@@ -1,21 +1,26 @@
-//
-//  ContentView.swift
-//  runimation
-//
-//  Created by Daniel Tombor on 13/02/2026.
-//
-
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            NoiseView()
+                .tabItem {
+                    Label("Noise", systemImage: "waveform")
+                }
+                .tag(0)
+
+            FbmView()
+                .tabItem {
+                    Label("fBm", systemImage: "scribble.variable")
+                }
+                .tag(1)
+            
+            WarpView()
+                .tabItem {
+                    Label("Warp", systemImage: "scribble.variable")
+                }
+                .tag(2)
         }
-        .padding()
     }
 }
 
