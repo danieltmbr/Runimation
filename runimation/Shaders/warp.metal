@@ -19,10 +19,11 @@ float3 color(float t, float3 a, float3 b, float3 c, float3 d)
 
 float3 palette1(float t)
 {
-    float3 a = float3(0.5, 0.5, 0.5);
-    float3 b = float3(0.5, 0.5, 0.5);
+    float3 a = float3(0.8, 0.5, 0.4);
+    float3 b = float3(0.2, 0.4, 0.2);
     float3 c = float3(1.0, 1.0, 1.0);
-    float3 d = float3(0.0, 0.33, 0.67);
+    float3 d = float3(0.0, 0.15, 0.20);
+
     return color(t, a, b, c, d);
 }
 
@@ -74,7 +75,7 @@ WarpResult warp(float2 p, float octaves, float h)
     
     // Add edge highlighting
     float edges = smoothstep(0.8, 1.2, abs(r.x) + abs(r.y));
-    c = mix(c, float3(0.2, 0.4, 0.6), edges * 0.3);
+    c = mix(c, float3(0.1, 0.4, 0.5), edges * 0.3);
     
     // Textrue details
     c *= 0.7 + 0.3 * f;

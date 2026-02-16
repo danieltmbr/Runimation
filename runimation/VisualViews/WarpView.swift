@@ -59,7 +59,7 @@ struct WarpView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     
-                    Slider(value: $octaves, in: 1...24, step: 1)
+                    Slider(value: $octaves, in: 1...12, step: 1)
                 }
             }
             .padding()
