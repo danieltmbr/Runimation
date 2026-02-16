@@ -20,6 +20,12 @@ struct ContentView: View {
                     Label("Warp", systemImage: "scribble.variable")
                 }
                 .tag(2)
+            
+            ColoringView()
+                .tabItem {
+                    Label("Colorings", systemImage: "paintpalette")
+                }
+                .tag(3)
         }
     }
 }
