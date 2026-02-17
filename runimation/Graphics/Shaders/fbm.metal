@@ -6,6 +6,7 @@ float3 noised(float2 position);
 
 float fbm(float2 position, float octaves, float h)
 {
+    const float2x2 m = float2x2(0.80, 0.60, -0.60, 0.80);
     float g = exp2(-h);
     float f = 1.0;
     float a = 1.0;
@@ -13,7 +14,8 @@ float fbm(float2 position, float octaves, float h)
     for(int i=0; i<octaves; i++ )
     {
         t += a * noised(f * position).x;
-        f *= 2.0;
+        position = m * position;
+        f *= 2.01 + i * 0.01;
         a *= g;
     }
     return t;
@@ -24,14 +26,16 @@ float3 fbmd(float2 position, float octaves, float h) {
     float f = 1.0;
     float a = 1.0;
     float t = 0.0;
-    float2 d = float2(0.0); // accumulate derivatives
-    
+    // accumulate derivatives
+    float2 d = float2(0.0);
+        
     for(int i = 0; i < octaves; i++) {
         float3 n = noised(f * position);
         t += a * n.x;
         // accumulate derivatives (note: multiply by f for chain rule)
         d += a * n.yz * f;
-        f *= 2.0;
+        
+        f *= 2.01 + i * 0.01;
         a *= g;
     }
     return float3(t, d);

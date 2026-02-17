@@ -27,20 +27,20 @@ float3 palette1(float t)
     return color(t, a, b, c, d);
 }
 
-WarpResult warp(float2 p, float octaves, float h)
+WarpResult warp(float2 p, float octaves, float h, float time)
 {
     float2 q = float2(
-                      fbm(p + float2(0.0, 0.0), octaves, h),
-                      fbm(p + float2(5.2,1.3), octaves, h)
+                      fbm(p + float2(0.7, 2.1), octaves, h),
+                      fbm(p + float2(5.2, 1.3), octaves, h)
                       );
     
     float2 r = float2(
                       fbm(p + 4.0 * q + float2(1.7, 9.2), octaves, h),
                       fbm(p + 4.0 * q + float2(8.3, 2.8), octaves, h)
                       );
-    
+
     float f = fbm(p + 4.0 * r, octaves, h);
-    
+
     WarpResult result;
     result.f = f;
     result.q = q;
@@ -59,7 +59,7 @@ WarpResult warp(float2 p, float octaves, float h)
 {
     // Normalize position to a reasonable scale
     float2 uv = position * scale;
-    WarpResult w = warp(uv, octaves, h);
+    WarpResult w = warp(uv, octaves, h, time);
 
     float f = clamp(w.f * 0.5 + 0.5, 0.0, 1.0);
     float2 q = w.q;

@@ -26,6 +26,12 @@ struct ContentView: View {
                     Label("Colorings", systemImage: "paintpalette")
                 }
                 .tag(3)
+            
+            AnimationExplorerView()
+                .tabItem {
+                    Label("Animations", systemImage: "paintpalette")
+                }
+                .tag(4)
         }
     }
 }
