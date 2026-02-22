@@ -1,37 +1,64 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var engine: PlaybackEngine?
+
     var body: some View {
         TabView {
-            NoiseView()
-                .tabItem {
-                    Label("Noise", systemImage: "waveform")
+            TabSection("Runs") {
+                Tab("Metrics", systemImage: "chart.xyaxis.line") {
+                    if let engine {
+                        RunMetricsView(engine: engine)
+                    } else {
+                        ProgressView("Loading run data...")
+                    }
                 }
-                .tag(0)
+                Tab("Visualisation", systemImage: "sparkles") {
+                    if let engine {
+                        RunView(engine: engine)
+                    } else {
+                        ProgressView("Loading run data...")
+                    }
+                }
+            }
 
-            FbmView()
-                .tabItem {
-                    Label("fBm", systemImage: "scribble.variable")
+            TabSection("Learnings") {
+                Tab("Noise", systemImage: "waveform") {
+                    NoiseView()
                 }
-                .tag(1)
-            
-            WarpView()
-                .tabItem {
-                    Label("Warp", systemImage: "scribble.variable")
+                Tab("fBM", systemImage: "function") {
+                    FbmView()
                 }
-                .tag(2)
-            
-            ColoringView()
-                .tabItem {
-                    Label("Colorings", systemImage: "paintpalette")
+                Tab("Warp", systemImage: "waveform.path.ecg") {
+                    WarpView()
                 }
-                .tag(3)
-            
-            AnimationExplorerView()
-                .tabItem {
-                    Label("Animations", systemImage: "paintpalette")
+                Tab("Colorings", systemImage: "paintpalette") {
+                    ColoringView()
                 }
-                .tag(4)
+                Tab("Animations", systemImage: "play.circle") {
+                    AnimationExplorerView()
+                }
+            }
+        }
+        .tabViewStyle(.sidebarAdaptable)
+        // Drives engine.update() regardless of which tab is visible.
+        .background {
+            if let engine {
+                TimelineView(.animation(paused: !engine.isPlaying)) { timeline in
+                    Color.clear
+                        .onChange(of: timeline.date) { _, date in
+                            engine.update(now: date)
+                        }
+                }
+            }
+        }
+        .task {
+            if engine == nil {
+                engine = await Task.detached {
+                    guard let track = GPXParser.parse(fileNamed: "run-01") else { return nil }
+                    return PlaybackEngine(runData: RunData(track: track))
+                }.value
+            }
         }
     }
 }
