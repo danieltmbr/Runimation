@@ -8,6 +8,6 @@ This project aims to reignites the fire in me for running, programming and art. 
 
 # Learning materials
 
-https://iquilezles.org/articles/morenoise/
-https://iquilezles.org/articles/fbm/
-https://iquilezles.org/articles/warp/
+- https://iquilezles.org/articles/morenoise/
+- https://iquilezles.org/articles/fbm/
+- https://iquilezles.org/articles/warp/
