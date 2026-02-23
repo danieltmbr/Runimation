@@ -36,7 +36,9 @@ final class PlaybackEngine {
     private(set) var currentHeartRate: Float = 0.5
     private(set) var currentDirX: Float = 0
     private(set) var currentDirY: Float = 0
-    private(set) var currentTime: Float = 0
+    // Pace-weighted: advances at dt * max(0.2, speed) so visual motion
+    // intensifies when the runner is pushing hard and slows at recovery pace.
+    private(set) var animationTime: Float = 0
 
     // For delta-time computation
     private var lastDate: Date?
@@ -68,7 +70,7 @@ final class PlaybackEngine {
     func reset() {
         isPlaying = false
         progress = 0
-        currentTime = 0
+        animationTime = 0
         lastDate = nil
         updateSampleValues()
     }
@@ -88,7 +90,7 @@ final class PlaybackEngine {
 
         let dt: TimeInterval
         if let last = lastDate {
-            dt = min(now.timeIntervalSince(last), 0.1) // cap at 100ms to avoid jumps
+            dt = min(now.timeIntervalSince(last), 0.03) // cap at 30ms to avoid jumps
         } else {
             dt = 0
         }
@@ -98,7 +100,10 @@ final class PlaybackEngine {
         guard targetDuration > 0 else { return }
 
         progress = min(1.0, progress + dt / targetDuration)
-        currentTime += Float(dt)
+        // Use last frame's speed (currentSpeed not yet updated this frame).
+        // Floor at 0.2 so the warp keeps breathing even during recovery.
+        let flowRate = max(0.2, Double(currentSpeed))
+        animationTime += Float(dt * flowRate)
 
         updateSampleValues()
 

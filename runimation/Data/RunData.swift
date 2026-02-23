@@ -151,10 +151,14 @@ struct RunData {
             ))
         }
 
-        // STEP 4: Smooth speed and direction
-        let smoothedSpeed = Self.movingAverage(rawSamples.map(\.speed), window: 5)
-        let smoothedDirX = Self.movingAverage(rawSamples.map(\.directionX), window: 11)
-        let smoothedDirY = Self.movingAverage(rawSamples.map(\.directionY), window: 11)
+        // STEP 4: Smooth speed, direction, and elevation with a Gaussian kernel.
+        // Gaussian is better than a moving average: it has no sidelobes in the
+        // frequency domain, so it cleanly attenuates high-frequency GPS noise
+        // without ringing. sigma is in samples (≈seconds at 1 Hz).
+        let smoothedSpeed     = Self.gaussianSmooth(rawSamples.map(\.speed),      sigma: 20)
+        let smoothedDirX      = Self.gaussianSmooth(rawSamples.map(\.directionX), sigma: 25)
+        let smoothedDirY      = Self.gaussianSmooth(rawSamples.map(\.directionY), sigma: 25)
+        let smoothedElevation = Self.gaussianSmooth(rawSamples.map(\.elevation),  sigma: 10)
 
         // Re-normalize smoothed direction to unit vectors, weighted by speed
         var finalDirX = [Double](repeating: 0, count: rawSamples.count)
@@ -178,7 +182,7 @@ struct RunData {
             finalSamples.append(RunSample(
                 timeOffset: raw.timeOffset,
                 speed: smoothedSpeed[i],
-                elevation: raw.elevation,
+                elevation: smoothedElevation[i],
                 elevationRate: raw.elevationRate,
                 heartRate: raw.heartRate,
                 directionX: finalDirX[i],
@@ -186,7 +190,10 @@ struct RunData {
             ))
         }
 
-        self.samples = finalSamples
+        // Metrics view gets raw (unsmoothed) data so charts reflect actual recorded values.
+        // The shader and diagnostics overlay use `normalized` which is derived from
+        // finalSamples (smoothed) below.
+        self.samples = rawSamples
 
         // STEP 5: Compute stats and normalize
         let speeds = finalSamples.map(\.speed)
@@ -278,6 +285,30 @@ struct RunData {
         let x = dLon * cos(midLat)
         let y = dLat
         return R * sqrt(x * x + y * y)
+    }
+
+    /// Gaussian kernel smoother. sigma is the standard deviation in samples.
+    /// Uses a ±3σ truncated kernel, normalised so edge samples aren't darkened.
+    private static func gaussianSmooth(_ values: [Double], sigma: Double) -> [Double] {
+        guard values.count > 1, sigma > 0 else { return values }
+        let halfWidth = Int(ceil(sigma * 3))
+        let n = values.count
+        var result = [Double](repeating: 0, count: n)
+        let twoSigmaSq = 2.0 * sigma * sigma
+        for i in 0..<n {
+            var weightSum = 0.0
+            var valueSum  = 0.0
+            let lo = max(0, i - halfWidth)
+            let hi = min(n - 1, i + halfWidth)
+            for j in lo...hi {
+                let d = Double(j - i)
+                let w = exp(-(d * d) / twoSigmaSq)
+                weightSum += w
+                valueSum  += values[j] * w
+            }
+            result[i] = weightSum > 0 ? valueSum / weightSum : values[i]
+        }
+        return result
     }
 
     private static func movingAverage(_ values: [Double], window: Int) -> [Double] {

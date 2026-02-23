@@ -16,6 +16,7 @@ struct RunView: View {
     @State private var baseH: Double = 0.5
     @State private var octaves: Double = 6.0
     @State private var showControls = false
+    @State private var showDiagnostics = false
 
     private var shaderH: Float {
         let elevationOffset = (1.0 - Double(engine.currentElevation) - 0.5) * 0.3
@@ -27,19 +28,30 @@ struct RunView: View {
             // TimelineView acts as a per-frame heartbeat so colorEffect re-evaluates
             // with fresh engine values each frame. engine.update() is driven by ContentView.
             TimelineView(.animation(paused: !engine.isPlaying)) { _ in
+                // Read engine properties here, inside the @ViewBuilder body.
+                // @Observable tracks accesses made during body/view-builder execution,
+                // but NOT inside .visualEffect closures (which run at Metal render time).
+                // Capturing locals forces RunView to re-render each frame when
+                // engine.update() mutates these values.
+                let animTime = engine.animationTime
+                let speed    = engine.currentSpeed
+                let hr       = engine.currentHeartRate
+                let dx       = engine.currentDirX
+                let dy       = engine.currentDirY
+                let h        = shaderH   // reads engine.currentElevation
                 GeometryReader { geo in
                     Rectangle()
-                        .visualEffect { content, proxy in
+                        .visualEffect { content, _ in
                             content.colorEffect(
                                 ShaderLibrary.runShader(
-                                    .float(engine.currentTime),
+                                    .float(animTime),
                                     .float(Float(octaves)),
-                                    .float(shaderH),
+                                    .float(h),
                                     .float(scale),
-                                    .float(engine.currentSpeed),
-                                    .float(engine.currentHeartRate),
-                                    .float(engine.currentDirX),
-                                    .float(engine.currentDirY),
+                                    .float(speed),
+                                    .float(hr),
+                                    .float(dx),
+                                    .float(dy),
                                     .float(offset.x),
                                     .float(offset.y)
                                 )
@@ -60,12 +72,24 @@ struct RunView: View {
                 RunStatsOverlay(engine: engine)
             }
             .overlay(alignment: .topTrailing) {
-                Button(action: { showControls.toggle() }) {
-                    Image(systemName: "slider.horizontal.3")
-                        .padding(8)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                HStack(spacing: 8) {
+                    Button(action: { showDiagnostics.toggle() }) {
+                        Image(systemName: "waveform.path.ecg")
+                            .padding(8)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                    }
+                    Button(action: { showControls.toggle() }) {
+                        Image(systemName: "slider.horizontal.3")
+                            .padding(8)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                    }
                 }
                 .padding(12)
+            }
+            .overlay(alignment: .bottom) {
+                if showDiagnostics {
+                    RunDiagnosticsOverlay(engine: engine)
+                }
             }
 
             if showControls {

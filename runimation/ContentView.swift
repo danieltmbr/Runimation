@@ -32,9 +32,6 @@ struct ContentView: View {
                 Tab("Warp", systemImage: "waveform.path.ecg") {
                     WarpView()
                 }
-                Tab("Animations", systemImage: "play.circle") {
-                    AnimationExplorerView()
-                }
             }
         }
         .tabViewStyle(.sidebarAdaptable)
