@@ -45,15 +45,19 @@ struct Run {
     /// Helps normalising the data and accessing the end of the spectrums quickly.
     ///
     struct Spectrum {
-        
+
         let elevation: ClosedRange<Double>
-        
+
+        /// Rate of elevation change in m/s. Negative = descending, positive = ascending.
+        ///
+        let elevationRate: ClosedRange<Double>
+
         let heartRate: ClosedRange<Double>
 
         /// Minimum non zero speed to maximum speed
         ///
         let speed: ClosedRange<Double>
-        
+
         let time: ClosedRange<TimeInterval>
     }
     
