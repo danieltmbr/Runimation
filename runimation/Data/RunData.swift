@@ -30,7 +30,7 @@ struct RunData {
     let minHeartRate: Double
     let maxHeartRate: Double
 
-    init(track: GPXTrack) {
+    init(track: GPX.Track) {
         let points = track.points
         guard points.count >= 2 else {
             self.samples = []
@@ -44,8 +44,8 @@ struct RunData {
             return
         }
 
-        let startTime = points[0].timestamp
-        let duration = points.last!.timestamp.timeIntervalSince(startTime)
+        let startTime = points[0].time
+        let duration = points.last!.time.timeIntervalSince(startTime)
         self.totalDuration = duration
 
         // STEP 1: Extract actual GPS fixes (where coordinates changed)
@@ -70,7 +70,7 @@ struct RunData {
             if curr.latitude != prev.lat || curr.longitude != prev.lon {
                 fixes.append(GPSFix(
                     index: i,
-                    timeOffset: curr.timestamp.timeIntervalSince(startTime),
+                    timeOffset: curr.time.timeIntervalSince(startTime),
                     lat: curr.latitude,
                     lon: curr.longitude,
                     elevation: curr.elevation
@@ -124,7 +124,7 @@ struct RunData {
         var fixIdx = 0 // index into fixes array
         for i in 0..<points.count {
             let pt = points[i]
-            let t = pt.timestamp.timeIntervalSince(startTime)
+            let t = pt.time.timeIntervalSince(startTime)
 
             // Advance fixIdx to the last fix at or before this trackpoint
             while fixIdx + 1 < fixes.count && fixes[fixIdx + 1].index <= i {

@@ -49,7 +49,8 @@ struct ContentView: View {
         .task {
             if engine == nil {
                 engine = await Task.detached {
-                    guard let track = GPXParser.parse(fileNamed: "run-01") else { return nil }
+                    let parser = GPX.Parser()
+                    guard let track = parser.parse(fileNamed: "run-01").first else { return nil }
                     return PlaybackEngine(runData: RunData(track: track))
                 }.value
             }

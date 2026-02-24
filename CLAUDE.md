@@ -1,3 +1,8 @@
+# MANDATORY RULES
+
+- **Never implement a suggestion you have doubts about.** If something seems unclear, suboptimal, or you have an alternative in mind — stop, ask questions, and discuss it first. Do not change any code until the approach is agreed upon.
+- It is always better to disagree and ask than to silently implement something on assumptions.
+
 # Runimation
 
 ## Project Overview

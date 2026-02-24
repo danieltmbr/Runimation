@@ -1,132 +1,161 @@
 import Foundation
 
-struct GPXTrackPoint {
-    let latitude: Double
-    let longitude: Double
-    let elevation: Double
-    let timestamp: Date
-    let heartRate: Int
-    let cadence: Int
-}
+enum GPX {
 
-struct GPXTrack {
-    let name: String
-    let type: String
-    let points: [GPXTrackPoint]
-}
-
-final class GPXParser: NSObject, XMLParserDelegate {
-
-    private var points: [GPXTrackPoint] = []
-    private var trackName = ""
-    private var trackType = ""
-
-    // Parsing state
-    private var currentText = ""
-    private var currentLat: Double?
-    private var currentLon: Double?
-    private var currentEle: Double?
-    private var currentTime: Date?
-    private var currentHR: Int?
-    private var currentCad: Int?
-    private var inTrackPointExtension = false
-
-    private var result: GPXTrack?
-
-    private static let dateFormatter: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime]
-        return f
-    }()
-
-    // MARK: - Public
-
-    static func parse(fileNamed name: String) -> GPXTrack? {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "gpx"),
-              let data = try? Data(contentsOf: url) else { return nil }
-        return GPXParser().parse(data: data)
+    struct Point {
+        
+        let cadence: Int
+        
+        let elevation: Double
+        
+        let heartRate: Int
+        
+        let latitude: Double
+        
+        let longitude: Double
+        
+        let time: Date
     }
 
-    func parse(data: Data) -> GPXTrack? {
-        let parser = XMLParser(data: data)
-        parser.delegate = self
-        parser.shouldProcessNamespaces = true
-        parser.parse()
-        return result
+    struct Track {
+        
+        fileprivate(set) var name: String
+        
+        fileprivate(set) var points: [Point]
+        
+        fileprivate(set) var type: String
     }
-
-    // MARK: - XMLParserDelegate
-
-    func parser(
-        _ parser: XMLParser,
-        didStartElement elementName: String,
-        namespaceURI: String?,
-        qualifiedName: String?,
-        attributes: [String: String] = [:]
-    ) {
-        currentText = ""
-
-        switch elementName {
-        case "trkpt":
-            currentLat = attributes["lat"].flatMap(Double.init)
-            currentLon = attributes["lon"].flatMap(Double.init)
-            currentEle = nil
-            currentTime = nil
-            currentHR = nil
-            currentCad = nil
-        case "TrackPointExtension":
-            inTrackPointExtension = true
-        default:
-            break
+    
+    final class Parser {
+        private let dateFormatter: ISO8601DateFormatter
+        
+        init(dateFormatter: ISO8601DateFormatter = .init()) {
+            self.dateFormatter = dateFormatter
+        }
+        
+        func parse(fileNamed name: String) -> [Track] {
+            guard let url = Bundle.main.url(forResource: name, withExtension: "gpx"),
+                  let data = try? Data(contentsOf: url) else { return [] }
+            return parse(data: data)
+        }
+        
+        private func parse(data: Data) -> [Track] {
+            let delegate = Delegate(dateFormatter: dateFormatter)
+            let parser = XMLParser(data: data)
+            parser.delegate = delegate
+            parser.shouldProcessNamespaces = false
+            parser.parse()
+            return delegate.results
         }
     }
+}
 
-    func parser(_ parser: XMLParser, foundCharacters string: String) {
-        currentText += string
-    }
+// MARK: - Private XMLParserDelegate
 
-    func parser(
-        _ parser: XMLParser,
-        didEndElement elementName: String,
-        namespaceURI: String?,
-        qualifiedName: String?
-    ) {
-        let text = currentText.trimmingCharacters(in: .whitespacesAndNewlines)
+private extension GPX {
 
-        switch elementName {
-        case "ele":
-            currentEle = Double(text)
-        case "time":
-            currentTime = Self.dateFormatter.date(from: text)
-        case "hr" where inTrackPointExtension:
-            currentHR = Int(text)
-        case "cad" where inTrackPointExtension:
-            currentCad = Int(text)
-        case "TrackPointExtension":
-            inTrackPointExtension = false
-        case "trkpt":
-            if let lat = currentLat,
-               let lon = currentLon,
-               let ele = currentEle,
-               let time = currentTime {
-                let point = GPXTrackPoint(
+    final class Delegate: NSObject, XMLParserDelegate {
+
+        private struct PointInProgress {
+            
+            var latitude: Double?
+            
+            var longitude: Double?
+            
+            var elevation: Double?
+            
+            var time: Date?
+            
+            var heartRate: Int?
+            
+            var cadence: Int?
+
+            func build() -> Point? {
+                guard let lat = latitude,
+                      let lon = longitude,
+                      let ele = elevation,
+                      let time = time else { return nil }
+                return Point(
+                    cadence: cadence ?? 0,
+                    elevation: ele,
+                    heartRate: heartRate ?? 0,
                     latitude: lat,
                     longitude: lon,
-                    elevation: ele,
-                    timestamp: time,
-                    heartRate: currentHR ?? 0,
-                    cadence: currentCad ?? 0
+                    time: time
                 )
-                points.append(point)
             }
-        case "name":
-            trackName = text
-        case "type":
-            trackType = text
-        case "trk":
-            result = GPXTrack(name: trackName, type: trackType, points: points)
-        default:
-            break
+        }
+
+        private let dateFormatter: ISO8601DateFormatter
+        
+        private var point: PointInProgress?
+        
+        private var text: String = ""
+        
+        private var track: Track?
+
+        var results: [Track] = []
+
+        init(dateFormatter: ISO8601DateFormatter) {
+            self.dateFormatter = dateFormatter
+            super.init()
+        }
+
+        func parser(
+            _ parser: XMLParser,
+            didStartElement elementName: String,
+            namespaceURI: String?,
+            qualifiedName: String?,
+            attributes: [String: String] = [:]
+        ) {
+            text = ""
+
+            switch elementName {
+            case "trk":
+                track = Track(name: "", points: [], type: "")
+            case "trkpt":
+                point = PointInProgress(
+                    latitude: attributes["lat"].flatMap(Double.init),
+                    longitude: attributes["lon"].flatMap(Double.init)
+                )
+            default:
+                break
+            }
+        }
+
+        func parser(_ parser: XMLParser, foundCharacters string: String) {
+            text += string
+        }
+
+        func parser(
+            _ parser: XMLParser,
+            didEndElement elementName: String,
+            namespaceURI: String?,
+            qualifiedName: String?
+        ) {
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            switch elementName {
+            case "name":
+                track?.name = trimmed
+            case "type":
+                track?.type = trimmed
+            case "ele":
+                point?.elevation = Double(trimmed)
+            case "time":
+                point?.time = dateFormatter.date(from: trimmed)
+            case "gpxtpx:hr":
+                point?.heartRate = Int(trimmed)
+            case "gpxtpx:cad":
+                point?.cadence = Int(trimmed)
+            case "trkpt":
+                if let p = point?.build() { track?.points.append(p) }
+                point = nil
+            case "trk":
+                if let t = track { results.append(t) }
+                track = nil
+            default:
+                break
+            }
         }
     }
 }
