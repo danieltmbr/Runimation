@@ -66,14 +66,38 @@ struct GuassianRun: RunTransformer {
 
         let runStart = segments[0].time.start
         let times = segments.map { $0.time.start.timeIntervalSince(runStart) }
-
-        let smoothedSpeed         = gaussianSmooth(segments.map(\.speed),                     times: times, sigma: configuration.speed)
-        let smoothedElevation     = gaussianSmooth(segments.map(\.elevation),                 times: times, sigma: configuration.elevation)
-        let smoothedElevationRate = gaussianSmooth(segments.map(\.elevationRate),             times: times, sigma: configuration.elevationRate)
-        let smoothedHeartRate     = gaussianSmooth(segments.map(\.heartRate),                 times: times, sigma: configuration.heartRate)
-        let smoothedDirX          = gaussianSmooth(segments.map { Double($0.direction.x) },   times: times, sigma: Double(configuration.direction.x))
-        let smoothedDirY          = gaussianSmooth(segments.map { Double($0.direction.y) },   times: times, sigma: Double(configuration.direction.y))
-
+        
+        let smoothedSpeed = gaussianSmooth(
+            segments.map(\.speed),
+            times: times,
+            sigma: configuration.speed
+        )
+        let smoothedElevation     = gaussianSmooth(
+            segments.map(\.elevation),
+            times: times,
+            sigma: configuration.elevation
+        )
+        let smoothedElevationRate = gaussianSmooth(
+            segments.map(\.elevationRate),
+            times: times,
+            sigma: configuration.elevationRate
+        )
+        let smoothedHeartRate = gaussianSmooth(
+            segments.map(\.heartRate),
+            times: times,
+            sigma: configuration.heartRate
+        )
+        let smoothedDirX = gaussianSmooth(
+            segments.map { Double($0.direction.x) },
+            times: times,
+            sigma: Double(configuration.direction.x)
+        )
+        let smoothedDirY = gaussianSmooth(
+            segments.map { Double($0.direction.y) },
+            times: times,
+            sigma: Double(configuration.direction.y)
+        )
+        
         let smoothedSegments: [Run.Segment] = (0..<segments.count).map { i in
             Run.Segment(
                 direction: CGPoint(x: smoothedDirX[i], y: smoothedDirY[i]),
@@ -137,5 +161,24 @@ struct GuassianRun: RunTransformer {
             result[i] = weightSum > 0 ? valueSum / weightSum : values[i]
         }
         return result
+    }
+}
+
+extension RunTransformer where Self == TransformerChain {
+    
+    static var guassian: Self {
+        self.guassian(configuration: GuassianRun.Configuration())
+    }
+    
+    static func guassian(configuration: GuassianRun.Configuration) -> Self {
+        TransformerChain(transformers: [GuassianRun(configuration: configuration)])
+    }
+    
+    var guassian: Self {
+        self.guassian(configuration: GuassianRun.Configuration())
+    }
+    
+    func guassian(configuration: GuassianRun.Configuration) -> Self {
+        self.append(transformer: .guassian(configuration: configuration))
     }
 }

@@ -55,3 +55,14 @@ struct NormalisedRun: RunTransformer {
         return (value - range.lowerBound) / span
     }
 }
+
+extension RunTransformer where Self == TransformerChain {
+    
+    static var normalised: Self {
+        TransformerChain(transformers: [NormalisedRun()])
+    }
+    
+    var normalised: Self {
+        self.append(transformer: .normalised)
+    }
+}

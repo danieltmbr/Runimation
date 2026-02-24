@@ -11,3 +11,9 @@ protocol RunTransformer {
 
     func transform(_ run: Run) -> Run
 }
+
+extension Run {
+    func transform(by transformer: RunTransformer) -> Run {
+        transformer.transform(self)
+    }
+}

@@ -66,3 +66,24 @@ struct SpeedWeightedRun: RunTransformer {
         return Run(segments: processedSegments, spectrum: spectrum)
     }
 }
+
+extension RunTransformer where Self == TransformerChain {
+    
+    static var speedWeighted: Self {
+        self.speedWeighted(configuration: SpeedWeightedRun.Configuration())
+    }
+    
+    static func speedWeighted(configuration: SpeedWeightedRun.Configuration) -> Self {
+        TransformerChain(
+            transformers: [SpeedWeightedRun(configuration: configuration)]
+        )
+    }
+    
+    var speedWeighted: Self {
+        self.speedWeighted(configuration: SpeedWeightedRun.Configuration())
+    }
+    
+    func speedWeighted(configuration: SpeedWeightedRun.Configuration) -> Self {
+        self.append(transformer: .speedWeighted(configuration: configuration))
+    }
+}
