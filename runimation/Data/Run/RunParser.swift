@@ -7,7 +7,7 @@ extension Run {
     /// The parser turns a track into a run by filtering out
     /// sample points with no coordinate changes, pairs them
     /// sequentally and make segments of them by calculating
-    /// the distance, duration, speed, elevation, elevation change
+    /// the direction, duration, speed, elevation, elevation change
     /// and heart rate.
     ///
     /// While creating the segments the processor also collects

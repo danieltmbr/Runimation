@@ -17,10 +17,10 @@ protocol RunProcessor {
 /// range depending on the metric.
 ///
 /// Speed, time, cadence, HR are mapped between [0, 1]
-/// while distance is mapped to [-1, 1].
+/// while direction is mapped to [-1, 1].
 ///
-/// The normalisation happens  based on the original
-/// spectrum of each metric.
+/// The normalisation happens  based on the
+/// spectrum of the input run.
 ///
 struct NormalisedRun: RunProcessor {
     
@@ -41,6 +41,43 @@ struct NormalisedRun: RunProcessor {
 /// especially when the animation duration is short.
 ///
 struct GuassianRun: RunProcessor {
+    
+    struct Configuration {
+        
+        /// Sigma parameter for direction smoothing.
+        ///
+        let direction: CGPoint
+        
+        /// Sigma parameter for elevation smoothing.
+        ///
+        let elevation: Double
+        
+        /// Sigma parameter for heart rate smoothing.
+        ///
+        let heartRate: Double
+        
+        /// Sigma parameter for speed smoothing.
+        ///
+        let speed: Double
+        
+        init(
+            direction: CGPoint = CGPoint(x: 25, y: 25),
+            elevation: Double = 10,
+            heartRate: Double = 10,
+            speed: Double = 20
+        ) {
+            self.direction = direction
+            self.elevation = elevation
+            self.heartRate = heartRate
+            self.speed = speed
+        }
+    }
+    
+    private let configuration: Configuration
+    
+    init(configuration: Configuration) {
+        self.configuration = configuration
+    }
     
     func interpolate(run: Run) -> Run {
         
