@@ -25,18 +25,29 @@ struct SpeedWeightedRun: RunTransformer {
     }
 
     func transform(_ run: Run) -> Run {
-        let segments = run.segments
-        guard !segments.isEmpty else { return run }
+        guard !run.segments.isEmpty else { return run }
+        let cap = speedCap(from: run.segments)
+        let weighted = weightedSegments(from: run.segments, cap: cap)
+        return Run(
+            segments: weighted,
+            spectrum: Run.Spectrum(from: weighted, time: run.spectrum.time)
+        )
+    }
 
-        let sortedSpeeds = segments.map(\.speed).sorted()
-        let p98Index = Int(Double(sortedSpeeds.count) * 0.98)
-        let speedCap = sortedSpeeds[min(p98Index, sortedSpeeds.count - 1)]
+    // MARK: - Private
 
-        let threshold = configuration.threshold
+    private func speedCap(from segments: [Run.Segment]) -> Double {
+        let sorted = segments.map(\.speed).sorted()
+        let p98Index = Int(Double(sorted.count) * 0.98)
+        return sorted[min(p98Index, sorted.count - 1)]
+    }
 
-        let processedSegments = segments.map { segment in
-            let clampedSpeed = min(segment.speed, speedCap)
-            let weight = threshold > 0 ? min(clampedSpeed / threshold, 1.0) : 1.0
+    private func weightedSegments(from segments: [Run.Segment], cap: Double) -> [Run.Segment] {
+        segments.map { segment in
+            let clampedSpeed = min(segment.speed, cap)
+            let weight = configuration.threshold > 0
+                ? min(clampedSpeed / configuration.threshold, 1.0)
+                : 1.0
             return Run.Segment(
                 direction: CGPoint(
                     x: segment.direction.x * weight,
@@ -49,40 +60,25 @@ struct SpeedWeightedRun: RunTransformer {
                 time: segment.time
             )
         }
-
-        let speeds = processedSegments.map(\.speed)
-        let elevations = processedSegments.map(\.elevation)
-        let elevationRates = processedSegments.map(\.elevationRate)
-        let nonZeroHR = processedSegments.map(\.heartRate).filter { $0 > 0 }
-
-        let spectrum = Run.Spectrum(
-            elevation: (elevations.min() ?? 0)...(elevations.max() ?? 0),
-            elevationRate: (elevationRates.min() ?? 0)...(elevationRates.max() ?? 0),
-            heartRate: (nonZeroHR.min() ?? 0)...(nonZeroHR.max() ?? 0),
-            speed: (speeds.min() ?? 0)...(speeds.max() ?? 0),
-            time: run.spectrum.time
-        )
-
-        return Run(segments: processedSegments, spectrum: spectrum)
     }
 }
 
 extension RunTransformer where Self == TransformerChain {
-    
+
     static var speedWeighted: Self {
         self.speedWeighted(configuration: SpeedWeightedRun.Configuration())
     }
-    
+
     static func speedWeighted(configuration: SpeedWeightedRun.Configuration) -> Self {
         TransformerChain(
             transformers: [SpeedWeightedRun(configuration: configuration)]
         )
     }
-    
+
     var speedWeighted: Self {
         self.speedWeighted(configuration: SpeedWeightedRun.Configuration())
     }
-    
+
     func speedWeighted(configuration: SpeedWeightedRun.Configuration) -> Self {
         self.append(transformer: .speedWeighted(configuration: configuration))
     }

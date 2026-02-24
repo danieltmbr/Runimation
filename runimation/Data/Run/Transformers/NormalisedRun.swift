@@ -14,39 +14,50 @@ struct NormalisedRun: RunTransformer {
 
     func transform(_ run: Run) -> Run {
         guard !run.segments.isEmpty else { return run }
+        let scale = elevationRateScale(for: run.spectrum)
+        let normalised = normalise(run.segments, using: run.spectrum, elevationRateScale: scale)
+        let spectrum = normalisedSpectrum(from: run.spectrum, elevationRateScale: scale)
+        return Run(segments: normalised, spectrum: spectrum)
+    }
 
-        let spectrum = run.spectrum
+    // MARK: - Private
 
-        // elevationRate uses peak-absolute scaling to preserve zero = flat
-        let elevRateScale = max(
-            abs(spectrum.elevationRate.lowerBound),
-            abs(spectrum.elevationRate.upperBound)
-        )
+    private func elevationRateScale(for spectrum: Run.Spectrum) -> Double {
+        max(abs(spectrum.elevationRate.lowerBound), abs(spectrum.elevationRate.upperBound))
+    }
 
-        let normalisedSegments = run.segments.map { s in
+    private func normalise(
+        _ segments: [Run.Segment],
+        using spectrum: Run.Spectrum,
+        elevationRateScale scale: Double
+    ) -> [Run.Segment] {
+        segments.map { s in
             Run.Segment(
                 direction: s.direction,
                 elevation: normalise(s.elevation, in: spectrum.elevation),
-                elevationRate: elevRateScale > 0 ? s.elevationRate / elevRateScale : 0,
+                elevationRate: scale > 0 ? s.elevationRate / scale : 0,
                 heartRate: normalise(s.heartRate, in: spectrum.heartRate),
                 speed: normalise(s.speed, in: spectrum.speed),
                 time: s.time
             )
         }
+    }
 
-        let normalisedElevationRate: ClosedRange<Double> = elevRateScale > 0
-            ? (spectrum.elevationRate.lowerBound / elevRateScale)...(spectrum.elevationRate.upperBound / elevRateScale)
+    /// Builds a fully normalised spectrum for the output run.
+    /// elevationRate preserves its asymmetric range rather than clamping to [-1, 1],
+    /// reflecting the actual peak in each direction.
+    ///
+    private func normalisedSpectrum(from spectrum: Run.Spectrum, elevationRateScale scale: Double) -> Run.Spectrum {
+        let elevationRate: ClosedRange<Double> = scale > 0
+            ? (spectrum.elevationRate.lowerBound / scale)...(spectrum.elevationRate.upperBound / scale)
             : 0...0
-
-        let normalisedSpectrum = Run.Spectrum(
+        return Run.Spectrum(
             elevation: 0...1,
-            elevationRate: normalisedElevationRate,
+            elevationRate: elevationRate,
             heartRate: 0...1,
             speed: 0...1,
-            time: run.spectrum.time
+            time: spectrum.time
         )
-
-        return Run(segments: normalisedSegments, spectrum: normalisedSpectrum)
     }
 
     private func normalise(_ value: Double, in range: ClosedRange<Double>) -> Double {
@@ -57,11 +68,11 @@ struct NormalisedRun: RunTransformer {
 }
 
 extension RunTransformer where Self == TransformerChain {
-    
+
     static var normalised: Self {
         TransformerChain(transformers: [NormalisedRun()])
     }
-    
+
     var normalised: Self {
         self.append(transformer: .normalised)
     }

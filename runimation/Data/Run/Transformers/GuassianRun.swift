@@ -61,68 +61,64 @@ struct GuassianRun: RunTransformer {
     }
 
     func transform(_ run: Run) -> Run {
-        let segments = run.segments
-        guard !segments.isEmpty else { return run }
+        guard !run.segments.isEmpty else { return run }
+        let times = timeOffsets(from: run.segments)
+        let smoothed = smooth(run.segments, times: times)
+        return Run(
+            segments: smoothed,
+            spectrum: Run.Spectrum(from: smoothed, time: run.spectrum.time)
+        )
+    }
 
-        let runStart = segments[0].time.start
-        let times = segments.map { $0.time.start.timeIntervalSince(runStart) }
-        
-        let smoothedSpeed = gaussianSmooth(
+    // MARK: - Private
+
+    private func timeOffsets(from segments: [Run.Segment]) -> [TimeInterval] {
+        let start = segments[0].time.start
+        return segments.map { $0.time.start.timeIntervalSince(start) }
+    }
+
+    private func smooth(_ segments: [Run.Segment], times: [TimeInterval]) -> [Run.Segment] {
+        let speed = gaussianSmooth(
             segments.map(\.speed),
             times: times,
             sigma: configuration.speed
         )
-        let smoothedElevation     = gaussianSmooth(
+        let elevation = gaussianSmooth(
             segments.map(\.elevation),
             times: times,
             sigma: configuration.elevation
         )
-        let smoothedElevationRate = gaussianSmooth(
+        let elevRate = gaussianSmooth(
             segments.map(\.elevationRate),
             times: times,
             sigma: configuration.elevationRate
         )
-        let smoothedHeartRate = gaussianSmooth(
+        let heartRate = gaussianSmooth(
             segments.map(\.heartRate),
             times: times,
             sigma: configuration.heartRate
         )
-        let smoothedDirX = gaussianSmooth(
+        let dirX = gaussianSmooth(
             segments.map { Double($0.direction.x) },
             times: times,
             sigma: Double(configuration.direction.x)
         )
-        let smoothedDirY = gaussianSmooth(
+        let dirY = gaussianSmooth(
             segments.map { Double($0.direction.y) },
             times: times,
             sigma: Double(configuration.direction.y)
         )
-        
-        let smoothedSegments: [Run.Segment] = (0..<segments.count).map { i in
+
+        return (0..<segments.count).map { i in
             Run.Segment(
-                direction: CGPoint(x: smoothedDirX[i], y: smoothedDirY[i]),
-                elevation: smoothedElevation[i],
-                elevationRate: smoothedElevationRate[i],
-                heartRate: smoothedHeartRate[i],
-                speed: smoothedSpeed[i],
+                direction: CGPoint(x: dirX[i], y: dirY[i]),
+                elevation: elevation[i],
+                elevationRate: elevRate[i],
+                heartRate: heartRate[i],
+                speed: speed[i],
                 time: segments[i].time
             )
         }
-
-        let speeds = smoothedSegments.map(\.speed)
-        let elevations = smoothedSegments.map(\.elevation)
-        let elevationRates = smoothedSegments.map(\.elevationRate)
-        let nonZeroHR = smoothedSegments.map(\.heartRate).filter { $0 > 0 }
-
-        let spectrum = Run.Spectrum(
-            elevation: (elevations.min() ?? 0)...(elevations.max() ?? 0),
-            elevationRate: (elevationRates.min() ?? 0)...(elevationRates.max() ?? 0),
-            heartRate: (nonZeroHR.min() ?? 0)...(nonZeroHR.max() ?? 0),
-            speed: (speeds.min() ?? 0)...(speeds.max() ?? 0),
-            time: run.spectrum.time
-        )
-
-        return Run(segments: smoothedSegments, spectrum: spectrum)
     }
 
     /// Time-based Gaussian kernel smoother.
@@ -165,19 +161,19 @@ struct GuassianRun: RunTransformer {
 }
 
 extension RunTransformer where Self == TransformerChain {
-    
+
     static var guassian: Self {
         self.guassian(configuration: GuassianRun.Configuration())
     }
-    
+
     static func guassian(configuration: GuassianRun.Configuration) -> Self {
         TransformerChain(transformers: [GuassianRun(configuration: configuration)])
     }
-    
+
     var guassian: Self {
         self.guassian(configuration: GuassianRun.Configuration())
     }
-    
+
     func guassian(configuration: GuassianRun.Configuration) -> Self {
         self.append(transformer: .guassian(configuration: configuration))
     }
