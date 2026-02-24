@@ -32,13 +32,17 @@ enum GPX {
         init(dateFormatter: ISO8601DateFormatter = .init()) {
             self.dateFormatter = dateFormatter
         }
-        
+
         func parse(fileNamed name: String) -> [Track] {
             guard let url = Bundle.main.url(forResource: name, withExtension: "gpx"),
                   let data = try? Data(contentsOf: url) else { return [] }
             return parse(data: data)
         }
-        
+
+        func parse(fileNamed name: String) -> Track? {
+            parse(fileNamed: name).first
+        }
+
         private func parse(data: Data) -> [Track] {
             let delegate = Delegate(dateFormatter: dateFormatter)
             let parser = XMLParser(data: data)
