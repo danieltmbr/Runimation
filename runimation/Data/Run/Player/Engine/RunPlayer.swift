@@ -224,3 +224,34 @@ private extension Duration {
         TimeInterval(components.seconds) + TimeInterval(components.attoseconds) * 1e-18
     }
 }
+
+// MARK: - Segments
+
+extension RunPlayer {
+
+    /// A namespace for reading the current playback segment
+    /// under each reading purpose, enabling KeyPath-based access:
+    /// `@PlayerState(\.segments.animation)`.
+    ///
+    struct Segments {
+
+        private let player: RunPlayer
+
+        fileprivate init(_ player: RunPlayer) {
+            self.player = player
+        }
+
+        var animation: Run.Segment? { player.segment(for: .animation) }
+
+        var diagnostics: Run.Segment? { player.segment(for: .diagnostics) }
+
+        var metrics: Run.Segment? { player.segment(for: .metrics) }
+    }
+
+    /// The current playback segments for all reading purposes.
+    ///
+    /// Updates on every playback tick because it reads from `progress`
+    /// and `runs`, which are both `@Observable` stored properties.
+    ///
+    var segments: Segments { Segments(self) }
+}
