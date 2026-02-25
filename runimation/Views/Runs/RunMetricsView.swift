@@ -2,9 +2,14 @@ import Charts
 import SwiftUI
 
 struct RunMetricsView: View {
-    let player: RunPlayer
 
-    private var run: Run? { player.runs?.run(for: .metrics) }
+    @PlayerState(\.runs)
+    private var runs
+    
+    @PlayerState(\.progress)
+    private var progress
+
+    private var run: Run? { runs?.run(for: .metrics) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -17,7 +22,7 @@ struct RunMetricsView: View {
                 }
                 .padding()
             }
-            RunPlayerControlsView(player: player)
+            RunPlayerControlsView()
         }
     }
 
@@ -78,7 +83,7 @@ struct RunMetricsView: View {
     }
 
     private var playheadMinutes: Double {
-        player.progress * (run?.duration ?? 0) / 60.0
+        progress * (run?.duration ?? 0) / 60.0
     }
 
     private var totalDurationMinutes: Double {

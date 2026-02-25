@@ -8,14 +8,16 @@ struct ContentView: View {
             TabSection("Runs") {
                 Tab("Metrics", systemImage: "chart.xyaxis.line") {
                     if let player {
-                        RunMetricsView(player: player)
+                        RunMetricsView()
+                            .player(player)
                     } else {
                         ProgressView("Loading run data...")
                     }
                 }
                 Tab("Visualisation", systemImage: "sparkles") {
                     if let player {
-                        RunPlayerView(player: player)
+                        RunPlayerView()
+                            .player(player)
                     } else {
                         ProgressView("Loading run data...")
                     }

@@ -2,9 +2,19 @@ import Charts
 import SwiftUI
 
 struct RunPlayerDiagnosticsOverlay: View {
-    let player: RunPlayer
 
-    private var diagnosticsRun: Run? { player.runs?.run(for: .diagnostics) }
+    @PlayerState(\.runs)
+    private var runs
+    
+    @PlayerState(\.progress)
+    private var progress
+    
+    @PlayerState(\.segments.animation)
+    private var animationSegment
+
+    private var diagnosticsRun: Run? {
+        runs?.run(for: .diagnostics)
+    }
 
     /// Downsampled segments for chart performance.
     ///
@@ -54,7 +64,7 @@ struct RunPlayerDiagnosticsOverlay: View {
                     .foregroundStyle(color.opacity(0.85))
                     .interpolationMethod(.catmullRom)
                 }
-                RuleMark(x: .value("Now", player.progress))
+                RuleMark(x: .value("Now", progress))
                     .foregroundStyle(.white.opacity(0.8))
                     .lineStyle(StrokeStyle(lineWidth: 1.5))
             }
@@ -121,7 +131,7 @@ struct RunPlayerDiagnosticsOverlay: View {
             }
 
             // Direction arrow from the animation tier (speed-weighted).
-            let direction = player.segment(for: .animation)?.direction ?? .zero
+            let direction = animationSegment?.direction ?? .zero
             let dirX = CGFloat(direction.x)
             let dirY = CGFloat(direction.y)
             let magnitude = sqrt(dirX * dirX + dirY * dirY)

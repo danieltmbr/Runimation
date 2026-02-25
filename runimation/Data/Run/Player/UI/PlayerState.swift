@@ -23,6 +23,7 @@ struct PlayerState<Value>: DynamicProperty {
     private var player
 
     private let get: (RunPlayer) -> Value
+    
     private let set: (RunPlayer, Value) -> Void
 
     var wrappedValue: Value {

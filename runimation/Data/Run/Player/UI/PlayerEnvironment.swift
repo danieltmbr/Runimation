@@ -3,11 +3,21 @@ import SwiftUI
 // MARK: - Environment Keys
 
 extension EnvironmentValues {
-    @Entry var togglePlay: TogglePlayAction = TogglePlayAction()
-    @Entry var stop: StopAction = StopAction()
-    @Entry var seek: SeekAction = SeekAction()
-    @Entry var loadRun: LoadRunAction = LoadRunAction()
-    @Entry var setTransformer: SetTransformerAction = SetTransformerAction()
+    
+    @Entry
+    var togglePlay: TogglePlayAction = TogglePlayAction()
+    
+    @Entry
+    var stop: StopAction = StopAction()
+    
+    @Entry
+    var seek: SeekAction = SeekAction()
+    
+    @Entry
+    var loadRun: LoadRunAction = LoadRunAction()
+    
+    @Entry
+    var setTransformer: SetTransformerAction = SetTransformerAction()
 }
 
 // MARK: - View Extension

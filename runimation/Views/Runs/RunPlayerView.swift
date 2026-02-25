@@ -1,26 +1,53 @@
 import SwiftUI
 
 struct RunPlayerView: View {
-    let player: RunPlayer
 
-    @State private var scale: Float = 0.005
-    @State private var baseScale: Float = 0.005
-    @State private var offset: SIMD2<Float> = .zero
-    @State private var baseOffset: SIMD2<Float> = .zero
+    @PlayerState(\.segments.animation)
+    private var animationSegment
+    
+    @PlayerState(\.progress)
+    private var progress
+    
+    @PlayerState(\.runs)
+    private var runs
+    
+    @PlayerState(\.duration)
+    private var duration
 
-    @State private var baseH: Double = 0.5
-    @State private var octaves: Double = 6.0
-    @State private var showControls = false
-    @State private var showDiagnostics = false
+    @State
+    private var scale: Float = 0.005
+    
+    @State
+    private var baseScale: Float = 0.005
+    
+    @State
+    private var offset: SIMD2<Float> = .zero
+    
+    @State
+    private var baseOffset: SIMD2<Float> = .zero
 
+    
+    @State
+    private var baseH: Double = 0.5
+    
+    @State
+    private var octaves: Double = 6.0
+    
+    @State
+    private var showControls = false
+    
+    @State
+    private var showDiagnostics = false
+
+    
     var body: some View {
         VStack(spacing: 0) {
             // RunPlayer.progress changes every ~16ms on the main actor via its
             // internal Task timer. @Observable tracks the access to `progress`
             // (and `runs`) made here in body, so SwiftUI automatically re-renders
             // this view on each tick — no TimelineView needed.
-            let segment  = player.segment(for: .animation)
-            let animTime = Float(player.progress * animationDuration)
+            let segment  = animationSegment
+            let animTime = Float(progress * animationDuration)
             let speed    = Float(segment?.speed ?? 0)
             let hr       = Float(segment?.heartRate ?? 0.5)
             let dx       = Float(segment?.direction.x ?? 0)
@@ -48,7 +75,7 @@ struct RunPlayerView: View {
             .gesture(magnifyGesture)
             .simultaneousGesture(panGesture)
             .overlay(alignment: .topLeading) {
-                RunPlayerStatsOverlay(player: player)
+                RunPlayerStatsOverlay()
             }
             .overlay(alignment: .topTrailing) {
                 HStack(spacing: 8) {
@@ -67,7 +94,7 @@ struct RunPlayerView: View {
             }
             .overlay(alignment: .bottom) {
                 if showDiagnostics {
-                    RunPlayerDiagnosticsOverlay(player: player)
+                    RunPlayerDiagnosticsOverlay()
                 }
             }
 
@@ -89,7 +116,7 @@ struct RunPlayerView: View {
                 .background(.ultraThinMaterial)
             }
 
-            RunPlayerControlsView(player: player)
+            RunPlayerControlsView()
         }
     }
 
@@ -99,8 +126,8 @@ struct RunPlayerView: View {
     /// Using the playback duration so a 15s run and a real-time run both animate at the
     /// same visual speed.
     private var animationDuration: Double {
-        guard let run = player.runs?.run(for: .metrics) else { return 15 }
-        return player.duration(for: run.duration)
+        guard let run = runs?.run(for: .metrics) else { return 15 }
+        return duration(for: run.duration)
     }
 
     private func shaderH(elevation: Double) -> Float {
@@ -149,11 +176,12 @@ struct RunPlayerView: View {
 // MARK: - Stats Overlay
 
 private struct RunPlayerStatsOverlay: View {
-    let player: RunPlayer
+
+    @PlayerState(\.segments.metrics) private var metricsSegment
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            if let segment = player.segment(for: .metrics) {
+            if let segment = metricsSegment {
                 statRow("Pace",       value: pace(speed: segment.speed),                    unit: "min/km")
                 statRow("Elevation",  value: String(format: "%.0f", segment.elevation),     unit: "m")
                 statRow("Heart Rate", value: String(format: "%.0f", segment.heartRate),     unit: "bpm")

@@ -1,35 +1,28 @@
 import SwiftUI
 
 struct RunPlayerControlsView: View {
-    @Bindable var player: RunPlayer
+
+    @PlayerState(\.runs)
+    private var runs
+    
+    @PlayerState(\.progress)
+    private var progress
+    
+    @PlayerState(\.duration)
+    private var duration
 
     var body: some View {
         VStack(spacing: 12) {
-            Picker("Duration", selection: $player.duration) {
-                ForEach(RunPlayer.Duration.all) { d in
-                    Text(d.label).tag(d)
-                }
-            }
-            .pickerStyle(.segmented)
+            DurationPicker()
+                .pickerStyle(.segmented)
 
             HStack(spacing: 16) {
-                Button(action: {
-                    player.isPlaying ? player.pause() : player.play()
-                }) {
-                    Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                        .frame(width: 30, height: 30)
-                }
-                .buttonStyle(.bordered)
+                PlayToggle()
+                    .buttonStyle(.bordered)
 
-                Slider(
-                    value: Binding(
-                        get: { player.progress },
-                        set: { player.seek(to: $0) }
-                    ),
-                    in: 0...1
-                )
+                ProgressSlider()
 
-                Button("Stop") { player.stop() }
+                StopButton()
                     .buttonStyle(.bordered)
             }
 
@@ -43,9 +36,9 @@ struct RunPlayerControlsView: View {
     }
 
     private var timeLabel: String {
-        guard let run = player.runs?.run(for: .metrics) else { return "0:00 / 0:00" }
-        let targetDuration = player.duration(for: run.duration)
-        let elapsed = player.progress * targetDuration
+        guard let run = runs?.run(for: .metrics) else { return "0:00 / 0:00" }
+        let targetDuration = duration(for: run.duration)
+        let elapsed = progress * targetDuration
         return "\(Self.formatTime(elapsed)) / \(Self.formatTime(targetDuration))"
     }
 
