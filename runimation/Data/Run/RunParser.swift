@@ -14,7 +14,7 @@ extension Run {
     /// the spectrum of these metrics, which is basically their
     /// minimum and maximum values.
     ///
-    struct Parser {
+    struct Parser: Equatable, Sendable {
 
         func run(from track: GPX.Track) -> Run {
             let points = track.points

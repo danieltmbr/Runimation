@@ -310,22 +310,4 @@ struct RunData {
         }
         return result
     }
-
-    private static func movingAverage(_ values: [Double], window: Int) -> [Double] {
-        guard values.count > 1 else { return values }
-        let halfWindow = window / 2
-        var result = [Double](repeating: 0, count: values.count)
-
-        for i in 0..<values.count {
-            let lo = max(0, i - halfWindow)
-            let hi = min(values.count - 1, i + halfWindow)
-            var sum = 0.0
-            for j in lo...hi {
-                sum += values[j]
-            }
-            result[i] = sum / Double(hi - lo + 1)
-        }
-
-        return result
-    }
 }

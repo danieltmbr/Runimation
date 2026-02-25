@@ -1,8 +1,8 @@
 import Foundation
 
-enum GPX {
+enum GPX: Equatable, Sendable {
 
-    struct Point {
+    struct Point: Equatable, Sendable {
         
         let cadence: Int
         
@@ -17,7 +17,7 @@ enum GPX {
         let time: Date
     }
 
-    struct Track {
+    struct Track: Equatable, Sendable {
         
         fileprivate(set) var name: String
         
@@ -26,7 +26,7 @@ enum GPX {
         fileprivate(set) var type: String
     }
     
-    final class Parser {
+    final class Parser: Sendable {
         private let dateFormatter: ISO8601DateFormatter
         
         init(dateFormatter: ISO8601DateFormatter = .init()) {

@@ -5,7 +5,7 @@ extension RunPlayer {
     /// Specifies the duration of how long it should take
     /// the player to go through a Run from start to end.
     ///
-    struct Duration: Equatable, Identifiable, Sendable {
+    struct Duration: Equatable, Hashable, Identifiable, Sendable {
         
         var id: String { label }
         
@@ -35,6 +35,10 @@ extension RunPlayer {
         
         static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.id == rhs.id
+        }
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(id)
         }
         
         // MARK: - Predefined Durations

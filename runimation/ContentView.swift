@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var engine: PlaybackEngine?
+    @State private var player: RunPlayer?
 
     var body: some View {
         TabView {
@@ -16,6 +17,13 @@ struct ContentView: View {
                 Tab("Visualisation", systemImage: "sparkles") {
                     if let engine {
                         RunView(engine: engine)
+                    } else {
+                        ProgressView("Loading run data...")
+                    }
+                }
+                Tab("Player", systemImage: "play.circle") {
+                    if let player {
+                        RunPlayerView(player: player)
                     } else {
                         ProgressView("Loading run data...")
                     }
@@ -52,6 +60,20 @@ struct ContentView: View {
                     let parser = GPX.Parser()
                     guard let track = parser.parse(fileNamed: "run-01").first else { return nil }
                     return PlaybackEngine(runData: RunData(track: track))
+                }.value
+            }
+        }
+        .task {
+            if player == nil {
+                player = await Task.detached {
+                    let gpxParser = GPX.Parser()
+                    guard let track = gpxParser.parse(fileNamed: "run-01").first else { return nil }
+                    let p = RunPlayer(
+                        parser: Run.Parser(),
+                        transformer: TransformerChain.guassian.speedWeighted
+                    )
+                    p.setRun(track)
+                    return p
                 }.value
             }
         }

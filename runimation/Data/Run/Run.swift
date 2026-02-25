@@ -1,10 +1,11 @@
 import Foundation
+import CoreGraphics
 
-struct Run {
+struct Run: Equatable, Sendable {
     
     /// Segment of a run
     ///
-    struct Segment {
+    struct Segment: Equatable, Sendable {
         
         /// Direction of the run
         ///
@@ -44,7 +45,7 @@ struct Run {
     ///
     /// Helps normalising the data and accessing the end of the spectrums quickly.
     ///
-    struct Spectrum {
+    struct Spectrum: Equatable, Sendable {
 
         let elevation: ClosedRange<Double>
 
@@ -72,6 +73,64 @@ struct Run {
     /// Spectrum of the metrics during the run
     ///
     let spectrum: Spectrum
+}
+
+extension Run {
+
+    /// Returns the segment whose metrics correspond to the given time offset
+    /// into the run, measured in seconds from the first segment's start.
+    ///
+    /// Values are linearly interpolated between the two surrounding segments.
+    /// Offsets outside the run's range are clamped to the first or last segment.
+    ///
+    func segment(at timeOffset: TimeInterval) -> Segment {
+        guard segments.count > 1 else {
+            return segments.first ?? Segment(
+                direction: .zero,
+                elevation: 0,
+                elevationRate: 0,
+                heartRate: 0,
+                speed: 0,
+                time: DateInterval()
+            )
+        }
+
+        let origin = segments[0].time.start
+
+        if timeOffset <= 0 { return segments[0] }
+
+        let lastOffset = segments.last!.time.start.timeIntervalSince(origin)
+        if timeOffset >= lastOffset { return segments.last! }
+
+        // Binary search for the last segment whose start ≤ timeOffset.
+        var lo = 0
+        var hi = segments.count - 1
+        while lo + 1 < hi {
+            let mid = (lo + hi) / 2
+            if segments[mid].time.start.timeIntervalSince(origin) <= timeOffset {
+                lo = mid
+            } else {
+                hi = mid
+            }
+        }
+
+        let a = segments[lo]
+        let b = segments[hi]
+        let dt = b.time.start.timeIntervalSince(a.time.start)
+        let t = dt > 0 ? (timeOffset - a.time.start.timeIntervalSince(origin)) / dt : 0
+
+        return Segment(
+            direction: CGPoint(
+                x: a.direction.x + (b.direction.x - a.direction.x) * t,
+                y: a.direction.y + (b.direction.y - a.direction.y) * t
+            ),
+            elevation: a.elevation + (b.elevation - a.elevation) * t,
+            elevationRate: a.elevationRate + (b.elevationRate - a.elevationRate) * t,
+            heartRate: a.heartRate + (b.heartRate - a.heartRate) * t,
+            speed: a.speed + (b.speed - a.speed) * t,
+            time: a.time
+        )
+    }
 }
 
 extension Run.Spectrum {
