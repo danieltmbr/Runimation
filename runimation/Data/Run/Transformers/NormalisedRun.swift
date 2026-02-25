@@ -56,7 +56,8 @@ struct NormalisedRun: RunTransformer {
             elevationRate: elevationRate,
             heartRate: 0...1,
             speed: 0...1,
-            time: spectrum.time
+            time: spectrum.time,
+            distance: spectrum.distance
         )
     }
 

@@ -11,6 +11,7 @@ struct RunPlayerView: View {
     @State private var baseH: Double = 0.5
     @State private var octaves: Double = 6.0
     @State private var showControls = false
+    @State private var showDiagnostics = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -50,12 +51,24 @@ struct RunPlayerView: View {
                 RunPlayerStatsOverlay(player: player)
             }
             .overlay(alignment: .topTrailing) {
-                Button(action: { showControls.toggle() }) {
-                    Image(systemName: "slider.horizontal.3")
-                        .padding(8)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                HStack(spacing: 8) {
+                    Button(action: { showDiagnostics.toggle() }) {
+                        Image(systemName: "waveform.path.ecg")
+                            .padding(8)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                    }
+                    Button(action: { showControls.toggle() }) {
+                        Image(systemName: "slider.horizontal.3")
+                            .padding(8)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                    }
                 }
                 .padding(12)
+            }
+            .overlay(alignment: .bottom) {
+                if showDiagnostics {
+                    RunPlayerDiagnosticsOverlay(player: player)
+                }
             }
 
             if showControls {

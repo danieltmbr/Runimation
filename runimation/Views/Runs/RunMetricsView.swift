@@ -2,9 +2,9 @@ import Charts
 import SwiftUI
 
 struct RunMetricsView: View {
-    let engine: PlaybackEngine
+    let player: RunPlayer
 
-    private var runData: RunData { engine.runData }
+    private var run: Run? { player.runs?.run(for: .metrics) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -17,7 +17,7 @@ struct RunMetricsView: View {
                 }
                 .padding()
             }
-            PlaybackControlsView(engine: engine)
+            RunPlayerControlsView(player: player)
         }
     }
 
@@ -35,7 +35,7 @@ struct RunMetricsView: View {
             }
             GridRow {
                 summaryCell("Avg HR", value: formattedAvgHR, unit: "bpm")
-                summaryCell("Max Speed", value: String(format: "%.1f", runData.maxSpeed * 3.6), unit: "km/h")
+                summaryCell("Max Speed", value: String(format: "%.1f", (run?.spectrum.speed.upperBound ?? 0) * 3.6), unit: "km/h")
             }
         }
         .padding(12)
@@ -78,50 +78,45 @@ struct RunMetricsView: View {
     }
 
     private var playheadMinutes: Double {
-        engine.progress * runData.totalDuration / 60.0
+        player.progress * (run?.duration ?? 0) / 60.0
+    }
+
+    private var totalDurationMinutes: Double {
+        (run?.duration ?? 0) / 60.0
     }
 
     private var paceChart: some View {
-        let segments = paceSegments
-
-        // Pace domain from actual running samples (speed > 1.0 m/s).
-        let runningSpeeds = runData.samples.filter { $0.speed > 1.0 }.map { $0.speed }
-        let maxSpeed = runningSpeeds.max() ?? 3.0
-        let minSpeed = runningSpeeds.min() ?? 1.5
-        let fastestPace = 1000.0 / (maxSpeed * 60.0) // min/km, numerically smallest
-        let slowestPace = 1000.0 / (minSpeed * 60.0) // min/km, numerically largest
+        let movingSegments = chartSegments.filter { $0.speed > 1.0 }
+        // Derive pace domain from the moving segments we'll actually plot.
+        let speeds = movingSegments.map { $0.speed }
+        let maxSpeed = speeds.max() ?? run?.spectrum.speed.upperBound ?? 3.0
+        let minSpeed = speeds.min() ?? 1.5
+        let fastestPace = 1000.0 / (maxSpeed * 60.0)
+        let slowestPace  = 1000.0 / (minSpeed * 60.0)
         let margin = (slowestPace - fastestPace) * 0.05
-        // Values are negated on the chart, so fast (small pace) → least-negative (top).
+        // Negate so faster pace (lower min/km) plots higher on the chart.
         let domainCeil  = -(fastestPace - margin)
         let domainFloor = -(slowestPace + margin)
 
         return Chart {
-            // Use LineMark with per-segment series so the line breaks across pauses.
-            // AreaMark can't break series, so pace is line-only.
-            ForEach(Array(segments.enumerated()), id: \.offset) { segIdx, segment in
-                ForEach(segment, id: \.self) { i in
-                    let s = runData.samples[i]
-                    // Negate pace so faster (lower min/km) plots higher on the chart.
-                    let pace = -(1000.0 / (s.speed * 60.0))
-                    LineMark(
-                        x: .value("min", s.timeOffset / 60.0),
-                        y: .value("min/km", pace),
-                        series: .value("Seg", segIdx)
-                    )
-                    .foregroundStyle(.blue)
-                }
+            ForEach(Array(movingSegments.enumerated()), id: \.offset) { _, segment in
+                LineMark(
+                    x: .value("min", minutes(of: segment)),
+                    y: .value("min/km", -(1000.0 / (segment.speed * 60.0)))
+                )
+                .foregroundStyle(.blue)
+                .interpolationMethod(.catmullRom)
             }
             RuleMark(x: .value("Now", playheadMinutes))
                 .foregroundStyle(.primary.opacity(0.5))
                 .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
         }
-        .chartXScale(domain: 0...(runData.totalDuration / 60.0))
+        .chartXScale(domain: 0...max(totalDurationMinutes, 1))
         .chartYScale(domain: domainFloor...domainCeil)
         .chartXAxis(.hidden)
         .chartYAxis {
             AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
                 if let negPace = value.as(Double.self) {
-                    // Values are negated, so flip back to get the real pace for display.
                     let total = Int(-negPace * 60)
                     AxisValueLabel {
                         Text(String(format: "%d:%02d", total / 60, total % 60))
@@ -133,50 +128,30 @@ struct RunMetricsView: View {
         }
     }
 
-    /// Samples grouped into continuous running segments.
-    /// A new segment starts when there is a >60 s gap (pause/walk) or speed drops
-    /// below 1.0 m/s (~16 min/km). This prevents LineMark from connecting across pauses.
-    private var paceSegments: [[Int]] {
-        let moving = sampledIndices.filter { runData.samples[$0].speed > 1.0 }
-        var segments: [[Int]] = []
-        var current: [Int] = []
-        var prevTime: Double = -.infinity
-        for idx in moving {
-            let t = runData.samples[idx].timeOffset
-            if t - prevTime > 60, !current.isEmpty {
-                segments.append(current)
-                current = []
-            }
-            current.append(idx)
-            prevTime = t
-        }
-        if !current.isEmpty { segments.append(current) }
-        return segments
-    }
-
     private var elevationChart: some View {
-        let domainFloor = runData.minElevation - 5
-        let domainCeil  = runData.maxElevation + 5
+        let domainFloor = (run?.spectrum.elevation.lowerBound ?? 0) - 5
+        let domainCeil  = (run?.spectrum.elevation.upperBound ?? 100) + 5
+
         return Chart {
-            ForEach(sampledIndices, id: \.self) { i in
-                let s = runData.samples[i]
+            ForEach(Array(chartSegments.enumerated()), id: \.offset) { _, segment in
                 AreaMark(
-                    x: .value("min", s.timeOffset / 60.0),
+                    x: .value("min", minutes(of: segment)),
                     yStart: .value("m", domainFloor),
-                    yEnd: .value("m", s.elevation)
+                    yEnd: .value("m", segment.elevation)
                 )
                 .foregroundStyle(.green.opacity(0.2))
                 LineMark(
-                    x: .value("min", s.timeOffset / 60.0),
-                    y: .value("m", s.elevation)
+                    x: .value("min", minutes(of: segment)),
+                    y: .value("m", segment.elevation)
                 )
                 .foregroundStyle(.green)
+                .interpolationMethod(.catmullRom)
             }
             RuleMark(x: .value("Now", playheadMinutes))
                 .foregroundStyle(.primary.opacity(0.5))
                 .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
         }
-        .chartXScale(domain: 0...(runData.totalDuration / 60.0))
+        .chartXScale(domain: 0...max(totalDurationMinutes, 1))
         .chartYScale(domain: domainFloor...domainCeil)
         .chartXAxis(.hidden)
         .chartYAxis {
@@ -193,30 +168,30 @@ struct RunMetricsView: View {
     }
 
     private var heartRateChart: some View {
-        let hrIndices = sampledIndices.filter { runData.samples[$0].heartRate > 0 }
-        let domainFloor = runData.minHeartRate - 10
+        let hrSegments = chartSegments.filter { $0.heartRate > 0 }
+        let domainFloor = (run?.spectrum.heartRate.lowerBound ?? 60) - 10
+        let domainCeil  = (run?.spectrum.heartRate.upperBound ?? 180) + 10
+
         return Chart {
-            ForEach(hrIndices, id: \.self) { i in
-                let s = runData.samples[i]
-                // yStart = domain floor so the fill uses the full chart height,
-                // not y=0 which would push all the data into a thin top sliver.
+            ForEach(Array(hrSegments.enumerated()), id: \.offset) { _, segment in
                 AreaMark(
-                    x: .value("min", s.timeOffset / 60.0),
+                    x: .value("min", minutes(of: segment)),
                     yStart: .value("bpm", domainFloor),
-                    yEnd: .value("bpm", s.heartRate)
+                    yEnd: .value("bpm", segment.heartRate)
                 )
                 .foregroundStyle(.red.opacity(0.2))
                 LineMark(
-                    x: .value("min", s.timeOffset / 60.0),
-                    y: .value("bpm", s.heartRate)
+                    x: .value("min", minutes(of: segment)),
+                    y: .value("bpm", segment.heartRate)
                 )
                 .foregroundStyle(.red)
+                .interpolationMethod(.catmullRom)
             }
             RuleMark(x: .value("Now", playheadMinutes))
                 .foregroundStyle(.primary.opacity(0.5))
                 .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
         }
-        .chartXScale(domain: 0...(runData.totalDuration / 60.0))
+        .chartXScale(domain: 0...max(totalDurationMinutes, 1))
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: 5)) {
                 AxisValueLabel(format: FloatingPointFormatStyle<Double>.number.precision(.fractionLength(0)))
@@ -225,7 +200,7 @@ struct RunMetricsView: View {
             }
         }
         .chartXAxisLabel("minutes", alignment: .trailing)
-        .chartYScale(domain: (runData.minHeartRate - 10)...(runData.maxHeartRate + 10))
+        .chartYScale(domain: domainFloor...domainCeil)
         .chartYAxis {
             AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
                 if let v = value.as(Double.self) {
@@ -241,42 +216,39 @@ struct RunMetricsView: View {
 
     // MARK: - Data helpers
 
-    /// Downsampled index list — at most 500 points per chart for performance.
-    private var sampledIndices: [Int] {
-        let step = max(1, runData.samples.count / 500)
-        return Array(Swift.stride(from: 0, to: runData.samples.count, by: step))
+    /// Downsampled segments — at most 500 points per chart for performance.
+    private var chartSegments: [Run.Segment] {
+        let segs = run?.segments ?? []
+        let step = max(1, segs.count / 500)
+        return stride(from: 0, to: segs.count, by: step).map { segs[$0] }
+    }
+
+    private func minutes(of segment: Run.Segment) -> Double {
+        guard let origin = run?.segments.first?.time.start else { return 0 }
+        return segment.time.start.timeIntervalSince(origin) / 60.0
     }
 
     // MARK: - Computed stats
 
-    private var totalDistanceKm: Double {
-        let s = runData.samples
-        var dist = 0.0
-        for i in 1..<s.count {
-            dist += s[i - 1].speed * (s[i].timeOffset - s[i - 1].timeOffset)
-        }
-        return dist / 1000.0
-    }
+    private var totalDistanceKm: Double { (run?.distance ?? 0) / 1000.0 }
 
     private var totalElevationGain: Double {
-        let s = runData.samples
-        var gain = 0.0
-        for i in 1..<s.count {
-            let delta = s[i].elevation - s[i - 1].elevation
-            if delta > 0 { gain += delta }
+        let segs = run?.segments ?? []
+        return zip(segs, segs.dropFirst()).reduce(0) { total, pair in
+            let delta = pair.1.elevation - pair.0.elevation
+            return delta > 0 ? total + delta : total
         }
-        return gain
     }
 
     private var avgHeartRate: Double {
-        let values = runData.samples.compactMap { $0.heartRate > 0 ? $0.heartRate : nil }
+        let values = (run?.segments ?? []).compactMap { $0.heartRate > 0 ? $0.heartRate : nil }
         return values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count)
     }
 
     private var formattedDistance: String { String(format: "%.2f", totalDistanceKm) }
 
     private var formattedDuration: String {
-        let total = Int(runData.totalDuration)
+        let total = Int(run?.duration ?? 0)
         let h = total / 3600
         let m = (total % 3600) / 60
         let s = total % 60
@@ -286,8 +258,8 @@ struct RunMetricsView: View {
     }
 
     private var formattedAvgPace: String {
-        guard totalDistanceKm > 0 else { return "--:--" }
-        let secsPerKm = runData.totalDuration / totalDistanceKm
+        guard totalDistanceKm > 0, let duration = run?.duration else { return "--:--" }
+        let secsPerKm = duration / totalDistanceKm
         return String(format: "%d:%02d", Int(secsPerKm) / 60, Int(secsPerKm) % 60)
     }
 

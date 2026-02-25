@@ -21,7 +21,13 @@ struct RunPlayerControlsView: View {
                 }
                 .buttonStyle(.bordered)
 
-                ProgressView(value: player.progress)
+                Slider(
+                    value: Binding(
+                        get: { player.progress },
+                        set: { player.seek(to: $0) }
+                    ),
+                    in: 0...1
+                )
 
                 Button("Stop") { player.stop() }
                     .buttonStyle(.bordered)

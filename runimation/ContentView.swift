@@ -1,27 +1,19 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var engine: PlaybackEngine?
     @State private var player: RunPlayer?
 
     var body: some View {
         TabView {
             TabSection("Runs") {
                 Tab("Metrics", systemImage: "chart.xyaxis.line") {
-                    if let engine {
-                        RunMetricsView(engine: engine)
+                    if let player {
+                        RunMetricsView(player: player)
                     } else {
                         ProgressView("Loading run data...")
                     }
                 }
                 Tab("Visualisation", systemImage: "sparkles") {
-                    if let engine {
-                        RunView(engine: engine)
-                    } else {
-                        ProgressView("Loading run data...")
-                    }
-                }
-                Tab("Player", systemImage: "play.circle") {
                     if let player {
                         RunPlayerView(player: player)
                     } else {
@@ -43,26 +35,6 @@ struct ContentView: View {
             }
         }
         .tabViewStyle(.sidebarAdaptable)
-        // Drives engine.update() regardless of which tab is visible.
-        .background {
-            if let engine {
-                TimelineView(.animation(paused: !engine.isPlaying)) { timeline in
-                    Color.clear
-                        .onChange(of: timeline.date) { _, date in
-                            engine.update(now: date)
-                        }
-                }
-            }
-        }
-        .task {
-            if engine == nil {
-                engine = await Task.detached {
-                    let parser = GPX.Parser()
-                    guard let track = parser.parse(fileNamed: "run-01").first else { return nil }
-                    return PlaybackEngine(runData: RunData(track: track))
-                }.value
-            }
-        }
         .task {
             if player == nil {
                 player = await Task.detached {
