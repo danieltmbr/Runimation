@@ -1,0 +1,25 @@
+import Foundation
+
+/// Maps a `Run`'s elevation data for chart display.
+///
+/// The Y domain adds a 5 m margin above and below the run's elevation spectrum
+/// so the line never sits flush against the chart edges.
+///
+struct ElevationChartMapper: RunChartMapper {
+
+    func map(run: Run, progress: Double) -> RunChart.Data {
+        let origin = run.segments.first?.time.start ?? Date()
+        let sampled = downsample(run.segments)
+        return RunChart.Data(
+            points: sampled.map { .init(x: minutes(of: $0, origin: origin), y: $0.elevation) },
+            xDomain: 0...totalDurationMinutes(run),
+            yDomain: (run.spectrum.elevation.lowerBound - 5)...(run.spectrum.elevation.upperBound + 5),
+            playheadX: playheadMinutes(progress: progress, run: run),
+            yAxisFormatter: .number.precision(.fractionLength(0))
+        )
+    }
+}
+
+extension RunChartMapper where Self == ElevationChartMapper {
+    static var elevation: ElevationChartMapper { .init() }
+}

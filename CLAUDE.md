@@ -40,6 +40,10 @@ Map run data to shader parameters:
 ### Image processing
 Allow to get a photo from library and extract main color components that will color the warping.
 
+## Coding Conventions
+
+- **Break complex functions into smaller, named helpers.** Each function should have a single clear responsibility. If a function needs a comment to explain a section, that section is a candidate for its own private helper.
+
 ## Key References
 - [Domain Warping](https://iquilezles.org/articles/warp/)
 - [fBM](https://iquilezles.org/articles/fbm/)
