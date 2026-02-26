@@ -190,7 +190,7 @@ private struct RunPlayerStatsOverlay: View {
         .font(.caption)
         .monospacedDigit()
         .padding(8)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+//        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
         .padding(12)
     }
 
