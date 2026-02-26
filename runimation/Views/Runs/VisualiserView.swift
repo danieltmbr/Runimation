@@ -19,10 +19,10 @@ struct VisualiserView: View {
     var octaves: Binding<Double>
 
     @State
-    private var scale: Float = 0.02
+    private var scale: Float = 0.007
 
     @State
-    private var baseScale: Float = 0.005
+    private var baseScale: Float = 0.007
 
     @State
     private var offset: SIMD2<Float> = .zero
@@ -38,10 +38,12 @@ struct VisualiserView: View {
         let segment  = animationSegment
         let animTime = Float(progress * animationDuration)
         let speed    = Float(segment?.speed ?? 0)
+        let scale    = self.scale
         let hr       = Float(segment?.heartRate ?? 0.5)
         let dx       = Float(segment?.direction.x ?? 0)
         let dy       = Float(segment?.direction.y ?? 0)
         let h        = shaderH(elevation: segment?.elevation ?? 0.5)
+        let offset   = self.offset
 
         Rectangle()
             .visualEffect { content, _ in
@@ -75,7 +77,7 @@ struct VisualiserView: View {
     /// Using the playback duration so a 15s run and a real-time run both animate at the
     /// same visual speed.
     private var animationDuration: Double {
-        guard let run = runs?.run(for: .metrics) else { return 15 }
+        guard let run = runs?.run(for: .metrics) else { return 0 }
         return duration(for: run.duration)
     }
 
@@ -91,7 +93,7 @@ struct VisualiserView: View {
             .onChanged { value in
                 let px = Float(value.startLocation.x)
                 let py = Float(value.startLocation.y)
-                let newScale = clamp(baseScale / Float(value.magnification), min: 0.001, max: 0.05)
+                let newScale = clamp(baseScale / Float(value.magnification), min: 0.0005, max: 0.025)
                 // Keep the noise coordinate under the pinch fixed:
                 // noiseX = px * baseScale + baseOffset.x = px * newScale + newOffset.x
                 offset = SIMD2(
