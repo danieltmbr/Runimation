@@ -35,7 +35,6 @@ struct RunMetricsView: View {
                 }
                 .padding()
             }
-            RunPlayerControlsView()
         }
     }
 

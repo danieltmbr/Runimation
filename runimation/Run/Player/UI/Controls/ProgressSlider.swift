@@ -8,15 +8,18 @@ import SwiftUI
 /// Requires `RunPlayer` in the environment via `.player(_:)`.
 ///
 struct ProgressSlider: View {
+    
+    @Environment(\.seek)
+    private var seek
 
     @PlayerState(\.progress)
     private var progress
 
-    @Environment(\.seek)
-    private var seek
-
-    @State private var isEditing = false
-    @State private var localValue: Double = 0
+    @State
+    private var isEditing = false
+    
+    @State
+    private var localValue: Double = 0
 
     var body: some View {
         Slider(value: $localValue, in: 0...1) { editing in

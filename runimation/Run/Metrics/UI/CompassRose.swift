@@ -27,7 +27,7 @@ struct CompassRose: View {
     private func drawRing(in context: inout GraphicsContext, cx: CGFloat, cy: CGFloat, radius: CGFloat) {
         context.stroke(
             Path(ellipseIn: CGRect(x: cx - radius, y: cy - radius, width: radius * 2, height: radius * 2)),
-            with: .color(.white.opacity(0.25)),
+            with: .color(.secondary),
             lineWidth: 1
         )
     }
@@ -39,7 +39,7 @@ struct CompassRose: View {
             var tick = Path()
             tick.move(to:    CGPoint(x: cx + inner  * sin(angle), y: cy - inner  * cos(angle)))
             tick.addLine(to: CGPoint(x: cx + radius * sin(angle), y: cy - radius * cos(angle)))
-            context.stroke(tick, with: .color(.white.opacity(0.4)), lineWidth: 1)
+            context.stroke(tick, with: .color(.secondary), lineWidth: 1)
         }
     }
 
@@ -49,7 +49,7 @@ struct CompassRose: View {
             context.draw(
                 Text(text)
                     .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.45)),
+                    .foregroundStyle(.primary),
                 at: CGPoint(x: cx + dx * dist, y: cy + dy * dist)
             )
         }
@@ -71,7 +71,7 @@ struct CompassRose: View {
         let magnitude = sqrt(dirX * dirX + dirY * dirY)
 
         guard magnitude > 0.05 else {
-            context.fill(Path(ellipseIn: dotRect), with: .color(.white.opacity(0.35)))
+            context.fill(Path(ellipseIn: dotRect), with: .color(.secondary))
             return
         }
 
@@ -80,7 +80,7 @@ struct CompassRose: View {
         let sDY = -dirY
         drawArrowShaft(sDX: sDX, sDY: sDY, magnitude: magnitude, in: &context, cx: cx, cy: cy, radius: radius)
         drawArrowHead(sDX: sDX, sDY: sDY, magnitude: magnitude, in: &context, cx: cx, cy: cy, radius: radius)
-        context.fill(Path(ellipseIn: dotRect), with: .color(.white.opacity(0.6)))
+        context.fill(Path(ellipseIn: dotRect), with: .color(.secondary))
     }
 
     private func drawArrowShaft(
@@ -92,7 +92,7 @@ struct CompassRose: View {
         var shaft = Path()
         shaft.move(to:    CGPoint(x: cx - sDX * arrowLen * 0.2, y: cy - sDY * arrowLen * 0.2))
         shaft.addLine(to: CGPoint(x: cx + sDX * arrowLen,       y: cy + sDY * arrowLen))
-        context.stroke(shaft, with: .color(.white), lineWidth: 2.5)
+        context.stroke(shaft, with: .color(.accentColor), lineWidth: 2.5)
     }
 
     private func drawArrowHead(
@@ -112,7 +112,7 @@ struct CompassRose: View {
         wings.move(to: tip)
         wings.addLine(to: CGPoint(x: tip.x - headLen * cos(angle + spread),
                                   y: tip.y - headLen * sin(angle + spread)))
-        context.stroke(wings, with: .color(.white), lineWidth: 2)
+        context.stroke(wings, with: .color(.accentColor), lineWidth: 2)
     }
 
     private func centredDotRect(cx: CGFloat, cy: CGFloat, radius: CGFloat) -> CGRect {

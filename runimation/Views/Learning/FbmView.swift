@@ -63,7 +63,6 @@ struct FbmView: View {
                 }
             }
             .padding()
-            .background(.ultraThinMaterial)
         }
         .onAppear {
             // Optional: animate time for dynamic effects
