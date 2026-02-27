@@ -65,7 +65,7 @@ final class RunPlayer {
 
     private var transformer: RunTransformer
 
-    var interpolator: RunInterpolator = LinearRunInterpolator() {
+    var interpolatorOption: RunInterpolatorOption = .linear {
         didSet { recompute(run: runs?.original) }
     }
 
@@ -172,6 +172,13 @@ final class RunPlayer {
         recompute(run: runs?.original)
     }
 
+    /// Swaps the active interpolator and recomputes all run variants
+    /// without stopping the current playback.
+    ///
+    func setInterpolator(_ option: RunInterpolatorOption) {
+        interpolatorOption = option
+    }
+
     // MARK: - Private
     
     private func advance(by dt: TimeInterval) {
@@ -197,7 +204,7 @@ final class RunPlayer {
         let timing = Timing(duration: playbackDuration, fps: 60)
         let transformed = run
             .transform(by: transformer)
-            .interpolate(by: interpolator, with: timing)
+            .interpolate(by: interpolatorOption.interpolator, with: timing)
         runs = Runs(
             original: run,
             transformed: transformed,

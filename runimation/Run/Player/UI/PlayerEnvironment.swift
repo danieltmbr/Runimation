@@ -18,6 +18,9 @@ extension EnvironmentValues {
     
     @Entry
     var setTransformer: SetTransformerAction = SetTransformerAction()
+
+    @Entry
+    var setInterpolator: SetInterpolatorAction = SetInterpolatorAction()
 }
 
 // MARK: - View Extension
@@ -41,5 +44,6 @@ extension View {
             .environment(\.seek, SeekAction(player: player))
             .environment(\.loadRun, LoadRunAction(player: player))
             .environment(\.setTransformer, SetTransformerAction(player: player))
+            .environment(\.setInterpolator, SetInterpolatorAction(player: player))
     }
 }

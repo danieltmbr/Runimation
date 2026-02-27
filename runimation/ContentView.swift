@@ -70,7 +70,7 @@ struct ContentView: View {
                     guard let track = gpxParser.parse(fileNamed: "run-01").first else { return nil }
                     let p = await RunPlayer(
                         parser: Run.Parser(),
-                        transformer: TransformerChain.guassian.speedWeighted
+                        transformer: TransformerChain.guassian.speedWeighted.sparsed
                     )
                     p.setRun(track)
                     return p
