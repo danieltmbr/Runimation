@@ -21,7 +21,7 @@ struct VisualiserView: View {
     var showInspector: Bool
 
     @State
-    private var selectedPanel: PlayerPanel = .stats
+    private var selectedPanel: InspectorFocus = .stats
 
     @State
     private var baseH: Double = 0.5
@@ -94,22 +94,8 @@ struct VisualiserView: View {
             .toolbar {
 #if os(macOS)
                 ToolbarItem(placement: .principal) {
-                    HStack(spacing: 8) {
-                        RewindButton()
-                            .labelStyle(.iconOnly)
-                        PlayToggle()
-                            .labelStyle(.iconOnly)
-                        LoopToggle()
-                            .labelStyle(.iconOnly)
-                        Divider().frame(height: 16)
-                        Text(elapsedLabel)
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                        ProgressSlider()
-                            .frame(width: 160)
-                        DurationMenu()
-                    }
-                    .foregroundStyle(.primary)
+                    PlaybackControls()
+                        .playbackControlsStyle(.toolbar)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button { showInspector.toggle() } label: {
@@ -133,19 +119,6 @@ struct VisualiserView: View {
     private func shaderH(elevation: Double) -> Float {
         let elevationOffset = (1.0 - elevation - 0.5) * 0.3
         return Float(max(0, min(1, baseH + elevationOffset)))
-    }
-
-    private var elapsedLabel: String {
-        guard let run = runs?.run(for: .metrics) else { return "0:00" }
-        let elapsed = progress * duration(for: run.duration)
-        let total = Int(elapsed)
-        let h = total / 3600
-        let m = (total % 3600) / 60
-        let s = total % 60
-        if h > 0 {
-            return String(format: "%d:%02d:%02d", h, m, s)
-        }
-        return String(format: "%d:%02d", m, s)
     }
 
     // MARK: - Gestures

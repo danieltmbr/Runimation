@@ -14,18 +14,9 @@ import SwiftUI
 ///
 struct PlayerSheetView: View {
 
-    @Binding var selectedPanel: PlayerPanel
+    @Binding var selectedPanel: InspectorFocus
     @Binding var baseH: Double
     @Binding var octaves: Double
-
-    @PlayerState(\.runs)
-    private var runs
-
-    @PlayerState(\.progress)
-    private var progress
-
-    @PlayerState(\.duration)
-    private var duration
 
     var body: some View {
         VStack(spacing: 0) {
@@ -55,33 +46,8 @@ struct PlayerSheetView: View {
         VStack(spacing: 20) {
             Divider()
 
-            // Progress slider with elapsed time and duration picker
-            HStack(spacing: 8) {
-                Text(elapsedLabel)
-                    .font(.caption.monospacedDigit())
-                ProgressSlider()
-                    .sliderThumbVisibility(.automatic)
-                DurationMenu()
-            }
-            .padding(.horizontal)
-
-            // Playback buttons: Spacer | Rewind | Spacer | Play(big) | Spacer | Loop | Spacer
-            HStack {
-                Spacer()
-                RewindButton()
-                    .labelStyle(.iconOnly)
-                    .font(.system(size: 26, weight: .semibold))
-                Spacer()
-                PlayToggle()
-                    .labelStyle(.iconOnly)
-                    .font(.system(size: 46))
-                Spacer()
-                LoopToggle()
-                    .labelStyle(.iconOnly)
-                    .font(.system(size: 26, weight: .semibold))
-                Spacer()
-            }
-            .foregroundStyle(.primary)
+            PlaybackControls()
+                .playbackControlsStyle(.regular)
 
             // Panel toggle buttons (diagnostics left, parameters right)
             HStack {
@@ -95,9 +61,9 @@ struct PlayerSheetView: View {
         .padding(.top, 4)
     }
 
-    // MARK: - Helpers
+    // MARK: - Panel Toggle
 
-    private func panelToggleButton(panel: PlayerPanel, icon: String) -> some View {
+    private func panelToggleButton(panel: InspectorFocus, icon: String) -> some View {
         let isActive = selectedPanel == panel
         return Button {
             selectedPanel = isActive ? .stats : panel
@@ -111,18 +77,6 @@ struct PlayerSheetView: View {
         .buttonStyle(.plain)
     }
 
-    private var elapsedLabel: String {
-        guard let run = runs?.run(for: .metrics) else { return "0:00" }
-        let elapsed = progress * duration(for: run.duration)
-        let total = Int(elapsed)
-        let h = total / 3600
-        let m = (total % 3600) / 60
-        let s = total % 60
-        if h > 0 {
-            return String(format: "%d:%02d:%02d", h, m, s)
-        }
-        return String(format: "%d:%02d", m, s)
-    }
 }
 
 #endif

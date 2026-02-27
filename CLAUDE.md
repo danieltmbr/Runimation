@@ -5,8 +5,23 @@
 
 # Runimation
 
+## Coding Conventions
+
+- **Break complex functions into smaller, named helpers.** Each function should have a single clear responsibility. If a function needs a comment to explain a section, that section is a candidate for its own private helper.
+- **Think systematically in small composable bits of implementations.** When you find yourself implementing repeating patterns, make them a composable component instead of a private method burried deep inside a feature. This is true for UI as well as functional components like the `RunTransformer`.
+- **Don't fight the system, follow its conventions.** 
+    - For UI follow Apple's SwiftUI conventions.
+        - Inject data/binding thorugh the intialiser (or complex view models via Environment).
+        - Inject sytling or layout specific customisations via view modifiers.
+    - For others follow Apple Foundation conventions. For example don't declare new formatting interface, implement a FormatStyle if possible. 
+- **Identify components based on functionality rahter than look.** Functionally identical views that have different layouts can be implemented with a shared view API but different layout style implementation. Just like how SwiftUI Picker has so many different style implementation: https://developer.apple.com/documentation/swiftui/pickerstyle Read thorugh `/.claude/docs/SwiftUI-Architecture-Proposal.pdf` and `/.claude/docs/SwiftUI-Architecture-CaseStudy.pdf` to see how to implement them.  
+- **Add header comments** to implementations. Especially to reusable components.
+- **Read documentations.** When learning about new APIs or design, the main source of information should be the official documentation.
+
 ## Project Overview
-An interactive SwiftUI + Metal shader app implementing Inigo Quilez's **domain warping** technique. The long-term goal is to feed **Strava GPX run data** into animation parameters to create fluid, organic visuals that respond to running data.
+The main purpose of this project is simply to learn computer graphics programming in Metal in a fun way.
+Learning mainly happens by implementing shader techniques from Inigo Quilez's site. 
+To make it even more personal I use Strava GPX run data to feed into animation parameters to create fluid, organic visuals that respond to running metrics.
 
 ## Tech Stack
 - **Language:** Swift 5.0
@@ -15,36 +30,8 @@ An interactive SwiftUI + Metal shader app implementing Inigo Quilez's **domain w
 - **Build:** Xcode 16+ (no SPM, no external dependencies)
 - **Targets:** iOS/iPadOS/macOS 26.2
 
-## Key Concepts Implemented
-- **Value noise** with quintic polynomial smoothing (C² continuity at cell boundaries)
-- **Analytical derivatives** via chain rule (noised returns `float3(value, dx, dy)`)
-- **fBM** with configurable octaves and H (roughness) parameter, rotation matrix between octaves to break grid alignment
-- **Domain warping** — two layers of fBM displacement creating fluid-like visuals
-- **Cosine color palettes** (Inigo's `a + b * cos(2π(c*t + d))` technique)
-- **Warp-magnitude coloring** — color driven by displacement amount, with Manhattan distance edge detection
-
-## Roadmap
-
-### Warp fine tuning
-1. **Inigo's organic animation** — opposing time directions for inner/outer warps, position-dependent ripples (`sin(freq * time + length(q) * 4.0)`)
-2. **Detuned fBM** with rotation matrix between octaves (2.02x frequency instead of 2.0x)
-3. **Inigo's lighting approach** — finite difference normals, Laplacian edge detection, diffuse + ambient lighting
-
-### Strava GPX Integration
-Map run data to shader parameters:
-- **Speed** → warp strength / turbulence
-- **Elevation change** → H parameter (roughness)
-- **Direction changes** → rotation/offset of noise domain
-- **Distance along route** → time/animation offset
-
-### Image processing
-Allow to get a photo from library and extract main color components that will color the warping.
-
-## Coding Conventions
-
-- **Break complex functions into smaller, named helpers.** Each function should have a single clear responsibility. If a function needs a comment to explain a section, that section is a candidate for its own private helper.
-
 ## Key References
+- [Inigo Quilez's site](https://iquilezles.org/)
 - [Domain Warping](https://iquilezles.org/articles/warp/)
 - [fBM](https://iquilezles.org/articles/fbm/)
 - [Noise Derivatives](https://iquilezles.org/articles/morenoise/)

@@ -11,7 +11,7 @@ import SwiftUI
 ///
 struct PlayerInspectorView: View {
 
-    @Binding var selectedPanel: PlayerPanel
+    @Binding var selectedPanel: InspectorFocus
     @Binding var baseH: Double
     @Binding var octaves: Double
 
@@ -19,13 +19,13 @@ struct PlayerInspectorView: View {
         VStack(spacing: 0) {
             Picker("", selection: $selectedPanel) {
                 Image(systemName: "chart.bar")
-                    .tag(PlayerPanel.stats)
+                    .tag(InspectorFocus.stats)
                 
                 Image(systemName: "waveform.path.ecg")
-                    .tag(PlayerPanel.diagnostics)
+                    .tag(InspectorFocus.diagnostics)
                 
                 Image(systemName: "slider.horizontal.3")
-                    .tag(PlayerPanel.parameters)
+                    .tag(InspectorFocus.parameters)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)

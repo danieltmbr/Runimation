@@ -1,21 +1,20 @@
 import SwiftUI
 
-/// The compact player controls shown as a tab bar accessory across all tabs.
+/// Minimal playback controls for the tab bar accessory on iOS.
 ///
-/// Displays Rewind, Play/Pause, and Loop buttons. A very subtle translucent fill
-/// creeps across the background from leading to trailing as the animation plays,
-/// giving a low-key sense of progress without a separate UI element.
-/// Tapping anywhere outside the three buttons opens the full player sheet.
+/// Displays Rewind, Play/Pause, and Loop as small icons with equal spacing.
+/// A translucent `PlayerProgressBar` creeps across the background from leading
+/// to trailing as the animation plays, giving a low-key sense of progress.
 ///
-/// Requires `RunPlayer` in the environment via `.player(_:)`.
-///
-struct PlayerControlsView: View {
+struct CompactPlaybackControlsStyle: PlaybackControlsStyle {
+    func makeBody() -> some View {
+        CompactPlaybackControls()
+    }
+}
 
-    @Binding var showInspector: Bool
+// MARK: - Layout
 
-    @PlayerState(\.progress)
-    private var progress
-
+private struct CompactPlaybackControls: View {
     var body: some View {
         HStack {
             Spacer()
@@ -42,6 +41,5 @@ struct PlayerControlsView: View {
                 .allowsHitTesting(false)
         }
         .contentShape(Rectangle())
-        .onTapGesture { showInspector.toggle() }
     }
 }

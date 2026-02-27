@@ -55,7 +55,9 @@ struct ContentView: View {
 #if os(iOS)
         .tabViewBottomAccessory(isEnabled: selectedTab == "visualiser" && player != nil) {
             if let player {
-                PlayerControlsView(showInspector: $showInspector)
+                PlaybackControls()
+                    .playbackControlsStyle(.compact)
+                    .onTapGesture { showInspector.toggle() }
                     .player(player)
             }
         }
