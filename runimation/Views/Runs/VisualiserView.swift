@@ -2,7 +2,7 @@ import SwiftUI
 
 struct VisualiserView: View {
 
-    @PlayerState(\.segments.animation)
+    @PlayerState(\.segment.animation)
     private var animationSegment
 
     @PlayerState(\.progress)
@@ -14,9 +14,20 @@ struct VisualiserView: View {
     @PlayerState(\.duration)
     private var duration
 
-    var baseH: Binding<Double>
+    @Environment(RunPlayer.self)
+    private var player
+
+    @Binding
+    var showPlayerSheet: Bool
     
-    var octaves: Binding<Double>
+    @State
+    private var selectedPanel: PlayerPanel? = nil
+    
+    @State
+    private var baseH: Double = 0.5
+    
+    @State
+    private var octaves: Double = 6.0
 
     @State
     private var scale: Float = 0.007
@@ -37,20 +48,21 @@ struct VisualiserView: View {
         // this view on each tick — no TimelineView needed.
         let segment  = animationSegment
         let animTime = Float(progress * animationDuration)
-        let speed    = Float(segment?.speed ?? 0)
+        let speed    = Float(segment.speed)
         let scale    = self.scale
-        let hr       = Float(segment?.heartRate ?? 0.5)
-        let dx       = Float(segment?.direction.x ?? 0)
-        let dy       = Float(segment?.direction.y ?? 0)
-        let h        = shaderH(elevation: segment?.elevation ?? 0.5)
+        let hr       = Float(segment.heartRate)
+        let dx       = Float(segment.direction.x)
+        let dy       = Float(segment.direction.y)
+        let h        = shaderH(elevation: segment.elevation)
         let offset   = self.offset
+        let octaves  = Float(self.octaves)
 
         Rectangle()
             .visualEffect { content, _ in
                 content.colorEffect(
                     ShaderLibrary.runShader(
                         .float(animTime),
-                        .float(Float(octaves.wrappedValue)),
+                        .float(octaves),
                         .float(h),
                         .float(scale),
                         .float(speed),
@@ -69,6 +81,28 @@ struct VisualiserView: View {
 #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
 #endif
+#if os(macOS)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !showPlayerSheet {
+                    HStack {
+                        Spacer(minLength: 0)
+                        PlayerControlsView(showSheet: $showPlayerSheet)
+                            .frame(width: 320)
+                            .glassEffect()
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.vertical, 12)
+                }
+            }
+#endif
+            .sheet(isPresented: $showPlayerSheet) {
+                PlayerSheetView(
+                    baseH: $baseH,
+                    octaves: $octaves,
+                    selectedPanel: $selectedPanel
+                )
+                .player(player)
+            }
     }
 
     // MARK: - Private
@@ -83,7 +117,7 @@ struct VisualiserView: View {
 
     private func shaderH(elevation: Double) -> Float {
         let elevationOffset = (1.0 - elevation - 0.5) * 0.3
-        return Float(max(0, min(1, baseH.wrappedValue + elevationOffset)))
+        return Float(max(0, min(1, baseH + elevationOffset)))
     }
 
     // MARK: - Gestures

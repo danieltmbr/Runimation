@@ -43,6 +43,17 @@ struct Run: Equatable, Sendable {
         /// the segment were sampled
         ///
         let time: DateInterval
+        
+        /// An "empty" segment with all zero values.
+        /// 
+        static let zero = Segment(
+            direction: .zero,
+            elevation: 0,
+            elevationRate: 0,
+            heartRate: 0,
+            speed: 0,
+            time: .init()
+        )
     }
 
     /// [min, max] ranges of the metrics of the run

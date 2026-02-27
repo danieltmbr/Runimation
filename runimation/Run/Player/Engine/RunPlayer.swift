@@ -128,8 +128,8 @@ final class RunPlayer {
     /// Returns the segment corresponding to the current playback
     /// progress for the given reading purpose.
     ///
-    func segment(for purpose: ReadingPurpose) -> Run.Segment? {
-        guard let run = runs?.run(for: purpose) else { return nil }
+    func segment(for purpose: ReadingPurpose) -> Run.Segment {
+        guard let run = runs?.run(for: purpose) else { return .zero }
         return run.segment(at: progress * run.duration)
     }
 
@@ -241,11 +241,11 @@ extension RunPlayer {
             self.player = player
         }
 
-        var animation: Run.Segment? { player.segment(for: .animation) }
+        var animation: Run.Segment { player.segment(for: .animation) }
 
-        var diagnostics: Run.Segment? { player.segment(for: .diagnostics) }
+        var diagnostics: Run.Segment { player.segment(for: .diagnostics) }
 
-        var metrics: Run.Segment? { player.segment(for: .metrics) }
+        var metrics: Run.Segment { player.segment(for: .metrics) }
     }
 
     /// The current playback segments for all reading purposes.
@@ -253,5 +253,5 @@ extension RunPlayer {
     /// Updates on every playback tick because it reads from `progress`
     /// and `runs`, which are both `@Observable` stored properties.
     ///
-    var segments: Segments { Segments(self) }
+    var segment: Segments { Segments(self) }
 }

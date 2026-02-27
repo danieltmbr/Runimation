@@ -7,7 +7,8 @@ import SwiftUI
 ///
 struct CompassRose: View {
 
-    @PlayerState(\.segments.animation) private var segment
+    @PlayerState(\.segment.animation)
+    private var segment
 
     var body: some View {
         Canvas { context, size in
@@ -18,7 +19,7 @@ struct CompassRose: View {
             drawRing(in: &context, cx: cx, cy: cy, radius: radius)
             drawCardinalTicks(in: &context, cx: cx, cy: cy, radius: radius)
             drawCardinalLabels(in: &context, cx: cx, cy: cy, radius: radius)
-            drawDirectionArrow(for: segment?.direction ?? .zero, in: &context, cx: cx, cy: cy, radius: radius)
+            drawDirectionArrow(for: segment.direction, in: &context, cx: cx, cy: cy, radius: radius)
         }
     }
 

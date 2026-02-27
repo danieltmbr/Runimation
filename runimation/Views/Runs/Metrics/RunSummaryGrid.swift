@@ -2,12 +2,7 @@ import SwiftUI
 
 struct RunSummaryGrid: View {
 
-    @PlayerState(\.runs)
-    private var runs
-
-    private var run: Run? {
-        runs?.run(for: .metrics)
-    }
+    let run: Run
 
     var body: some View {
         Grid(horizontalSpacing: 16, verticalSpacing: 12) {
@@ -48,10 +43,10 @@ struct RunSummaryGrid: View {
 
     // MARK: - Computed stats
 
-    private var totalDistanceKm: Double { (run?.distance ?? 0) / 1000.0 }
+    private var totalDistanceKm: Double { run.distance / 1000.0 }
 
     private var totalElevationGain: Double {
-        let segs = run?.segments ?? []
+        let segs = run.segments
         return zip(segs, segs.dropFirst()).reduce(0) { total, pair in
             let delta = pair.1.elevation - pair.0.elevation
             return delta > 0 ? total + delta : total
@@ -59,14 +54,14 @@ struct RunSummaryGrid: View {
     }
 
     private var avgHeartRate: Double {
-        let values = (run?.segments ?? []).compactMap { $0.heartRate > 0 ? $0.heartRate : nil }
+        let values = run.segments.compactMap { $0.heartRate > 0 ? $0.heartRate : nil }
         return values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count)
     }
 
     private var formattedDistance: String { String(format: "%.2f", totalDistanceKm) }
 
     private var formattedDuration: String {
-        let total = Int(run?.duration ?? 0)
+        let total = Int(run.duration)
         let h = total / 3600
         let m = (total % 3600) / 60
         let s = total % 60
@@ -76,8 +71,8 @@ struct RunSummaryGrid: View {
     }
 
     private var formattedAvgPace: String {
-        guard totalDistanceKm > 0, let duration = run?.duration else { return "--:--" }
-        let secsPerKm = duration / totalDistanceKm
+        guard totalDistanceKm > 0 else { return "--:--" }
+        let secsPerKm = run.duration / totalDistanceKm
         return String(format: "%d:%02d", Int(secsPerKm) / 60, Int(secsPerKm) % 60)
     }
 
@@ -86,7 +81,8 @@ struct RunSummaryGrid: View {
     private var formattedAvgHR: String { String(format: "%.0f", avgHeartRate) }
 
     private var formattedBestPace: String {
-        guard let maxSpeed = run?.spectrum.speed.upperBound, maxSpeed > 0 else { return "--:--" }
+        let maxSpeed = run.spectrum.speed.upperBound
+        guard maxSpeed > 0 else { return "--:--" }
         let secsPerKm = 1000.0 / maxSpeed
         return String(format: "%d:%02d", Int(secsPerKm) / 60, Int(secsPerKm) % 60)
     }

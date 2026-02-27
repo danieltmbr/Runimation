@@ -2,39 +2,39 @@ import SwiftUI
 
 struct RunMetricsView: View {
 
-    @PlayerState(\.runs)
-    private var runs
+    let run: Run
 
-    @PlayerState(\.progress)
-    private var progress
-
-    private var run: Run? { runs?.run(for: .metrics) }
+    @State private var scrubProgress: Double = 0
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    RunSummaryGrid()
-                    if let run {
-                        chartSection("Pace", unit: "min/km") {
-                            RunChart(data: run.mapped(by: .pace, progress: progress))
-                        }
-                        chartSection("Elevation", unit: "m") {
-                            RunChart(data: run.mapped(by: .elevation, progress: progress))
-                                .runChartKind(.filled)
-                                .runChartShapeStyle(.green)
-                        }
-                        chartSection("Heart Rate", unit: "bpm") {
-                            RunChart(
-                                data: run.mapped(by: .heartRate, progress: progress)
-                            )
-                            .runChartKind(.filled)
-                            .runChartShapeStyle(.red)
-                        }
-                    }
+        let seg = segment(at: scrubProgress, in: run)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                RunSummaryGrid(run: run)
+                chartSection("Pace", unit: "min/km", value: paceString(speed: seg?.speed)) {
+                    RunChart(
+                        data: run.mapped(by: .pace, progress: scrubProgress),
+                        scrubProgress: $scrubProgress
+                    )
                 }
-                .padding()
+                chartSection("Elevation", unit: "m", value: elevationString(elevation: seg?.elevation)) {
+                    RunChart(
+                        data: run.mapped(by: .elevation, progress: scrubProgress),
+                        scrubProgress: $scrubProgress
+                    )
+                    .runChartKind(.filled)
+                    .runChartShapeStyle(.green)
+                }
+                chartSection("Heart Rate", unit: "bpm", value: heartRateString(heartRate: seg?.heartRate)) {
+                    RunChart(
+                        data: run.mapped(by: .heartRate, progress: scrubProgress),
+                        scrubProgress: $scrubProgress
+                    )
+                    .runChartKind(.filled)
+                    .runChartShapeStyle(.red)
+                }
             }
+            .padding()
         }
     }
 
@@ -42,14 +42,51 @@ struct RunMetricsView: View {
     private func chartSection<C: View>(
         _ title: String,
         unit: String,
+        value: String,
         @ViewBuilder content: () -> C
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("\(title) (\(unit))")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            HStack {
+                Text(title)
+                    .font(.subheadline.weight(.medium))
+                Spacer()
+                Text(value)
+                    .font(.subheadline.monospacedDigit())
+                Text(unit)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             content()
-                .frame(height: 150)
+                .frame(height: 220)
         }
+    }
+
+    // MARK: - Segment lookup
+
+    private func segment(at progress: Double, in run: Run) -> Run.Segment? {
+        guard let origin = run.segments.first?.time.start else { return nil }
+        let targetSeconds = progress * run.duration
+        return run.segments.min {
+            abs($0.time.start.timeIntervalSince(origin) - targetSeconds) <
+            abs($1.time.start.timeIntervalSince(origin) - targetSeconds)
+        }
+    }
+
+    // MARK: - Value formatters
+
+    private func paceString(speed: Double?) -> String {
+        guard let speed, speed > 0.3 else { return "--:--" }
+        let secsPerKm = 1000.0 / speed
+        return String(format: "%d:%02d", Int(secsPerKm) / 60, Int(secsPerKm) % 60)
+    }
+
+    private func elevationString(elevation: Double?) -> String {
+        guard let elevation else { return "--" }
+        return String(format: "%.0f", elevation)
+    }
+
+    private func heartRateString(heartRate: Double?) -> String {
+        guard let heartRate, heartRate > 0 else { return "--" }
+        return String(format: "%.0f", heartRate)
     }
 }

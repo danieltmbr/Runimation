@@ -135,33 +135,31 @@ struct PlayerSheetView: View {
 
 private struct StatsContent: View {
 
-    @PlayerState(\.segments.metrics)
+    @PlayerState(\.segment.metrics)
     private var segment
 
     var body: some View {
-        if let segment {
-            HStack(spacing: 0) {
-                statCell(
-                    label: "PACE",
-                    value: pace(speed: segment.speed),
-                    unit: "min/km"
-                )
-                Divider().frame(height: 56)
-                statCell(
-                    label: "ELEVATION",
-                    value: String(format: "%.0f", segment.elevation),
-                    unit: "m"
-                )
-                Divider().frame(height: 56)
-                statCell(
-                    label: "HR",
-                    value: String(format: "%.0f", segment.heartRate),
-                    unit: "bpm"
-                )
-            }
-            .padding(.vertical, 28)
-            .padding(.horizontal)
+        HStack(spacing: 0) {
+            statCell(
+                label: "PACE",
+                value: pace(speed: segment.speed),
+                unit: "min/km"
+            )
+            Divider().frame(height: 56)
+            statCell(
+                label: "ELEVATION",
+                value: String(format: "%.0f", segment.elevation),
+                unit: "m"
+            )
+            Divider().frame(height: 56)
+            statCell(
+                label: "HR",
+                value: String(format: "%.0f", segment.heartRate),
+                unit: "bpm"
+            )
         }
+        .padding(.vertical, 28)
+        .padding(.horizontal)
     }
 
     private func statCell(label: String, value: String, unit: String) -> some View {

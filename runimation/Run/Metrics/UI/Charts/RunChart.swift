@@ -107,20 +107,26 @@ struct RunChart: View {
     }
 
     // MARK: - Properties
-    
+
     @Environment(\.runChartKind)
     private var kind
-    
+
     @Environment(\.runChartShapeStyle)
     private var shapeStyle
-    
+
     @Environment(\.runChartPlayheadStyle)
     private var playheadStyle
-    
+
     @Environment(\.runChartAxisVisibility)
     private var axisVisibility
 
     let data: Data
+
+    /// When provided, the chart becomes interactive: dragging updates this binding
+    /// with a normalised [0, 1] progress value. The playhead follows the scrub position.
+    var scrubProgress: Binding<Double>? = nil
+
+    @State private var selectionMinutes: Double? = nil
 
     // MARK: - Body
 
@@ -176,6 +182,11 @@ struct RunChart: View {
         }
         .chartXScale(domain: data.xDomain)
         .chartYScale(domain: data.yDomain)
+        .chartXSelection(value: $selectionMinutes)
+        .onChange(of: selectionMinutes) { _, newValue in
+            guard let binding = scrubProgress, let m = newValue else { return }
+            binding.wrappedValue = m / max(data.xDomain.upperBound, 1)
+        }
     }
 
     // MARK: - Marks
