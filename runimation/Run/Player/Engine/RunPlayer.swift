@@ -128,9 +128,16 @@ final class RunPlayer {
     /// Returns the segment corresponding to the current playback
     /// progress for the given reading purpose.
     ///
+    /// Uses direct index lookup — O(1) — into the pre-computed segment
+    /// array rather than interpolating at runtime, so the interpolation
+    /// strategy is fully owned by the `RunInterpolator` implementation.
+    ///
     func segment(for purpose: ReadingPurpose) -> Run.Segment {
         guard let run = runs?.run(for: purpose) else { return .zero }
-        return run.segment(at: progress * run.duration)
+        let segments = run.segments
+        guard !segments.isEmpty else { return .zero }
+        let index = min(Int(progress * Double(segments.count)), segments.count - 1)
+        return segments[index]
     }
 
     // MARK: - Configuration

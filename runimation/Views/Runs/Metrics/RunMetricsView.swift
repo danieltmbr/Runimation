@@ -64,12 +64,10 @@ struct RunMetricsView: View {
     // MARK: - Segment lookup
 
     private func segment(at progress: Double, in run: Run) -> Run.Segment? {
-        guard let origin = run.segments.first?.time.start else { return nil }
-        let targetSeconds = progress * run.duration
-        return run.segments.min {
-            abs($0.time.start.timeIntervalSince(origin) - targetSeconds) <
-            abs($1.time.start.timeIntervalSince(origin) - targetSeconds)
-        }
+        let segments = run.segments
+        guard !segments.isEmpty else { return nil }
+        let index = min(Int(progress * Double(segments.count)), segments.count - 1)
+        return segments[index]
     }
 
     // MARK: - Value formatters
