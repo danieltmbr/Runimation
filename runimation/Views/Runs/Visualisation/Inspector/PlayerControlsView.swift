@@ -11,7 +11,7 @@ import SwiftUI
 ///
 struct PlayerControlsView: View {
 
-    @Binding var showSheet: Bool
+    @Binding var showInspector: Bool
 
     @PlayerState(\.progress)
     private var progress
@@ -42,6 +42,6 @@ struct PlayerControlsView: View {
                 .allowsHitTesting(false)
         }
         .contentShape(Rectangle())
-        .onTapGesture { showSheet = true }
+        .onTapGesture { showInspector.toggle() }
     }
 }

@@ -18,14 +18,14 @@ struct VisualiserView: View {
     private var player
 
     @Binding
-    var showPlayerSheet: Bool
-    
+    var showInspector: Bool
+
     @State
-    private var selectedPanel: PlayerPanel? = nil
-    
+    private var selectedPanel: PlayerPanel = .stats
+
     @State
     private var baseH: Double = 0.5
-    
+
     @State
     private var octaves: Double = 6.0
 
@@ -81,27 +81,42 @@ struct VisualiserView: View {
 #if os(iOS)
             .toolbar(.hidden, for: .navigationBar)
 #endif
+            .inspector(isPresented: $showInspector) {
 #if os(macOS)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !showPlayerSheet {
-                    HStack {
-                        Spacer(minLength: 0)
-                        PlayerControlsView(showSheet: $showPlayerSheet)
-                            .frame(width: 320)
-                            .glassEffect()
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.vertical, 12)
-                }
-            }
+                PlayerInspectorView(selectedPanel: $selectedPanel, baseH: $baseH, octaves: $octaves)
+                    .inspectorColumnWidth(min: 200, ideal: 270, max: 400)
+                    .player(player)
+#else
+                PlayerSheetView(selectedPanel: $selectedPanel, baseH: $baseH, octaves: $octaves)
+                    .player(player)
 #endif
-            .sheet(isPresented: $showPlayerSheet) {
-                PlayerSheetView(
-                    baseH: $baseH,
-                    octaves: $octaves,
-                    selectedPanel: $selectedPanel
-                )
-                .player(player)
+            }
+            .toolbar {
+#if os(macOS)
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 8) {
+                        RewindButton()
+                            .labelStyle(.iconOnly)
+                        PlayToggle()
+                            .labelStyle(.iconOnly)
+                        LoopToggle()
+                            .labelStyle(.iconOnly)
+                        Divider().frame(height: 16)
+                        Text(elapsedLabel)
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                        ProgressSlider()
+                            .frame(width: 160)
+                        DurationMenu()
+                    }
+                    .foregroundStyle(.primary)
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button { showInspector.toggle() } label: {
+                        Image(systemName: "sidebar.right")
+                    }
+                }
+#endif
             }
     }
 
@@ -118,6 +133,19 @@ struct VisualiserView: View {
     private func shaderH(elevation: Double) -> Float {
         let elevationOffset = (1.0 - elevation - 0.5) * 0.3
         return Float(max(0, min(1, baseH + elevationOffset)))
+    }
+
+    private var elapsedLabel: String {
+        guard let run = runs?.run(for: .metrics) else { return "0:00" }
+        let elapsed = progress * duration(for: run.duration)
+        let total = Int(elapsed)
+        let h = total / 3600
+        let m = (total % 3600) / 60
+        let s = total % 60
+        if h > 0 {
+            return String(format: "%d:%02d:%02d", h, m, s)
+        }
+        return String(format: "%d:%02d", m, s)
     }
 
     // MARK: - Gestures

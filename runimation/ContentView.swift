@@ -1,16 +1,22 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var player: RunPlayer?
-    @State private var showPlayerSheet = false
-    @State private var selectedTab: String = "visualiser"
+    
+    @State
+    private var player: RunPlayer?
+    
+    @State
+    private var showInspector = false
+    
+    @State
+    private var selectedTab: String = "visualiser"
 
     var body: some View {
         TabView(selection: $selectedTab) {
             TabSection("Runs") {
                 Tab("Visualisation", systemImage: "sparkles", value: "visualiser") {
                     if let player {
-                        VisualiserView(showPlayerSheet: $showPlayerSheet)
+                        VisualiserView(showInspector: $showInspector)
                             .player(player)
                     } else {
                         ProgressView("Loading run data...")
@@ -47,9 +53,9 @@ struct ContentView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
 #if os(iOS)
-        .tabViewBottomAccessory(isEnabled: selectedTab == "visualiser" && player != nil && !showPlayerSheet) {
+        .tabViewBottomAccessory(isEnabled: selectedTab == "visualiser" && player != nil) {
             if let player {
-                PlayerControlsView(showSheet: $showPlayerSheet)
+                PlayerControlsView(showInspector: $showInspector)
                     .player(player)
             }
         }
