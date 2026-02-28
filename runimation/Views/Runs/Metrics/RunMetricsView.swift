@@ -11,6 +11,9 @@ struct RunMetricsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 RunSummaryGrid(run: run)
+                    .padding(12)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                
                 chartSection("Pace", unit: "min/km", value: paceString(speed: seg?.speed)) {
                     RunChart(
                         data: run.mapped(by: .pace, progress: scrubProgress),

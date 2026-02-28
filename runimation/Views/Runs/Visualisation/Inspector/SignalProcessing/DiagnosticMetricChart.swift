@@ -19,16 +19,16 @@ struct DiagnosticMetricChart: View {
 
     let mapper: any RunChartMapper
 
+    var valueLabel: String = ""
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading) {
+            MetricHeader(title: label, value: valueLabel)
             if let run = runs?.run(for: .diagnostics) {
                 RunChart(data: mapper.map(run: run, progress: progress))
-                    .runChartPlayheadStyle(.white.opacity(0.8))
+                    .runChartPlayheadStyle(Color.accentColor.opacity(0.8))
                     .runChartAxisVisibility(.none)
-                    .frame(height: 50)
+                    .frame(height: 70)
             }
         }
     }

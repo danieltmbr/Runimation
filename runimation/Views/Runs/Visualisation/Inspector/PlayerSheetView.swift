@@ -5,9 +5,9 @@ import SwiftUI
 
 /// Bottom sheet inspector shown on iOS.
 ///
-/// Scrollable content area shows stats by default. Two toggle buttons at the bottom
-/// switch to diagnostics charts or parameter controls — mirroring the Apple Music
-/// "lyrics / queue" pattern. Tapping an active button returns to the stats view.
+/// Scrollable content area shows animation controls by default. Two toggle buttons
+/// at the bottom switch to the signal processing or stats panels — mirroring the Apple Music
+/// "lyrics / queue" pattern. Tapping an active button returns to animation.
 /// Playback controls are always visible at the bottom of the sheet.
 ///
 /// Requires `RunPlayer` in the environment via `.player(_:)`.
@@ -20,24 +20,38 @@ struct PlayerSheetView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            panelTitle
             scrollableContent
             fixedControls
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .presentationBackground(Color(uiColor: .systemBackground))
     }
 
     // MARK: - Sections
 
+    private var panelTitle: some View {
+        Text(selectedPanel.rawValue)
+            .font(.headline)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+            .padding(.top, 16)
+            .padding(.bottom, 8)
+    }
+
+    @ViewBuilder
     private var scrollableContent: some View {
-        ScrollView {
-            switch selectedPanel {
-            case .stats:
-                StatsContent()
-            case .diagnostics:
-                DiagnosticsContent()
-            case .parameters:
-                ParametersContent(baseH: $baseH, octaves: $octaves)
+        switch selectedPanel {
+        case .animation:
+            ScrollView {
+                AnimationPreferencesContent(baseH: $baseH, octaves: $octaves)
+            }
+        case .pipeline:
+            SignalProcessingContent()
+        case .stats:
+            ScrollView {
+                RunStatisticsContent()
             }
         }
     }
@@ -49,11 +63,11 @@ struct PlayerSheetView: View {
             PlaybackControls()
                 .playbackControlsStyle(.regular)
 
-            // Panel toggle buttons (diagnostics left, parameters right)
+            // Panel toggle buttons (pipeline left, stats right)
             HStack {
-                panelToggleButton(panel: .diagnostics, icon: "waveform.path.ecg")
+                panelToggleButton(panel: .pipeline, icon: "waveform.path.ecg")
                 Spacer()
-                panelToggleButton(panel: .parameters,  icon: "slider.horizontal.3")
+                panelToggleButton(panel: .stats, icon: "chart.bar")
             }
             .padding(.horizontal, 36)
             .padding(.bottom)
@@ -66,7 +80,7 @@ struct PlayerSheetView: View {
     private func panelToggleButton(panel: InspectorFocus, icon: String) -> some View {
         let isActive = selectedPanel == panel
         return Button {
-            selectedPanel = isActive ? .stats : panel
+            selectedPanel = isActive ? .animation : panel
         } label: {
             Image(systemName: icon)
                 .font(.system(size: 20))

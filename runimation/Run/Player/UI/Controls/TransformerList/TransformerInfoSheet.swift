@@ -20,8 +20,11 @@ struct TransformerInfoSheet: View {
 
     var binding: Binding<RunTransformerOption>? = nil
 
-    @State private var targetCount: Int
-    @State private var rank: Int
+    @State
+    private var targetCount: Int
+    
+    @State
+    private var rank: Int
 
     init(option: RunTransformerOption, binding: Binding<RunTransformerOption>? = nil) {
         self.option = option

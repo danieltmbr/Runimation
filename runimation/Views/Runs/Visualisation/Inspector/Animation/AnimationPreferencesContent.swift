@@ -1,8 +1,8 @@
 import SwiftUI
 
-// MARK: - Parameters Content
+// MARK: - Animation Preferences Content
 
-struct ParametersContent: View {
+struct AnimationPreferencesContent: View {
 
     @Binding
     var baseH: Double
@@ -12,13 +12,13 @@ struct ParametersContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("H: \(baseH, specifier: "%.2f")")
+            VStack(alignment: .leading) {
+                Text("Smoothing")
                     .font(.caption)
                 Slider(value: $baseH, in: 0...1)
             }
-            HStack {
-                Text("Octaves: \(Int(octaves))")
+            VStack(alignment: .leading) {
+                Text("Details")
                     .font(.caption)
                 Slider(value: $octaves, in: 1...12, step: 1)
             }

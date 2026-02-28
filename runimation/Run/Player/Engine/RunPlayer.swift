@@ -73,7 +73,7 @@ final class RunPlayer {
 
     // MARK: Playback States
 
-    var duration: Duration = .fifteenSeconds {
+    var duration: Duration = .thirtySeconds {
         didSet { recompute(run: runs?.original) }
     }
 

@@ -13,7 +13,8 @@ struct TransformerListView: View {
     @PlayerState(\.selectedTransformers)
     private var selectedTransformers
 
-    @State private var activeSheet: ActiveSheet? = nil
+    @State
+    private var activeSheet: ActiveSheet? = nil
 
     var body: some View {
         List {

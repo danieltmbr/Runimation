@@ -21,13 +21,13 @@ struct VisualiserView: View {
     var showInspector: Bool
 
     @State
-    private var selectedPanel: InspectorFocus = .stats
+    private var selectedPanel: InspectorFocus = .animation
 
     @State
-    private var baseH: Double = 0.5
+    private var baseH: Double = 0.8
 
     @State
-    private var octaves: Double = 6.0
+    private var octaves: Double = 5.0
 
     @State
     private var scale: Float = 0.007

@@ -19,8 +19,6 @@ struct RunSummaryGrid: View {
                 cell("Elev. Gain", value: formattedElevGain, unit: "m")
             }
         }
-        .padding(12)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
     private func cell(_ label: String, value: String, unit: String) -> some View {
@@ -73,7 +71,8 @@ struct RunSummaryGrid: View {
     private var formattedAvgPace: String {
         guard totalDistanceKm > 0 else { return "--:--" }
         let secsPerKm = run.duration / totalDistanceKm
-        return String(format: "%d:%02d", Int(secsPerKm) / 60, Int(secsPerKm) % 60)
+        return secsPerKm.formatted(.pace)
+        // return String(format: "%d:%02d", Int(secsPerKm) / 60, Int(secsPerKm) % 60)
     }
 
     private var formattedElevGain: String { String(format: "%.0f", totalElevationGain) }
@@ -84,6 +83,7 @@ struct RunSummaryGrid: View {
         let maxSpeed = run.spectrum.speed.upperBound
         guard maxSpeed > 0 else { return "--:--" }
         let secsPerKm = 1000.0 / maxSpeed
-        return String(format: "%d:%02d", Int(secsPerKm) / 60, Int(secsPerKm) % 60)
+        return secsPerKm.formatted(.pace)
+        // return String(format: "%d:%02d", Int(secsPerKm) / 60, Int(secsPerKm) % 60)
     }
 }
