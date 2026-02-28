@@ -11,9 +11,14 @@ import SwiftUI
 ///
 struct PlayerInspectorView: View {
 
-    @Binding var selectedPanel: InspectorFocus
-    @Binding var baseH: Double
-    @Binding var octaves: Double
+    @Binding
+    var selectedPanel: InspectorFocus
+    
+    @Binding
+    var baseH: Double
+    
+    @Binding
+    var octaves: Double
 
     var body: some View {
         VStack(spacing: 0) {

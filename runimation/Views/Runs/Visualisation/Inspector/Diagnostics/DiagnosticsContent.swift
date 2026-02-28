@@ -6,6 +6,8 @@ struct DiagnosticsContent: View {
         VStack(spacing: 16) {
             InterpolationPicker()
 
+            TransformerListButton()
+
             DiagnosticMetricChart(label: "Speed", mapper: .pace)
                 .runChartShapeStyle(.orange)
             

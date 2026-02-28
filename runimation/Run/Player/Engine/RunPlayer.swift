@@ -63,7 +63,9 @@ final class RunPlayer {
 
     private let parser: Run.Parser
 
-    private var transformer: RunTransformer
+    var selectedTransformers: [RunTransformerOption] = [] {
+        didSet { recompute(run: runs?.original) }
+    }
 
     var interpolatorOption: RunInterpolatorOption = .linear {
         didSet { recompute(run: runs?.original) }
@@ -94,10 +96,10 @@ final class RunPlayer {
 
     init(
         parser: Run.Parser,
-        transformer: RunTransformer
+        transformers: [RunTransformerOption] = []
     ) {
         self.parser = parser
-        self.transformer = transformer
+        self.selectedTransformers = transformers
     }
 
     // MARK: - Playback Controls
@@ -167,9 +169,16 @@ final class RunPlayer {
     /// Updates the transformer and recomputes all run variants
     /// without stopping the current playback.
     ///
+    /// Wraps the given transformer in an anonymous `RunTransformerOption`
+    /// and replaces the entire chain with that single entry.
+    ///
     func setTransformer(_ transformer: RunTransformer) {
-        self.transformer = transformer
-        recompute(run: runs?.original)
+        let option = RunTransformerOption(
+            label: "Custom",
+            description: "",
+            transformer: transformer
+        )
+        selectedTransformers = [option]
     }
 
     /// Swaps the active interpolator and recomputes all run variants
@@ -202,9 +211,13 @@ final class RunPlayer {
         guard let run else { return reset() }
         let playbackDuration = duration(for: run.duration)
         let timing = Timing(duration: playbackDuration, fps: 60)
+        let chain = TransformerChain(transformers: selectedTransformers.map(\.transformer))
         let transformed = run
-            .transform(by: transformer)
-            .interpolate(by: interpolatorOption.interpolator, with: timing)
+            .transform(by: chain)
+            .interpolate(
+                by: interpolatorOption.interpolator,
+                with: timing
+            )
         runs = Runs(
             original: run,
             transformed: transformed,
