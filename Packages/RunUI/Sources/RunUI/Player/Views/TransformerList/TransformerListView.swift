@@ -16,6 +16,8 @@ public struct TransformerListView: View {
 
     @State
     private var activeSheet: ActiveSheet? = nil
+    
+    public init() {}
 
     public var body: some View {
         List {

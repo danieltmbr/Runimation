@@ -10,6 +10,8 @@ public struct RewindButton: View {
 
     @Environment(\.seek)
     private var seek
+    
+    public init() {}
 
     public var body: some View {
         Button("Rewind", systemImage: "backward.end.fill") {

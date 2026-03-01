@@ -11,6 +11,8 @@ public struct DurationMenu: View {
     @PlayerState(\.duration)
     private var duration
 
+    public init() {}
+
     public var body: some View {
         Menu {
             ForEach(RunPlayer.Duration.all) { option in

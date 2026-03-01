@@ -1,4 +1,6 @@
 import SwiftUI
+import RunKit
+import RunUI
 
 /// Signal processing panel: post-transformation signal preview, interpolation controls,
 /// and the transformer chain manager.

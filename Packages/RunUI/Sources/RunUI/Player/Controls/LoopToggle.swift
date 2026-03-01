@@ -11,6 +11,8 @@ public struct LoopToggle: View {
 
     @PlayerState(\.loop)
     private var loop
+    
+    public init() {}
 
     public var body: some View {
         Button("Loop", systemImage: "repeat") {

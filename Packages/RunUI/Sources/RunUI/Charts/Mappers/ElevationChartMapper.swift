@@ -6,9 +6,9 @@ import RunKit
 /// The Y domain adds a 5 m margin above and below the run's elevation spectrum
 /// so the line never sits flush against the chart edges.
 ///
-struct ElevationChartMapper: RunChartMapper {
+public struct ElevationChartMapper: RunChartMapper {
 
-    func map(run: Run, progress: Double) -> RunChart.Data {
+    public func map(run: Run, progress: Double) -> RunChart.Data {
         let origin = run.segments.first?.time.start ?? Date()
         let sampled = downsample(run.segments)
         return RunChart.Data(
@@ -22,5 +22,5 @@ struct ElevationChartMapper: RunChartMapper {
 }
 
 extension RunChartMapper where Self == ElevationChartMapper {
-    static var elevation: ElevationChartMapper { .init() }
+    public static var elevation: ElevationChartMapper { .init() }
 }

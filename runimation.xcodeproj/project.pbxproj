@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E2FB3BAD2F54905400126ACC /* RunKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BAC2F54905400126ACC /* RunKit */; };
+		E2FB3BAF2F54905400126ACC /* RunUI in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BAE2F54905400126ACC /* RunUI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		E263D31F2F3F8E920089E1E8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -54,6 +59,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E2FB3BAF2F54905400126ACC /* RunUI in Frameworks */,
+				E2FB3BAD2F54905400126ACC /* RunKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,6 +88,7 @@
 				E263D3132F3F8E920089E1E8 /* Runimation */,
 				E263D3212F3F8E920089E1E8 /* RunimationTests */,
 				E263D32B2F3F8E920089E1E8 /* RunimationUITests */,
+				E2FB3BAB2F54905400126ACC /* Frameworks */,
 				E263D3122F3F8E920089E1E8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -104,6 +112,13 @@
 			path = Packages;
 			sourceTree = "<group>";
 		};
+		E2FB3BAB2F54905400126ACC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -124,6 +139,8 @@
 			);
 			name = Runimation;
 			packageProductDependencies = (
+				E2FB3BAC2F54905400126ACC /* RunKit */,
+				E2FB3BAE2F54905400126ACC /* RunUI */,
 			);
 			productName = runimation;
 			productReference = E263D3112F3F8E920089E1E8 /* Runimation.app */;
@@ -631,6 +648,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E2FB3BAC2F54905400126ACC /* RunKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RunKit;
+		};
+		E2FB3BAE2F54905400126ACC /* RunUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RunUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E263D3092F3F8E910089E1E8 /* Project object */;
 }

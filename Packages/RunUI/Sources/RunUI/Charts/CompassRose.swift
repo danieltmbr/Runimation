@@ -6,12 +6,14 @@ import RunKit
 /// Reads from the animation segment (speed-weighted, smoothed direction) so the
 /// arrow responds fluidly to changes in heading rather than snapping between GPS points.
 ///
-struct CompassRose: View {
+public struct CompassRose: View {
 
     @PlayerState(\.segment.animation)
     private var segment
+    
+    public init() {}
 
-    var body: some View {
+    public var body: some View {
         Canvas { context, size in
             let cx = size.width / 2
             let cy = size.height / 2

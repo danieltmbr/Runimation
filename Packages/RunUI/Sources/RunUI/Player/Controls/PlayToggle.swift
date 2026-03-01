@@ -15,6 +15,8 @@ public struct PlayToggle: View {
 
     @Environment(\.togglePlay)
     private var togglePlay
+    
+    public init() {}
 
     public var body: some View {
         Button(

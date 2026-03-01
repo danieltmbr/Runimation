@@ -7,9 +7,9 @@ import RunKit
 /// Only segments where the runner is moving (speed > 1 m/s) are included,
 /// which removes GPS noise at standing stops.
 ///
-struct PaceChartMapper: RunChartMapper {
+public struct PaceChartMapper: RunChartMapper {
 
-    func map(run: Run, progress: Double) -> RunChart.Data {
+    public func map(run: Run, progress: Double) -> RunChart.Data {
         let origin = run.segments.first?.time.start ?? Date()
         let segments = movingSegments(from: run)
         return RunChart.Data(
@@ -57,5 +57,5 @@ struct PaceChartMapper: RunChartMapper {
 }
 
 extension RunChartMapper where Self == PaceChartMapper {
-    static var pace: PaceChartMapper { .init() }
+    public static var pace: PaceChartMapper { .init() }
 }

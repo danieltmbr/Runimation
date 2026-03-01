@@ -43,8 +43,6 @@ public final class RunPlayer {
 
     // MARK: Dependencies
 
-    private let parser: Run.Parser
-
     public var transformers: [RunTransformerOption] = [] {
         didSet {
             guard let original = runs?.original else { return }
@@ -92,16 +90,8 @@ public final class RunPlayer {
 
     // MARK: - Init
 
-    required init(
-        parser: Run.Parser,
-        transformers: [RunTransformerOption] = []
-    ) {
-        self.parser = parser
+    public init(transformers: [RunTransformerOption] = []) {
         self.transformers = transformers
-    }
-
-    public convenience init(transformers: [RunTransformerOption] = []) {
-        self.init(parser: Run.Parser(), transformers: transformers)
     }
 
     // MARK: - Playback Controls
@@ -165,9 +155,11 @@ public final class RunPlayer {
     /// the player is ready to play, or throws `CancellationError` if
     /// preempted by another `setRun` call.
     ///
-    public func setRun(_ track: GPX.Track) async throws {
+    public func setRun(
+        _ track: GPX.Track,
+        parser: Run.Parser = .init()
+    ) async throws {
         stop()
-        let parser = self.parser
         try await process { parser.run(from: track) }
     }
 

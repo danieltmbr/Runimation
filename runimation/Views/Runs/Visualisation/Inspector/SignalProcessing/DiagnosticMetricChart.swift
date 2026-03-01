@@ -1,4 +1,6 @@
 import SwiftUI
+import RunKit
+import RunUI
 
 /// A compact sparkline for a single run metric, shown in the diagnostics overlay.
 ///

@@ -1,4 +1,6 @@
 import SwiftUI
+import RunKit
+import RunUI
 
 struct RunMetricsView: View {
 
@@ -17,13 +19,13 @@ struct RunMetricsView: View {
                 chartSection("Pace", unit: "min/km", value: paceString(speed: seg?.speed)) {
                     RunChart(
                         data: run.mapped(by: .pace, progress: scrubProgress),
-                        scrubProgress: $scrubProgress
+                        progress: $scrubProgress
                     )
                 }
                 chartSection("Elevation", unit: "m", value: elevationString(elevation: seg?.elevation)) {
                     RunChart(
                         data: run.mapped(by: .elevation, progress: scrubProgress),
-                        scrubProgress: $scrubProgress
+                        progress: $scrubProgress
                     )
                     .runChartKind(.filled)
                     .runChartShapeStyle(.green)
@@ -31,7 +33,7 @@ struct RunMetricsView: View {
                 chartSection("Heart Rate", unit: "bpm", value: heartRateString(heartRate: seg?.heartRate)) {
                     RunChart(
                         data: run.mapped(by: .heartRate, progress: scrubProgress),
-                        scrubProgress: $scrubProgress
+                        progress: $scrubProgress
                     )
                     .runChartKind(.filled)
                     .runChartShapeStyle(.red)

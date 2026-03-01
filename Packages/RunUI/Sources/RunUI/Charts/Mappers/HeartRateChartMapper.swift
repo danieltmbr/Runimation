@@ -8,9 +8,9 @@ import RunKit
 ///
 /// The Y domain adds a 10 BPM margin above and below the run's HR spectrum.
 ///
-struct HeartRateChartMapper: RunChartMapper {
+public struct HeartRateChartMapper: RunChartMapper {
 
-    func map(run: Run, progress: Double) -> RunChart.Data {
+    public func map(run: Run, progress: Double) -> RunChart.Data {
         let origin = run.segments.first?.time.start ?? Date()
         let hrSegments = downsample(run.segments).filter { $0.heartRate > 0 }
         return RunChart.Data(
@@ -24,5 +24,5 @@ struct HeartRateChartMapper: RunChartMapper {
 }
 
 extension RunChartMapper where Self == HeartRateChartMapper {
-    static var heartRate: HeartRateChartMapper { .init() }
+    public static var heartRate: HeartRateChartMapper { .init() }
 }

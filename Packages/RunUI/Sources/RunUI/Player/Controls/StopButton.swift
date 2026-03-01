@@ -9,6 +9,8 @@ public struct StopButton: View {
 
     @Environment(\.stop)
     private var stop
+    
+    public init() {}
 
     public var body: some View {
         Button("Stop", systemImage: "stop.fill") {

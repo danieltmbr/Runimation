@@ -1,4 +1,6 @@
 import SwiftUI
+import RunKit
+import RunUI
 
 struct ContentView: View {
     
@@ -65,14 +67,13 @@ struct ContentView: View {
 #endif
         .task {
             if player == nil {
-                player = await Task.detached {
+                player = try? await Task.detached {
                     let gpxParser = GPX.Parser()
                     guard let track = gpxParser.parse(fileNamed: "run-01").first else { return nil }
                     let p = await RunPlayer(
-                        parser: Run.Parser(),
                         transformers: [.gaussian(), .speedWeighted(), .waveSampling()]
                     )
-                    p.setRun(track)
+                    try await p.setRun(track)
                     return p
                 }.value
             }

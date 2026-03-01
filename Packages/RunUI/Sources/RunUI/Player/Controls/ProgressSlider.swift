@@ -21,6 +21,8 @@ public struct ProgressSlider: View {
     
     @State
     private var localValue: Double = 0
+    
+    public init() {}
 
     public var body: some View {
         Slider(value: $localValue, in: 0...1) { editing in

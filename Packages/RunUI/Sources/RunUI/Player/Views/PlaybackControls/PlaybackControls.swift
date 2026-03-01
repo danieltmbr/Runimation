@@ -15,6 +15,8 @@ public struct PlaybackControls: View {
 
     @Environment(\.playbackControlsStyle)
     private var style
+    
+    public init() {}
 
     public var body: some View {
         style.makeBody()

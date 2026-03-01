@@ -9,6 +9,8 @@ public struct PlayerProgressBar: View {
 
     @PlayerState(\.progress)
     private var progress
+    
+    public init() {}
 
     public var body: some View {
         GeometryReader { geo in

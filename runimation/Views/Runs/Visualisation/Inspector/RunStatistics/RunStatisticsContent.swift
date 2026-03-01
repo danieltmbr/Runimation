@@ -1,4 +1,6 @@
 import SwiftUI
+import RunKit
+import RunUI
 
 /// Shows a full run summary and scrubbable metric charts using raw GPS data.
 ///
@@ -24,13 +26,13 @@ struct RunStatisticsContent: View {
                     chartRow("Pace", unit: "min/km", value: paceString(run: run)) {
                         RunChart(
                             data: run.mapped(by: .pace, progress: scrubProgress),
-                            scrubProgress: $scrubProgress
+                            progress: $scrubProgress
                         )
                     }
                     chartRow("Elevation", unit: "m", value: elevationString(run: run)) {
                         RunChart(
                             data: run.mapped(by: .elevation, progress: scrubProgress),
-                            scrubProgress: $scrubProgress
+                            progress: $scrubProgress
                         )
                         .runChartKind(.filled)
                         .runChartShapeStyle(.green)
@@ -38,7 +40,7 @@ struct RunStatisticsContent: View {
                     chartRow("Heart Rate", unit: "bpm", value: heartRateString(run: run)) {
                         RunChart(
                             data: run.mapped(by: .heartRate, progress: scrubProgress),
-                            scrubProgress: $scrubProgress
+                            progress: $scrubProgress
                         )
                         .runChartKind(.filled)
                         .runChartShapeStyle(.red)

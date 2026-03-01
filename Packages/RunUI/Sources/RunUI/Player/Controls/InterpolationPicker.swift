@@ -16,6 +16,8 @@ public struct InterpolationPicker: View {
 
     @PlayerState(\.interpolator)
     private var option
+    
+    public init() {}
 
     public var body: some View {
         Picker("Interpolation", selection: $option) {

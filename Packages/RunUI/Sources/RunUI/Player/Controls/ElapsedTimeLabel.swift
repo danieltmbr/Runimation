@@ -15,6 +15,8 @@ public struct ElapsedTimeLabel: View {
 
     @PlayerState(\.duration)
     private var duration
+    
+    public init() {}
 
     public var body: some View {
         Text(elapsed, format: ElapsedTimeFormatStyle())

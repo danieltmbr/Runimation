@@ -26,20 +26,20 @@ public enum GPX: Equatable, Sendable {
         fileprivate(set) var type: String
     }
     
-    final class Parser {
+    public final class Parser {
         private let dateFormatter: ISO8601DateFormatter
         
-        init(dateFormatter: ISO8601DateFormatter = .init()) {
+        public init(dateFormatter: ISO8601DateFormatter = .init()) {
             self.dateFormatter = dateFormatter
         }
 
-        func parse(fileNamed name: String) -> [Track] {
+        public func parse(fileNamed name: String) -> [Track] {
             guard let url = Bundle.main.url(forResource: name, withExtension: "gpx"),
                   let data = try? Data(contentsOf: url) else { return [] }
             return parse(data: data)
         }
 
-        func parse(fileNamed name: String) -> Track? {
+        public func parse(fileNamed name: String) -> Track? {
             parse(fileNamed: name).first
         }
 

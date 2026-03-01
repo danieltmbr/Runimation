@@ -8,7 +8,7 @@ import RunKit
 /// Adopt this protocol to define new metric mappings. The default extension
 /// provides downsampling and time-conversion helpers that implementations can reuse.
 ///
-public protocol RunChartMapper {
+public protocol RunChartMapper: Sendable {
     func map(run: Run, progress: Double) -> RunChart.Data
 }
 

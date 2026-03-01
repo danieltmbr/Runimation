@@ -12,7 +12,10 @@ public struct TransformerListButton: View {
     @PlayerState(\.transformers)
     private var transformers
 
-    @State private var showSheet = false
+    @State
+    private var showSheet = false
+    
+    public init() {}
 
     public var body: some View {
         Button {
