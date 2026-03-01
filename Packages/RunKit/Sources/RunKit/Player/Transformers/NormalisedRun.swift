@@ -34,6 +34,7 @@ public struct NormalisedRun: RunTransformer {
         segments.map { s in
             Run.Segment(
                 direction: s.direction,
+                cadence: normalise(s.cadence, in: spectrum.cadence),
                 elevation: normalise(s.elevation, in: spectrum.elevation),
                 elevationRate: scale > 0 ? s.elevationRate / scale : 0,
                 heartRate: normalise(s.heartRate, in: spectrum.heartRate),
@@ -52,6 +53,7 @@ public struct NormalisedRun: RunTransformer {
             ? (spectrum.elevationRate.lowerBound / scale)...(spectrum.elevationRate.upperBound / scale)
             : 0...0
         return Run.Spectrum(
+            cadence: 0...1,
             elevation: 0...1,
             elevationRate: elevationRate,
             heartRate: 0...1,

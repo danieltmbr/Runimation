@@ -41,6 +41,7 @@ public struct CatmullRomRunInterpolator: RunInterpolator {
             let s = segment(at: t, in: run)
             return Run.Segment(
                 direction: s.direction,
+                cadence: s.cadence,
                 elevation: s.elevation,
                 elevationRate: s.elevationRate,
                 heartRate: s.heartRate,
@@ -100,6 +101,7 @@ public struct CatmullRomRunInterpolator: RunInterpolator {
                 x: catmullRom(t, p0: p0.direction.x, p1: p1.direction.x, p2: p2.direction.x, p3: p3.direction.x),
                 y: catmullRom(t, p0: p0.direction.y, p1: p1.direction.y, p2: p2.direction.y, p3: p3.direction.y)
             ),
+            cadence:       catmullRom(t, p0: p0.cadence,       p1: p1.cadence,       p2: p2.cadence,       p3: p3.cadence),
             elevation:     catmullRom(t, p0: p0.elevation,     p1: p1.elevation,     p2: p2.elevation,     p3: p3.elevation),
             elevationRate: catmullRom(t, p0: p0.elevationRate, p1: p1.elevationRate, p2: p2.elevationRate, p3: p3.elevationRate),
             heartRate:     catmullRom(t, p0: p0.heartRate,     p1: p1.heartRate,     p2: p2.heartRate,     p3: p3.heartRate),

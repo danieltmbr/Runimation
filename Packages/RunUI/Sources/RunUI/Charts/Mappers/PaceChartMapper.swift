@@ -1,11 +1,15 @@
 import Foundation
 import RunKit
 
-/// Maps a `Run`'s speed data into negated pace values so that faster pace
-/// plots higher on a standard ascending Y axis.
+/// Maps a `Run`'s speed data into chart points for pace display.
 ///
-/// Only segments where the runner is moving (speed > 1 m/s) are included,
-/// which removes GPS noise at standing stops.
+/// Y values are stored as raw m/s speed — faster speed sits higher on a
+/// standard ascending Y axis, which is the natural representation of pace
+/// (faster = better = higher). The Y-axis formatter converts m/s labels to
+/// the "M:SS /km" pace format.
+///
+/// Only segments where the runner is actively moving (speed > 1 m/s) are
+/// included, removing GPS noise at standing stops.
 ///
 public struct PaceChartMapper: RunChartMapper {
 
@@ -29,30 +33,26 @@ public struct PaceChartMapper: RunChartMapper {
         downsample(run.segments).filter { $0.speed > 1.0 }
     }
 
-    /// Converts each segment's speed into a negated pace value (-(min/km)).
+    /// Maps each segment to a chart point with speed (m/s) as the Y value.
     ///
     private func points(from segments: [Run.Segment], origin: Date) -> [RunChart.Data.Point] {
         segments.map { segment in
             .init(
                 x: minutes(of: segment, origin: origin),
-                y: -(1000.0 / (segment.speed * 60.0))
+                y: segment.speed
             )
         }
     }
 
-    /// Derives the Y domain from the speed range of the supplied segments,
-    /// with a 5 % margin and a sign flip so faster pace sits higher.
+    /// Derives the Y domain from the speed range of the supplied segments
+    /// with a 5 % margin.
     ///
     private func yDomain(for segments: [Run.Segment], run: Run) -> ClosedRange<Double> {
         let speeds = segments.map(\.speed)
         let maxSpeed = speeds.max() ?? run.spectrum.speed.upperBound
         let minSpeed = max(speeds.min() ?? 1.5, 0.001)
-        let fastestPace = 1000.0 / (maxSpeed * 60.0)
-        let slowestPace  = 1000.0 / (minSpeed * 60.0)
-        let margin = (slowestPace - fastestPace) * 0.05
-        let yFloor = -(slowestPace + margin)
-        let yCeil  = -(fastestPace - margin)
-        return yFloor...yCeil
+        let margin = (maxSpeed - minSpeed) * 0.05
+        return (minSpeed - margin)...(maxSpeed + margin)
     }
 }
 

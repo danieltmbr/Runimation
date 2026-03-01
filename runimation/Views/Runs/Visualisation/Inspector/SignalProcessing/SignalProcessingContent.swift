@@ -97,19 +97,18 @@ struct SignalProcessingContent: View {
     }
 
     private var paceLabel: String {
-        guard let speed = currentSegment?.speed, speed > 0.3 else { return "" }
-        let secsPerKm = 1000.0 / speed
-        return String(format: "%d:%02d /km", Int(secsPerKm) / 60, Int(secsPerKm) % 60)
+        guard let speed = currentSegment?.speed else { return "" }
+        return speed.formatted(.pace)
     }
 
     private var heartRateLabel: String {
         guard let hr = currentSegment?.heartRate, hr > 0 else { return "" }
-        return String(format: "%.0f bpm", hr)
+        return hr.formatted(.heartRate)
     }
 
     private var elevationLabel: String {
         guard let elevation = currentSegment?.elevation else { return "" }
-        return String(format: "%.0f m", elevation)
+        return elevation.formatted(.elevation)
     }
 }
 

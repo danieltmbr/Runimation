@@ -16,7 +16,7 @@ public struct ElevationChartMapper: RunChartMapper {
             xDomain: 0...totalDurationMinutes(run),
             yDomain: (run.spectrum.elevation.lowerBound - 5)...(run.spectrum.elevation.upperBound + 5),
             playheadX: playheadMinutes(progress: progress, run: run),
-            yAxisFormatter: .number.precision(.fractionLength(0))
+            yAxisFormatter: .elevation
         )
     }
 }

@@ -35,6 +35,7 @@ public struct SmoothStepRunInterpolator: RunInterpolator {
             let s = segment(at: t, in: run)
             return Run.Segment(
                 direction: s.direction,
+                cadence: s.cadence,
                 elevation: s.elevation,
                 elevationRate: s.elevationRate,
                 heartRate: s.heartRate,
@@ -90,6 +91,7 @@ public struct SmoothStepRunInterpolator: RunInterpolator {
                 x: a.direction.x + (b.direction.x - a.direction.x) * t,
                 y: a.direction.y + (b.direction.y - a.direction.y) * t
             ),
+            cadence: a.cadence + (b.cadence - a.cadence) * t,
             elevation: a.elevation + (b.elevation - a.elevation) * t,
             elevationRate: a.elevationRate + (b.elevationRate - a.elevationRate) * t,
             heartRate: a.heartRate + (b.heartRate - a.heartRate) * t,

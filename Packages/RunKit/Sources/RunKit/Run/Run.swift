@@ -24,6 +24,10 @@ public struct Run: Equatable, Sendable {
         ///
         public var distance: Double { speed * duration }
 
+        /// Steps per minute. Zero indicates missing sensor data.
+        ///
+        public let cadence: Double
+
         /// Elevation in meter
         public let elevation: Double
 
@@ -43,11 +47,12 @@ public struct Run: Equatable, Sendable {
         /// the segment were sampled
         ///
         public let time: DateInterval
-        
+
         /// An "empty" segment with all zero values.
-        /// 
+        ///
         public static let zero = Segment(
             direction: .zero,
+            cadence: 0,
             elevation: 0,
             elevationRate: 0,
             heartRate: 0,
@@ -61,6 +66,11 @@ public struct Run: Equatable, Sendable {
     /// Helps normalising the data and accessing the end of the spectrums quickly.
     ///
     public struct Spectrum: Equatable, Sendable {
+
+        /// Minimum to maximum non-zero cadence (spm). Zero values are excluded
+        /// as they indicate missing sensor data.
+        ///
+        public let cadence: ClosedRange<Double>
 
         public let elevation: ClosedRange<Double>
 
@@ -106,15 +116,18 @@ extension Run.Spectrum {
 
     /// Builds a spectrum by computing the min/max of each metric across all segments.
     ///
-    /// Heart rate zeroes are excluded as they indicate missing sensor data, not an actual reading.
+    /// Zero values for heart rate and cadence are excluded as they indicate
+    /// missing sensor data, not actual readings.
     ///
     init(from segments: [Run.Segment], time: ClosedRange<TimeInterval>) {
         let speeds = segments.map(\.speed)
         let elevations = segments.map(\.elevation)
         let elevationRates = segments.map(\.elevationRate)
         let nonZeroHR = segments.map(\.heartRate).filter { $0 > 0 }
+        let nonZeroCadence = segments.map(\.cadence).filter { $0 > 0 }
         let totalDistance = segments.reduce(0.0) { $0 + $1.distance }
         self.init(
+            cadence: (nonZeroCadence.min() ?? 0)...(nonZeroCadence.max() ?? 0),
             elevation: (elevations.min() ?? 0)...(elevations.max() ?? 0),
             elevationRate: (elevationRates.min() ?? 0)...(elevationRates.max() ?? 0),
             heartRate: (nonZeroHR.min() ?? 0)...(nonZeroHR.max() ?? 0),

@@ -60,6 +60,7 @@ public struct WaveSamplingTransformer: RunTransformer {
 
         return Run.Segment(
             direction: meanDirection(from: window),
+            cadence:      nth(window.map(\.cadence),      highest: pickHighest),
             elevation:     nth(window.map(\.elevation),     highest: pickHighest),
             elevationRate: nth(window.map(\.elevationRate), highest: pickHighest),
             heartRate:     nth(window.map(\.heartRate),     highest: pickHighest),

@@ -23,13 +23,13 @@ struct RunStatisticsContent: View {
                     RunSummaryGrid(run: run)
                 }
                 Section("Charts") {
-                    chartRow("Pace", unit: "min/km", value: paceString(run: run)) {
+                    chartRow("Pace", value: currentSegment(in: run)?.speed.formatted(.pace) ?? "--:-- /km") {
                         RunChart(
                             data: run.mapped(by: .pace, progress: scrubProgress),
                             progress: $scrubProgress
                         )
                     }
-                    chartRow("Elevation", unit: "m", value: elevationString(run: run)) {
+                    chartRow("Elevation", value: currentSegment(in: run)?.elevation.formatted(.elevation) ?? "-- m") {
                         RunChart(
                             data: run.mapped(by: .elevation, progress: scrubProgress),
                             progress: $scrubProgress
@@ -37,7 +37,7 @@ struct RunStatisticsContent: View {
                         .runChartKind(.filled)
                         .runChartShapeStyle(.green)
                     }
-                    chartRow("Heart Rate", unit: "bpm", value: heartRateString(run: run)) {
+                    chartRow("Heart Rate", value: currentSegment(in: run)?.heartRate.formatted(.heartRate) ?? "-- bpm") {
                         RunChart(
                             data: run.mapped(by: .heartRate, progress: scrubProgress),
                             progress: $scrubProgress
@@ -55,7 +55,6 @@ struct RunStatisticsContent: View {
 
     private func chartRow<C: View>(
         _ title: String,
-        unit: String,
         value: String,
         @ViewBuilder content: () -> C
     ) -> some View {
@@ -66,37 +65,18 @@ struct RunStatisticsContent: View {
                 Spacer()
                 Text(value)
                     .font(.subheadline.monospacedDigit())
-                Text(unit)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
             content()
                 .frame(height: 180)
         }
     }
 
-    // MARK: - Value Formatters
+    // MARK: - Segment lookup
 
-    private func segment(in run: Run) -> Run.Segment? {
+    private func currentSegment(in run: Run) -> Run.Segment? {
         let segments = run.segments
         guard !segments.isEmpty else { return nil }
         let index = min(Int(scrubProgress * Double(segments.count)), segments.count - 1)
         return segments[index]
-    }
-
-    private func paceString(run: Run) -> String {
-        guard let speed = segment(in: run)?.speed, speed > 0.3 else { return "--:--" }
-        let secsPerKm = 1000.0 / speed
-        return String(format: "%d:%02d", Int(secsPerKm) / 60, Int(secsPerKm) % 60)
-    }
-
-    private func elevationString(run: Run) -> String {
-        guard let elevation = segment(in: run)?.elevation else { return "--" }
-        return String(format: "%.0f", elevation)
-    }
-
-    private func heartRateString(run: Run) -> String {
-        guard let hr = segment(in: run)?.heartRate, hr > 0 else { return "--" }
-        return String(format: "%.0f", hr)
     }
 }

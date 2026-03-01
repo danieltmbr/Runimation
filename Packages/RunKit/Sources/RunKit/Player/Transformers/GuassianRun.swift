@@ -113,6 +113,7 @@ public struct GuassianRun: RunTransformer {
         return (0..<segments.count).map { i in
             Run.Segment(
                 direction: CGPoint(x: dirX[i], y: dirY[i]),
+                cadence: segments[i].cadence,
                 elevation: elevation[i],
                 elevationRate: elevRate[i],
                 heartRate: heartRate[i],

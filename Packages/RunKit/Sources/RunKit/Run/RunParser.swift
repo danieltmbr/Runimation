@@ -85,6 +85,7 @@ extension Run {
                     x: dirLen > 1e-12 ? dx / dirLen : 0,
                     y: dirLen > 1e-12 ? dy / dirLen : 0
                 ),
+                cadence: Double(curr.cadence),
                 elevation: curr.elevation,
                 elevationRate: elevationRate,
                 heartRate: Double(curr.heartRate),

@@ -53,6 +53,7 @@ public struct SpeedWeightedRun: RunTransformer {
                     x: segment.direction.x * weight,
                     y: segment.direction.y * weight
                 ),
+                cadence: segment.cadence,
                 elevation: segment.elevation,
                 elevationRate: segment.elevationRate,
                 heartRate: segment.heartRate,

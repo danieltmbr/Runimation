@@ -18,7 +18,7 @@ public struct HeartRateChartMapper: RunChartMapper {
             xDomain: 0...totalDurationMinutes(run),
             yDomain: (run.spectrum.heartRate.lowerBound - 10)...(run.spectrum.heartRate.upperBound + 10),
             playheadX: playheadMinutes(progress: progress, run: run),
-            yAxisFormatter: .number.precision(.fractionLength(0))
+            yAxisFormatter: .heartRate
         )
     }
 }
