@@ -5,6 +5,9 @@ import SwiftUI
 /// Requires `RunPlayer` in the environment via `.player(_:)`.
 ///
 struct PlayToggle: View {
+    
+    @PlayerState(\.runs)
+    private var runs
 
     @PlayerState(\.isPlaying)
     private var isPlaying
@@ -19,5 +22,6 @@ struct PlayToggle: View {
         ) {
             togglePlay()
         }
+        .disabled(runs == nil)
     }
 }

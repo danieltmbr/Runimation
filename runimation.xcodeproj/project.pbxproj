@@ -24,25 +24,26 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		E263D3112F3F8E920089E1E8 /* runimation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = runimation.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E263D31E2F3F8E920089E1E8 /* runimationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = runimationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E263D3282F3F8E920089E1E8 /* runimationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = runimationUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E263D3112F3F8E920089E1E8 /* Runimation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runimation.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E263D31E2F3F8E920089E1E8 /* RunimationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunimationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E263D3282F3F8E920089E1E8 /* RunimationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunimationUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2FB3AF42F535AEE00126ACC /* Run */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Run; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		E263D3132F3F8E920089E1E8 /* runimation */ = {
+		E263D3132F3F8E920089E1E8 /* Runimation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = runimation;
+			path = Runimation;
 			sourceTree = "<group>";
 		};
-		E263D3212F3F8E920089E1E8 /* runimationTests */ = {
+		E263D3212F3F8E920089E1E8 /* RunimationTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = runimationTests;
+			path = RunimationTests;
 			sourceTree = "<group>";
 		};
-		E263D32B2F3F8E920089E1E8 /* runimationUITests */ = {
+		E263D32B2F3F8E920089E1E8 /* RunimationUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = runimationUITests;
+			path = RunimationUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,9 +76,10 @@
 		E263D3082F3F8E910089E1E8 = {
 			isa = PBXGroup;
 			children = (
-				E263D3132F3F8E920089E1E8 /* runimation */,
-				E263D3212F3F8E920089E1E8 /* runimationTests */,
-				E263D32B2F3F8E920089E1E8 /* runimationUITests */,
+				E2FB3AF32F535ABC00126ACC /* Packages */,
+				E263D3132F3F8E920089E1E8 /* Runimation */,
+				E263D3212F3F8E920089E1E8 /* RunimationTests */,
+				E263D32B2F3F8E920089E1E8 /* RunimationUITests */,
 				E263D3122F3F8E920089E1E8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,19 +87,27 @@
 		E263D3122F3F8E920089E1E8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E263D3112F3F8E920089E1E8 /* runimation.app */,
-				E263D31E2F3F8E920089E1E8 /* runimationTests.xctest */,
-				E263D3282F3F8E920089E1E8 /* runimationUITests.xctest */,
+				E263D3112F3F8E920089E1E8 /* Runimation.app */,
+				E263D31E2F3F8E920089E1E8 /* RunimationTests.xctest */,
+				E263D3282F3F8E920089E1E8 /* RunimationUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E2FB3AF32F535ABC00126ACC /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				E2FB3AF42F535AEE00126ACC /* Run */,
+			);
+			path = Packages;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		E263D3102F3F8E920089E1E8 /* runimation */ = {
+		E263D3102F3F8E920089E1E8 /* Runimation */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E263D3322F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "runimation" */;
+			buildConfigurationList = E263D3322F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "Runimation" */;
 			buildPhases = (
 				E263D30D2F3F8E920089E1E8 /* Sources */,
 				E263D30E2F3F8E920089E1E8 /* Frameworks */,
@@ -108,18 +118,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				E263D3132F3F8E920089E1E8 /* runimation */,
+				E263D3132F3F8E920089E1E8 /* Runimation */,
 			);
-			name = runimation;
+			name = Runimation;
 			packageProductDependencies = (
 			);
 			productName = runimation;
-			productReference = E263D3112F3F8E920089E1E8 /* runimation.app */;
+			productReference = E263D3112F3F8E920089E1E8 /* Runimation.app */;
 			productType = "com.apple.product-type.application";
 		};
-		E263D31D2F3F8E920089E1E8 /* runimationTests */ = {
+		E263D31D2F3F8E920089E1E8 /* RunimationTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E263D3352F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "runimationTests" */;
+			buildConfigurationList = E263D3352F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "RunimationTests" */;
 			buildPhases = (
 				E263D31A2F3F8E920089E1E8 /* Sources */,
 				E263D31B2F3F8E920089E1E8 /* Frameworks */,
@@ -131,18 +141,18 @@
 				E263D3202F3F8E920089E1E8 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				E263D3212F3F8E920089E1E8 /* runimationTests */,
+				E263D3212F3F8E920089E1E8 /* RunimationTests */,
 			);
-			name = runimationTests;
+			name = RunimationTests;
 			packageProductDependencies = (
 			);
 			productName = runimationTests;
-			productReference = E263D31E2F3F8E920089E1E8 /* runimationTests.xctest */;
+			productReference = E263D31E2F3F8E920089E1E8 /* RunimationTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		E263D3272F3F8E920089E1E8 /* runimationUITests */ = {
+		E263D3272F3F8E920089E1E8 /* RunimationUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E263D3382F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "runimationUITests" */;
+			buildConfigurationList = E263D3382F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "RunimationUITests" */;
 			buildPhases = (
 				E263D3242F3F8E920089E1E8 /* Sources */,
 				E263D3252F3F8E920089E1E8 /* Frameworks */,
@@ -154,13 +164,13 @@
 				E263D32A2F3F8E920089E1E8 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				E263D32B2F3F8E920089E1E8 /* runimationUITests */,
+				E263D32B2F3F8E920089E1E8 /* RunimationUITests */,
 			);
-			name = runimationUITests;
+			name = RunimationUITests;
 			packageProductDependencies = (
 			);
 			productName = runimationUITests;
-			productReference = E263D3282F3F8E920089E1E8 /* runimationUITests.xctest */;
+			productReference = E263D3282F3F8E920089E1E8 /* RunimationUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +196,7 @@
 					};
 				};
 			};
-			buildConfigurationList = E263D30C2F3F8E910089E1E8 /* Build configuration list for PBXProject "runimation" */;
+			buildConfigurationList = E263D30C2F3F8E910089E1E8 /* Build configuration list for PBXProject "Runimation" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -200,9 +210,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				E263D3102F3F8E920089E1E8 /* runimation */,
-				E263D31D2F3F8E920089E1E8 /* runimationTests */,
-				E263D3272F3F8E920089E1E8 /* runimationUITests */,
+				E263D3102F3F8E920089E1E8 /* Runimation */,
+				E263D31D2F3F8E920089E1E8 /* RunimationTests */,
+				E263D3272F3F8E920089E1E8 /* RunimationUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +268,12 @@
 /* Begin PBXTargetDependency section */
 		E263D3202F3F8E920089E1E8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = E263D3102F3F8E920089E1E8 /* runimation */;
+			target = E263D3102F3F8E920089E1E8 /* Runimation */;
 			targetProxy = E263D31F2F3F8E920089E1E8 /* PBXContainerItemProxy */;
 		};
 		E263D32A2F3F8E920089E1E8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = E263D3102F3F8E920089E1E8 /* runimation */;
+			target = E263D3102F3F8E920089E1E8 /* Runimation */;
 			targetProxy = E263D3292F3F8E920089E1E8 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -398,6 +408,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Runimation;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -442,6 +454,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Runimation;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -494,7 +508,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/runimation.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/runimation";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runimation.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runimation";
 				XROS_DEPLOYMENT_TARGET = 26.2;
 			};
 			name = Debug;
@@ -520,7 +534,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/runimation.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/runimation";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runimation.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runimation";
 				XROS_DEPLOYMENT_TARGET = 26.2;
 			};
 			name = Release;
@@ -578,7 +592,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		E263D30C2F3F8E910089E1E8 /* Build configuration list for PBXProject "runimation" */ = {
+		E263D30C2F3F8E910089E1E8 /* Build configuration list for PBXProject "Runimation" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E263D3302F3F8E920089E1E8 /* Debug */,
@@ -587,7 +601,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E263D3322F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "runimation" */ = {
+		E263D3322F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "Runimation" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E263D3332F3F8E920089E1E8 /* Debug */,
@@ -596,7 +610,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E263D3352F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "runimationTests" */ = {
+		E263D3352F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "RunimationTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E263D3362F3F8E920089E1E8 /* Debug */,
@@ -605,7 +619,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E263D3382F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "runimationUITests" */ = {
+		E263D3382F3F8E920089E1E8 /* Build configuration list for PBXNativeTarget "RunimationUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E263D3392F3F8E920089E1E8 /* Debug */,
