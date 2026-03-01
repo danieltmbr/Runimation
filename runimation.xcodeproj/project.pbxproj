@@ -27,7 +27,8 @@
 		E263D3112F3F8E920089E1E8 /* Runimation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runimation.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E263D31E2F3F8E920089E1E8 /* RunimationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunimationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E263D3282F3F8E920089E1E8 /* RunimationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunimationUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E2FB3AF42F535AEE00126ACC /* Run */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Run; sourceTree = "<group>"; };
+		E2FB3AF52F5443A100126ACC /* RunUI */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RunUI; sourceTree = "<group>"; };
+		E2FB3BAA2F54448800126ACC /* RunKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RunKit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -97,7 +98,8 @@
 		E2FB3AF32F535ABC00126ACC /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				E2FB3AF42F535AEE00126ACC /* Run */,
+				E2FB3BAA2F54448800126ACC /* RunKit */,
+				E2FB3AF52F5443A100126ACC /* RunUI */,
 			);
 			path = Packages;
 			sourceTree = "<group>";

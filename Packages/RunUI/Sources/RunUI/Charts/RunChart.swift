@@ -1,0 +1,313 @@
+import Charts
+import SwiftUI
+
+/// A reusable chart view for displaying a single run metric over time.
+///
+/// Accepts pre-computed `Data` from a `RunChartMapper` and renders it with
+/// configurable marks and colour. All styling is injected via environment
+/// modifiers rather than init parameters, following SwiftUI conventions:
+///
+/// ```swift
+/// RunChart(data: run.mapped(by: .pace, progress: progress))
+///     .runChartKind(.filled)
+///     .runChartShapeStyle(.blue)
+/// ```
+///
+public struct RunChart: View {
+    
+    /// Controls which chart axes are rendered.
+    ///
+    /// Conforms to `OptionSet` so axes can be freely combined:
+    /// - `.x` — the horizontal axis and its labels.
+    /// - `.y` — the vertical axis and its labels.
+    /// - `.xy` — both axes (the default).
+    /// - `.none`— both axes are hidden.
+    ///
+    public struct AxisVisibility: OptionSet, Sendable {
+
+        public let rawValue: Int
+
+        public init(rawValue: Int) { self.rawValue = rawValue }
+        
+        /// Shows the X (horizontal) axis.
+        ///
+        public static let x = AxisVisibility(rawValue: 1 << 0)
+        
+        /// Shows the Y (vertical) axis.
+        ///
+        public static let y = AxisVisibility(rawValue: 1 << 1)
+        
+        /// Shows both axes.
+        ///
+        /// The default when no `.runChartAxisVisibility()` modifier is applied.
+        ///
+        public static let xy: AxisVisibility = [.x, .y]
+        
+        /// Shows neither of the axes.
+        ///
+        public static let none: AxisVisibility = []
+    }
+
+    /// Pure data model for a chart.
+    ///
+    public struct Data {
+
+        public struct Point {
+            
+            let x: Double
+            
+            let y: Double
+        }
+
+        let points: [Point]
+        
+        let xDomain: ClosedRange<Double>
+        
+        let yDomain: ClosedRange<Double>
+
+        /// X position of the playhead, in the same unit as `xDomain`.
+        ///
+        let playheadX: Double
+
+        /// Formats Y-axis tick values into display strings.
+        ///
+        /// Accepts any `FormatStyle<Double, String>` — standard Foundation styles
+        /// (e.g. `.number.precision(.fractionLength(0))`) or custom ones (e.g. `.pace`).
+        ///
+        let yAxisFormatter: any FormatStyle<Double, String>
+    }
+
+    /// Controls which chart marks are rendered.
+    ///
+    /// Conforms to `OptionSet` so styles can be freely combined:
+    /// - `.line` — a line through the data points.
+    /// - `.area` — a filled area below the data.
+    /// - `.filled` — the common combination of both.
+    ///
+    /// When `.line` and `.area` are both active, the area is drawn at reduced
+    /// opacity (0.2) so the line remains visually prominent.
+    ///
+    public struct Kind: OptionSet, Sendable {
+
+        public let rawValue: Int
+
+        public init(rawValue: Int) { self.rawValue = rawValue }
+
+        /// Renders a line connecting the data points.
+        ///
+        public static let line = Kind(rawValue: 1 << 0)
+
+        /// Renders a filled area beneath the data.
+        ///
+        /// When combined with `.line`, drawn at 0.2 opacity to keep the line prominent.
+        ///
+        public static let area = Kind(rawValue: 1 << 1)
+
+        /// A line with a subtly filled area beneath it.
+        ///
+        /// Convenience for `[.line, .area]`.
+        ///
+        public static let filled: Kind = [.line, .area]
+    }
+
+    // MARK: - Properties
+
+    @Environment(\.runChartKind)
+    private var kind
+
+    @Environment(\.runChartShapeStyle)
+    private var shapeStyle
+
+    @Environment(\.runChartPlayheadStyle)
+    private var playheadStyle
+
+    @Environment(\.runChartAxisVisibility)
+    private var axisVisibility
+
+    let data: Data
+
+    /// When provided, the chart becomes interactive: dragging updates this binding
+    /// with a normalised [0, 1] progress value. The playhead follows the scrub position.
+    var scrubProgress: Binding<Double>? = nil
+
+    @State private var selectionMinutes: Double? = nil
+
+    // MARK: - Body
+
+    public var body: some View {
+        if axisVisibility.contains(.x) {
+            yAxisChart
+                .chartXAxis {
+                    AxisMarks(values: .automatic(desiredCount: 5)) {
+                        AxisValueLabel(format: FloatingPointFormatStyle<Double>.number.precision(.fractionLength(0)))
+                        AxisGridLine()
+                        AxisTick()
+                    }
+                }
+                .chartXAxisLabel("minutes", alignment: .trailing)
+        } else {
+            yAxisChart
+                .chartXAxis(.hidden)
+        }
+    }
+
+    // MARK: - Chart layers
+
+    @ViewBuilder
+    private var yAxisChart: some View {
+        if axisVisibility.contains(.y) {
+            baseChart
+                .chartYAxis {
+                    AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
+                        if let v = value.as(Double.self) {
+                            AxisValueLabel {
+                                Text(data.yAxisFormatter.format(v))
+                                    .frame(width: 44, alignment: .trailing)
+                            }
+                        }
+                        AxisGridLine()
+                    }
+                }
+        } else {
+            baseChart
+                .chartYAxis(.hidden)
+        }
+    }
+
+    private var baseChart: some View {
+        Chart {
+            if kind.contains(.area) {
+                areaMarks(opacity: kind.contains(.line) ? 0.2 : 1.0)
+            }
+            if kind.contains(.line) {
+                lineMarks
+            }
+            playheadMark
+        }
+        .chartXScale(domain: data.xDomain)
+        .chartYScale(domain: data.yDomain)
+        .chartXSelection(value: $selectionMinutes)
+        .onChange(of: selectionMinutes) { _, newValue in
+            guard let binding = scrubProgress, let m = newValue else { return }
+            binding.wrappedValue = m / max(data.xDomain.upperBound, 1)
+        }
+    }
+
+    // MARK: - Marks
+
+    @ChartContentBuilder
+    private func areaMarks(opacity: Double) -> some ChartContent {
+        ForEach(Array(data.points.enumerated()), id: \.offset) { _, point in
+            AreaMark(
+                x: .value("x", point.x),
+                yStart: .value("y", data.yDomain.lowerBound),
+                yEnd: .value("y", point.y)
+            )
+            .foregroundStyle(AnyShapeStyle(shapeStyle).opacity(opacity))
+        }
+    }
+
+    @ChartContentBuilder
+    private var lineMarks: some ChartContent {
+        ForEach(Array(data.points.enumerated()), id: \.offset) { _, point in
+            LineMark(
+                x: .value("x", point.x),
+                y: .value("y", point.y)
+            )
+            .foregroundStyle(AnyShapeStyle(shapeStyle))
+            .interpolationMethod(.catmullRom)
+        }
+    }
+
+    private var playheadMark: some ChartContent {
+        RuleMark(x: .value("Now", data.playheadX))
+            .foregroundStyle(playheadStyle)
+            .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+    }
+}
+
+// MARK: - Environment: Kind
+
+private struct RunChartKindKey: EnvironmentKey {
+    static let defaultValue: RunChart.Kind = .line
+}
+
+private extension EnvironmentValues {
+    var runChartKind: RunChart.Kind {
+        get { self[RunChartKindKey.self] }
+        set { self[RunChartKindKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// Sets which marks `RunChart` renders (line, area, or both).
+    ///
+    public func runChartKind(_ kind: RunChart.Kind) -> some View {
+        environment(\.runChartKind, kind)
+    }
+}
+
+// MARK: - Environment: Shape style
+
+private struct RunChartShapeStyleKey: EnvironmentKey {
+    static let defaultValue: any ShapeStyle = Color.accentColor
+}
+
+private extension EnvironmentValues {
+    var runChartShapeStyle: any ShapeStyle {
+        get { self[RunChartShapeStyleKey.self] }
+        set { self[RunChartShapeStyleKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// Sets the colour/style applied to `RunChart`'s data marks.
+    ///
+    /// Defaults to `Color.accentColor`, which respects the SwiftUI `.tint()` modifier.
+    ///
+    public func runChartShapeStyle(_ style: some ShapeStyle) -> some View {
+        environment(\.runChartShapeStyle, style)
+    }
+}
+
+// MARK: - Environment: Playhead style
+
+private struct RunChartPlayheadStyleKey: EnvironmentKey {
+    static let defaultValue: AnyShapeStyle = AnyShapeStyle(.primary.opacity(0.5))
+}
+
+private extension EnvironmentValues {
+    var runChartPlayheadStyle: AnyShapeStyle {
+        get { self[RunChartPlayheadStyleKey.self] }
+        set { self[RunChartPlayheadStyleKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// Sets the style of `RunChart`'s playhead rule mark.
+    ///
+    public func runChartPlayheadStyle(_ style: some ShapeStyle) -> some View {
+        environment(\.runChartPlayheadStyle, AnyShapeStyle(style))
+    }
+}
+
+// MARK: - Environment: Axis visibility
+
+private struct RunChartAxisVisibilityKey: EnvironmentKey {
+    static let defaultValue: RunChart.AxisVisibility = .xy
+}
+
+private extension EnvironmentValues {
+    var runChartAxisVisibility: RunChart.AxisVisibility {
+        get { self[RunChartAxisVisibilityKey.self] }
+        set { self[RunChartAxisVisibilityKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// Sets which axes `RunChart` renders. Defaults to `.xy` (both visible).
+    ///
+    public func runChartAxisVisibility(_ visibility: RunChart.AxisVisibility) -> some View {
+        environment(\.runChartAxisVisibility, visibility)
+    }
+}
