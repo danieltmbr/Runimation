@@ -14,9 +14,9 @@ public struct RunTransformerOption: Identifiable, Sendable {
 
     public let description: String
 
-    let transformer: any RunTransformer
+    public let transformer: any RunTransformer
 
-    init(
+    public init(
         id: UUID = UUID(),
         label: String,
         description: String,
@@ -30,7 +30,7 @@ public struct RunTransformerOption: Identifiable, Sendable {
 
     /// Returns a copy of this option with a new transformer, preserving id, label, and description.
     ///
-    func with(_ transformer: any RunTransformer) -> Self {
+    public func with(_ transformer: any RunTransformer) -> Self {
         Self(id: id, label: label, description: description, transformer: transformer)
     }
 }

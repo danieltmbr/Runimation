@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "Run",
+    name: "RunKit",
     platforms: [
         .iOS(.v26),
         .macOS(.v26),
@@ -12,19 +12,19 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "Run",
-            targets: ["Run"]
+            name: "RunKit",
+            targets: ["RunKit"]
         ),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "Run"
+            name: "RunKit"
         ),
         .testTarget(
-            name: "RunTests",
-            dependencies: ["Run"]
+            name: "RunKitTests",
+            dependencies: ["RunKit"]
         ),
     ]
 )

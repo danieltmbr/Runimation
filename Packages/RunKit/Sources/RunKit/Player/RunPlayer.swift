@@ -45,14 +45,14 @@ public final class RunPlayer {
 
     private let parser: Run.Parser
 
-    var transformers: [RunTransformerOption] = [] {
+    public var transformers: [RunTransformerOption] = [] {
         didSet {
             guard let original = runs?.original else { return }
             Task { [weak self] in try? await self?.process { original } }
         }
     }
 
-    var interpolator: RunInterpolatorOption = .linear {
+    public private(set) var interpolator: RunInterpolatorOption = .linear {
         didSet {
             guard let original = runs?.original else { return }
             Task { [weak self] in try? await self?.process { original } }
@@ -84,9 +84,10 @@ public final class RunPlayer {
     /// The run and its transformations that the player
     /// has currently loaded and playing.
     ///
-    private(set) var runs: Runs? = nil
+    public private(set) var runs: Runs? = nil
 
     private var playbackTask: Task<Void, Never>?
+    
     private var processTask: Task<Runs, Never>?
 
     // MARK: - Init
@@ -279,7 +280,7 @@ extension RunPlayer {
     /// under each reading purpose, enabling KeyPath-based access:
     /// `@PlayerState(\.segment.animation)`.
     ///
-    @MainActor struct Segments {
+    @MainActor public struct Segments {
 
         private let player: RunPlayer
 
@@ -287,11 +288,11 @@ extension RunPlayer {
             self.player = player
         }
 
-        var animation: Run.Segment { player.segment(for: .animation) }
+        public var animation: Run.Segment { player.segment(for: .animation) }
 
-        var diagnostics: Run.Segment { player.segment(for: .diagnostics) }
+        public var diagnostics: Run.Segment { player.segment(for: .diagnostics) }
 
-        var metrics: Run.Segment { player.segment(for: .metrics) }
+        public var metrics: Run.Segment { player.segment(for: .metrics) }
     }
 
     /// The current playback segments for all reading purposes.
@@ -299,5 +300,5 @@ extension RunPlayer {
     /// Updates on every playback tick because it reads from `progress`
     /// and `runs`, which are both `@Observable` stored properties.
     ///
-    var segment: Segments { Segments(self) }
+    public var segment: Segments { Segments(self) }
 }

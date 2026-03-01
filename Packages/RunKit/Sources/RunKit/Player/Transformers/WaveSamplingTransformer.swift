@@ -22,14 +22,14 @@ public struct WaveSamplingTransformer: RunTransformer {
 
     /// Number of segments in the output run.
     ///
-    let targetCount: Int
+    public let targetCount: Int
 
     /// Rank offset for value selection (1 = absolute max/min).
     ///
     /// A value of 3 picks the 3rd-highest or 3rd-lowest within the window,
     /// providing light outlier protection against GPS anomalies.
     ///
-    let rank: Int
+    public let rank: Int
 
     public init(targetCount: Int, rank: Int) {
         self.targetCount = targetCount
