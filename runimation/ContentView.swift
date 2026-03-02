@@ -26,7 +26,7 @@ struct ContentView: View {
                 }
                 Tab("Metrics", systemImage: "chart.xyaxis.line", value: "metrics") {
                     if let player {
-                        RunMetricsView(run: player.runs.metrics)
+                        RunMetricsView(run: player.run.metrics)
                     } else {
                         ProgressView("Loading run data...")
                     }

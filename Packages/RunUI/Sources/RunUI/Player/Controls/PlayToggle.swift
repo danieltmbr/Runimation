@@ -7,7 +7,7 @@ import RunKit
 ///
 public struct PlayToggle: View {
     
-    @PlayerState(\.runs.animation)
+    @PlayerState(\.run.animation)
     private var run
 
     @PlayerState(\.isPlaying)

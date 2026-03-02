@@ -15,7 +15,7 @@ import Charts
 ///
 struct RunStatisticsContent: View {
     
-    @PlayerState(\.runs.metrics)
+    @PlayerState(\.run.metrics)
     private var run
     
     @State

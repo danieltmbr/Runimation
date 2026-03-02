@@ -16,7 +16,7 @@ import Charts
 ///
 struct DiagnosticMetricChart: View {
 
-    @PlayerState(\.runs.diagnostics)
+    @PlayerState(\.run.diagnostics)
     private var run
 
     let label: String

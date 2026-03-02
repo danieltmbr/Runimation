@@ -17,7 +17,7 @@ import RunKit
 ///
 public struct RunChartPlayhead: View {
 
-    @PlayerState(\.progress)
+    @PlayerState(\.progress.diagnostics)
     private var progress
 
     let proxy: ChartProxy

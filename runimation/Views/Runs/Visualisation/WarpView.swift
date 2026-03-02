@@ -7,10 +7,10 @@ struct WarpView: View {
     @PlayerState(\.segment.animation)
     private var animationSegment
     
-    @PlayerState(\.progress)
+    @PlayerState(\.progress.animation)
     private var progress
-    
-    @PlayerState(\.runs.animation)
+
+    @PlayerState(\.run.animation)
     private var run
     
     @PlayerState(\.duration)

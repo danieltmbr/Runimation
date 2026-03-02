@@ -13,7 +13,7 @@ public struct ProgressSlider: View {
     @Environment(\.seek)
     private var seek
 
-    @PlayerState(\.progress)
+    @PlayerState(\.progress.diagnostics)
     private var progress
 
     @State

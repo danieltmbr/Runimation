@@ -35,58 +35,45 @@ public final class RunPlayer {
         ///
         fileprivate let normalised: Run
 
-        /// Returns a run data appropriate for a purpose.
+        /// Returns a run appropriate for the given variant's purpose.
         ///
-        public func callAsFunction(for purpose: ReadingPurpose) -> Run {
+        public func callAsFunction(for purpose: Variant.Purpose) -> Run {
             switch purpose {
-            case .metrics: return original
+            case .metrics:     return original
             case .diagnostics: return transformed
-            case .animation: return normalised
+            case .animation:   return normalised
             }
         }
 
-        public subscript(dynamicMember keyPath: KeyPath<Variant.Type, ReadingPurpose>) -> Run {
-            callAsFunction(for: Variant.self[keyPath: keyPath])
+        public subscript(dynamicMember keyPath: KeyPath<Variant.Type, Variant>) -> Run {
+            callAsFunction(for: Variant.self[keyPath: keyPath].purpose)
         }
     }
-    
+
     /// A namespace for reading the current playback segment
-    /// under each reading purpose, enabling KeyPath-based access:
+    /// under each reading variant, enabling KeyPath-based access:
     /// `@PlayerState(\.segment.animation)`.
     ///
     @dynamicMemberLookup
     @MainActor public struct Segments {
-        
+
         private let player: RunPlayer
-        
+
         fileprivate init(_ player: RunPlayer) {
             self.player = player
         }
-        
-        public subscript(dynamicMember keyPath: KeyPath<Variant.Type, ReadingPurpose>) -> Run.Segment {
-            player.segment(for: Variant.self[keyPath: keyPath], at: player.progress)
+
+        public subscript(dynamicMember keyPath: KeyPath<Variant.Type, Variant>) -> Run.Segment {
+            let variant = Variant.self[keyPath: keyPath]
+            return player.segment(for: variant.purpose, at: player.sampler(at: variant.fps).value)
         }
-    }
-    
-    /// A keypath-friendly namespace for addressing the three run data variants.
-    ///
-    /// Used with `@dynamicMemberLookup` on both `Runs` and `Segments` to enable
-    /// KeyPath-based access such as `\.runs.animation` or `\.segment.metrics`.
-    ///
-    public struct Variant {
-        
-        public static let animation  = ReadingPurpose.animation
-        
-        public static let diagnostics = ReadingPurpose.diagnostics
-        
-        public static let metrics    = ReadingPurpose.metrics
     }
 
     // MARK: Dependencies
 
     public var transformers: [any RunTransformer] = [] {
         didSet {
-            let original = runs.original
+            let original = run.original
             let process = self.process
             Task { try? await process { original } }
         }
@@ -94,7 +81,7 @@ public final class RunPlayer {
 
     public var interpolator: any RunInterpolator = LinearRunInterpolator() {
         didSet {
-            let original = runs.original
+            let original = run.original
             let process = self.process
             Task { try? await process { original } }
         }
@@ -104,7 +91,7 @@ public final class RunPlayer {
 
     public var duration: Duration = .thirtySeconds {
         didSet {
-            let original = runs.original
+            let original = run.original
             let process = self.process
             Task { try? await process { original } }
         }
@@ -119,24 +106,26 @@ public final class RunPlayer {
 
     public var loop: Bool = false
 
-    public private(set) var progress: Double = 0
-
     // MARK: Data
 
     /// The run and its transformations that the player
     /// has currently loaded and playing.
     ///
-    public private(set) var runs: Runs = .zero
-    
-    /// The current playback segments for all reading purposes.
-    ///
-    /// Updates on every playback tick because it reads from `progress`
-    /// and `runs`, which are both `@Observable` stored properties.
+    public private(set) var run: Runs = .zero
+
+    /// The current playback segments for all reading variants.
     ///
     public var segment: Segments { Segments(self) }
 
+    @ObservationIgnored
+    private var _progress: Double = 0
+
+    @ObservationIgnored
     private var playbackTask: Task<Void, Never>?
-    
+
+    @ObservationIgnored
+    private var samplers: [Int: ProgressSampler] = [:]
+
     private var processTask: Task<Runs, Never>?
 
     // MARK: - Init
@@ -152,40 +141,44 @@ public final class RunPlayer {
     // MARK: - Playback Controls
 
     public func play() {
-        if progress >= 1 { progress = 0 }
+        if _progress >= 1 { _progress = 0 }
         isPlaying = true
         startTimer()
+        samplers.values.forEach { $0.start() }
     }
 
     public func pause() {
         playbackTask?.cancel()
         playbackTask = nil
         isPlaying = false
+        samplers.values.forEach { $0.stop() }
     }
 
     public func stop() {
         pause()
-        progress = 0
+        _progress = 0
+        syncSamplers()
     }
 
     public func seek(to progress: Double) {
-        self.progress = min(1, max(0, progress))
+        _progress = progress.clamped(0, 1)
+        syncSamplers()
     }
 
     // MARK: - Data Readings
 
     /// Returns the segment corresponding to the current playback
-    /// progress for the given reading purpose.
+    /// progress for the given variant's purpose.
     ///
     /// Uses direct index lookup — O(1) — into the pre-computed segment
     /// array rather than interpolating at runtime, so the interpolation
     /// strategy is fully owned by the `RunInterpolator` implementation.
     ///
     public func segment(
-        for purpose: ReadingPurpose,
+        for purpose: Variant.Purpose,
         at progress: Double
     ) -> Run.Segment {
-        let segments = runs(for: purpose).segments
+        let segments = run(for: purpose).segments
         guard !segments.isEmpty else { return .zero }
         let index = min(Int(progress.clamped(0, 1) * Double(segments.count)), segments.count - 1)
         return segments[index]
@@ -200,9 +193,9 @@ public final class RunPlayer {
     /// is ready to play, or throws `CancellationError` if preempted by
     /// another `setRun` call.
     ///
-    public func setRun(_ run: Run) async throws {
+    public func setRun(_ newRun: Run) async throws {
         stop()
-        try await process { run }
+        try await process { newRun }
     }
 
     /// Loads a new run to the player from a GPX track.
@@ -222,19 +215,31 @@ public final class RunPlayer {
 
     // MARK: - Private
 
+    func sampler(at fps: Int) -> ProgressSampler {
+        if let existing = samplers[fps] { return existing }
+        let sampler = ProgressSampler(fps: fps) { [weak self] in self?._progress ?? 0 }
+        if isPlaying { sampler.start() }
+        samplers[fps] = sampler
+        return sampler
+    }
+
+    private func syncSamplers() {
+        samplers.values.forEach { $0.sync() }
+    }
+
     private func advance(by dt: TimeInterval) {
-        let playbackDuration = duration(for: runs.original.duration)
+        let playbackDuration = duration(for: run.original.duration)
         guard playbackDuration > 0 else { return }
-        let newProgress = progress + dt / playbackDuration
+        let newProgress = _progress + dt / playbackDuration
         if newProgress >= 1 {
             if loop {
-                progress = newProgress.truncatingRemainder(dividingBy: 1)
+                _progress = newProgress.truncatingRemainder(dividingBy: 1)
             } else {
-                progress = 1
+                _progress = 1
                 pause()
             }
         } else {
-            progress = newProgress
+            _progress = newProgress
         }
     }
 
@@ -244,7 +249,7 @@ public final class RunPlayer {
     /// Cancels any in-flight processing before starting a new task.
     /// If preempted by a subsequent call (i.e. the task was cancelled
     /// before its result could be applied), throws `CancellationError`
-    /// without modifying `runs` or `isProcessing`.
+    /// without modifying `run` or `isProcessing`.
     ///
     private func process(_ makeRun: @escaping @Sendable () -> Run) async throws {
         processTask?.cancel()
@@ -255,14 +260,14 @@ public final class RunPlayer {
         let duration = self.duration
 
         let task = Task<Runs, Never>.detached(priority: .userInitiated) {
-            let run = makeRun()
-            let playbackDuration = duration(for: run.duration)
+            let rawRun = makeRun()
+            let playbackDuration = duration(for: rawRun.duration)
             let timing = Timing(duration: playbackDuration, fps: 60)
             let transformed = transformers
-                .reduce(run) { $0.transform(by: $1) }
+                .reduce(rawRun) { $0.transform(by: $1) }
                 .interpolate(by: interpolator, with: timing)
             return Runs(
-                original: run,
+                original: rawRun,
                 transformed: transformed,
                 normalised: transformed.transform(by: NormalisedRun())
             )
@@ -271,7 +276,7 @@ public final class RunPlayer {
 
         let computed = await task.value
         guard !task.isCancelled else { throw CancellationError() }
-        runs = computed
+        run = computed
         isProcessing = false
     }
 

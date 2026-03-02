@@ -7,10 +7,10 @@ import RunKit
 ///
 public struct ElapsedTimeLabel: View {
 
-    @PlayerState(\.progress)
+    @PlayerState(\.progress.metrics)
     private var progress
 
-    @PlayerState(\.runs.metrics)
+    @PlayerState(\.run.metrics)
     private var run
 
     @PlayerState(\.duration)
