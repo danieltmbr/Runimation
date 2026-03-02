@@ -12,6 +12,10 @@ import Foundation
 ///
 public struct NormalisedRun: RunTransformer {
 
+    public let label = "Normalised"
+
+    public let description = "Maps metrics to [0, 1] or [-1, 1] ranges based on the run's own spectrum."
+
     public func transform(_ run: Run) -> Run {
         guard !run.segments.isEmpty else { return run }
         let scale = elevationRateScale(for: run.spectrum)
@@ -70,13 +74,9 @@ public struct NormalisedRun: RunTransformer {
     }
 }
 
-extension RunTransformer where Self == TransformerChain {
-
+extension RunTransformer where Self == NormalisedRun {
+    
     public static var normalised: Self {
-        TransformerChain(transformers: [NormalisedRun()])
-    }
-
-    public var normalised: Self {
-        self.append(transformer: .normalised)
+        NormalisedRun()
     }
 }

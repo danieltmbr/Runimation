@@ -55,9 +55,13 @@ public struct GuassianRun: RunTransformer {
         }
     }
 
+    public let label = "Gaussian"
+
+    public let description = "Smooths run metrics using a time-based Gaussian kernel, reducing noise from GPS anomalies and brief stops while preserving meaningful signal changes."
+
     private let configuration: Configuration
 
-    init(configuration: Configuration = Configuration()) {
+    public init(configuration: Configuration = Configuration()) {
         self.configuration = configuration
     }
 
@@ -162,21 +166,13 @@ public struct GuassianRun: RunTransformer {
     }
 }
 
-extension RunTransformer where Self == TransformerChain {
-
+extension RunTransformer where Self == GuassianRun {
+    
     public static var guassian: Self {
         self.guassian(configuration: GuassianRun.Configuration())
     }
-
+    
     public static func guassian(configuration: GuassianRun.Configuration) -> Self {
-        TransformerChain(transformers: [GuassianRun(configuration: configuration)])
-    }
-
-    public var guassian: Self {
-        self.guassian(configuration: GuassianRun.Configuration())
-    }
-
-    public func guassian(configuration: GuassianRun.Configuration) -> Self {
-        self.append(transformer: .guassian(configuration: configuration))
+        GuassianRun(configuration: configuration)
     }
 }

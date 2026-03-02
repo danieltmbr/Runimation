@@ -26,7 +26,7 @@ struct ContentView: View {
                 }
                 Tab("Metrics", systemImage: "chart.xyaxis.line", value: "metrics") {
                     if let player {
-                        RunMetricsView(run: player.runs.run(for: .metrics))
+                        RunMetricsView(run: player.runs.metrics)
                     } else {
                         ProgressView("Loading run data...")
                     }
@@ -63,7 +63,7 @@ struct ContentView: View {
                     let gpxParser = GPX.Parser()
                     guard let track = gpxParser.parse(fileNamed: "run-01").first else { return nil }
                     let p = await RunPlayer(
-                        transformers: [.gaussian(), .speedWeighted(), .waveSampling()]
+                        transformers: [GuassianRun(), SpeedWeightedRun(), WaveSamplingTransformer()]
                     )
                     try await p.setRun(track)
                     return p

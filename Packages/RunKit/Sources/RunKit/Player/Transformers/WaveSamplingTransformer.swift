@@ -20,6 +20,10 @@ import CoreGraphics
 ///
 public struct WaveSamplingTransformer: RunTransformer {
 
+    public let label = "Wave Sampling"
+
+    public let description = "Reduces the run to a fixed number of synthetic segments by alternating between peak and valley values across windows, producing a wave-like dataset that makes interpolation differences clearly visible."
+
     /// Number of segments in the output run.
     ///
     public let targetCount: Int
@@ -31,7 +35,7 @@ public struct WaveSamplingTransformer: RunTransformer {
     ///
     public let rank: Int
 
-    public init(targetCount: Int, rank: Int) {
+    public init(targetCount: Int = 15, rank: Int = 5) {
         self.targetCount = targetCount
         self.rank = rank
     }
@@ -91,23 +95,13 @@ public struct WaveSamplingTransformer: RunTransformer {
     }
 }
 
-extension RunTransformer where Self == TransformerChain {
+extension RunTransformer where Self == WaveSamplingTransformer {
     
     static var sparsed: Self {
         self.sparsed()
     }
     
     static func sparsed(targetCount: Int = 15, rank: Int = 5) -> Self {
-        TransformerChain(
-            transformers: [WaveSamplingTransformer(targetCount: targetCount, rank: rank)]
-        )
-    }
-    
-    var sparsed: Self {
-        self.sparsed()
-    }
-    
-    func sparsed(targetCount: Int = 15, rank: Int = 5) -> Self {
-        self.append(transformer: .sparsed(targetCount: targetCount, rank: rank))
+        WaveSamplingTransformer(targetCount: targetCount, rank: rank)
     }
 }

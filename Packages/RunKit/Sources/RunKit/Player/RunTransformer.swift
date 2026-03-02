@@ -7,7 +7,7 @@ import Foundation
 /// For example it can return a run where the metrics are
 /// normalised to [0, 1] or [-1, 1] ranges.
 ///
-public protocol RunTransformer: Sendable {
+public protocol RunTransformer: Option, Sendable {
 
     func transform(_ run: Run) -> Run
 }

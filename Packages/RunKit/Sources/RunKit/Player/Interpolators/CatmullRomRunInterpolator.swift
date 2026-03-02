@@ -20,6 +20,12 @@ import CoreGraphics
 ///
 public struct CatmullRomRunInterpolator: RunInterpolator {
 
+    public let label = "Catmull-Rom"
+
+    public let description = "Fits a Catmull-Rom spline through the original GPS data points, producing C¹-continuous curves that pass through every sample with smooth acceleration and deceleration."
+
+    public init() {}
+
     public func interpolate(_ run: Run, timing: RunPlayer.Timing) -> Run {
         guard !run.segments.isEmpty, timing.fps > 0, timing.duration > 0 else {
             return run
@@ -122,5 +128,11 @@ public struct CatmullRomRunInterpolator: RunInterpolator {
             (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
             (-p0 + 3 * p1 - 3 * p2 + p3) * t3
         )
+    }
+}
+
+extension RunInterpolator where Self == CatmullRomRunInterpolator {
+    public static var catmullRom: Self {
+        CatmullRomRunInterpolator()
     }
 }

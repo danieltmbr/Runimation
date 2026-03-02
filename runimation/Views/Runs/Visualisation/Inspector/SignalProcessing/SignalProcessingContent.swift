@@ -80,20 +80,3 @@ struct SignalProcessingContent: View {
     }
 
 }
-
-// MARK: - ActiveSheet
-
-private extension SignalProcessingContent {
-
-    enum ActiveSheet: Identifiable {
-        case applied(Int)
-        case catalog(RunTransformerOption)
-
-        var id: String {
-            switch self {
-            case .applied(let index): return "applied-\(index)"
-            case .catalog(let option): return "catalog-\(option.id.uuidString)"
-            }
-        }
-    }
-}

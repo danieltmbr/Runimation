@@ -13,6 +13,12 @@ import Foundation
 ///
 public struct LinearRunInterpolator: RunInterpolator {
 
+    public let label = "Linear"
+
+    public let description = "Linearly blends metric values between surrounding GPS data points, producing straight transitions between samples."
+
+    public init() {}
+
     public func interpolate(_ run: Run, timing: RunPlayer.Timing) -> Run {
         guard !run.segments.isEmpty, timing.fps > 0, timing.duration > 0 else {
             return run
@@ -95,5 +101,11 @@ public struct LinearRunInterpolator: RunInterpolator {
             speed: a.speed + (b.speed - a.speed) * t,
             time: a.time
         )
+    }
+}
+
+extension RunInterpolator where Self == LinearRunInterpolator {
+    public static var linear: Self {
+        LinearRunInterpolator()
     }
 }

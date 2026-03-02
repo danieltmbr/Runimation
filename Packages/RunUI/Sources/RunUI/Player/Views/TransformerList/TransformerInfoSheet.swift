@@ -9,28 +9,28 @@ import RunKit
 ///
 /// ```swift
 /// // Editable (Applied)
-/// TransformerInfoSheet(option: option, binding: $selectedTransformers[index])
+/// TransformerInfoSheet(item: item, binding: $items[index])
 ///
 /// // Read-only (Catalog)
-/// TransformerInfoSheet(option: option)
+/// TransformerInfoSheet(item: item)
 /// ```
 ///
 public struct TransformerInfoSheet: View {
 
-    let option: RunTransformerOption
+    let item: Item<any RunTransformer>
 
-    var binding: Binding<RunTransformerOption>? = nil
+    var binding: Binding<Item<any RunTransformer>>? = nil
 
     @State
     private var targetCount: Int
-    
+
     @State
     private var rank: Int
 
-    public init(option: RunTransformerOption, binding: Binding<RunTransformerOption>? = nil) {
-        self.option = option
+    public init(item: Item<any RunTransformer>, binding: Binding<Item<any RunTransformer>>? = nil) {
+        self.item = item
         self.binding = binding
-        let ws = option.transformer as? WaveSamplingTransformer
+        let ws = item.value as? WaveSamplingTransformer
         _targetCount = State(initialValue: ws?.targetCount ?? 15)
         _rank = State(initialValue: ws?.rank ?? 5)
     }
@@ -39,11 +39,11 @@ public struct TransformerInfoSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Text(option.description)
+                    Text(item.description)
                         .foregroundStyle(.secondary)
                 }
 
-                if binding != nil, option.transformer is WaveSamplingTransformer {
+                if binding != nil, item.value is WaveSamplingTransformer {
                     Section("Configuration") {
                         LabeledContent("Target Count: \(targetCount)") {
                             Slider(value: targetCountBinding, in: 5...100, step: 1)
@@ -54,7 +54,7 @@ public struct TransformerInfoSheet: View {
                     }
                 }
             }
-            .navigationTitle(option.label)
+            .navigationTitle(item.label)
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
 #endif
@@ -69,7 +69,7 @@ public struct TransformerInfoSheet: View {
             get: { Double(targetCount) },
             set: { newValue in
                 targetCount = Int(newValue)
-                binding?.wrappedValue = option.with(WaveSamplingTransformer(targetCount: targetCount, rank: rank))
+                binding?.wrappedValue = item.with(WaveSamplingTransformer(targetCount: targetCount, rank: rank))
             }
         )
     }
@@ -79,7 +79,7 @@ public struct TransformerInfoSheet: View {
             get: { Double(rank) },
             set: { newValue in
                 rank = Int(newValue)
-                binding?.wrappedValue = option.with(WaveSamplingTransformer(targetCount: targetCount, rank: rank))
+                binding?.wrappedValue = item.with(WaveSamplingTransformer(targetCount: targetCount, rank: rank))
             }
         )
     }

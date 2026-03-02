@@ -8,7 +8,7 @@ import Foundation
 /// to produce at least `timing.fps` updates per second
 /// over `timing.duration`.
 ///
-public protocol RunInterpolator: Sendable {
+public protocol RunInterpolator: Option, Sendable {
     func interpolate(_ run: Run, timing: RunPlayer.Timing) -> Run
 }
 

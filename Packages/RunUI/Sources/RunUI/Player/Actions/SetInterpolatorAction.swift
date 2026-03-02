@@ -6,17 +6,17 @@ import RunKit
 ///
 public struct SetInterpolatorAction {
 
-    private let body: @MainActor (RunInterpolatorOption) -> Void
+    private let body: @MainActor (any RunInterpolator) -> Void
 
-    init(_ body: @escaping @MainActor (RunInterpolatorOption) -> Void = { _ in }) {
+    init(_ body: @escaping @MainActor (any RunInterpolator) -> Void = { _ in }) {
         self.body = body
     }
 
     @MainActor
     init(player: RunPlayer) {
-        self.init { player.setInterpolator($0) }
+        self.init { player.interpolator = $0 }
     }
 
     @MainActor
-    public func callAsFunction(_ option: RunInterpolatorOption) { body(option) }
+    public func callAsFunction(_ interpolator: any RunInterpolator) { body(interpolator) }
 }

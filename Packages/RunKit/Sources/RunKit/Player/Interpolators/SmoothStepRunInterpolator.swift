@@ -14,6 +14,12 @@ import Foundation
 ///
 public struct SmoothStepRunInterpolator: RunInterpolator {
 
+    public let label = "Smooth Step"
+
+    public let description = "Blends metric values with a smooth-step (ease-in/ease-out) curve between surrounding GPS data points, softening abrupt transitions."
+
+    public init() {}
+
     public func interpolate(_ run: Run, timing: RunPlayer.Timing) -> Run {
         guard !run.segments.isEmpty, timing.fps > 0, timing.duration > 0 else {
             return run
@@ -107,5 +113,11 @@ public struct SmoothStepRunInterpolator: RunInterpolator {
     ///
     private func smoothstep(_ t: Double) -> Double {
         t * t * (3 - 2 * t)
+    }
+}
+
+extension RunInterpolator where Self == SmoothStepRunInterpolator {
+    public static var smoothStep: Self {
+        SmoothStepRunInterpolator()
     }
 }

@@ -18,9 +18,13 @@ public struct SpeedWeightedRun: RunTransformer {
         }
     }
 
+    public let label = "Speed Weighted"
+
+    public let description = "Fades direction amplitude toward zero when the runner is moving slowly or stopped, and clips speed outliers at the 98th percentile to prevent GPS spikes."
+
     private let configuration: Configuration
 
-    init(configuration: Configuration = Configuration()) {
+    public init(configuration: Configuration = Configuration()) {
         self.configuration = configuration
     }
 
@@ -64,23 +68,13 @@ public struct SpeedWeightedRun: RunTransformer {
     }
 }
 
-extension RunTransformer where Self == TransformerChain {
-
+extension RunTransformer where Self == SpeedWeightedRun {
+    
     public static var speedWeighted: Self {
         self.speedWeighted(configuration: SpeedWeightedRun.Configuration())
     }
-
+    
     public static func speedWeighted(configuration: SpeedWeightedRun.Configuration) -> Self {
-        TransformerChain(
-            transformers: [SpeedWeightedRun(configuration: configuration)]
-        )
-    }
-
-    public var speedWeighted: Self {
-        self.speedWeighted(configuration: SpeedWeightedRun.Configuration())
-    }
-
-    public func speedWeighted(configuration: SpeedWeightedRun.Configuration) -> Self {
-        self.append(transformer: .speedWeighted(configuration: configuration))
+        SpeedWeightedRun(configuration: configuration)
     }
 }

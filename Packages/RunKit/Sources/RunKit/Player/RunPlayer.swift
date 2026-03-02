@@ -37,7 +37,7 @@ public final class RunPlayer {
 
         /// Returns a run data appropriate for a purpose.
         ///
-        public func run(for purpose: ReadingPurpose) -> Run {
+        public func callAsFunction(for purpose: ReadingPurpose) -> Run {
             switch purpose {
             case .metrics: return original
             case .diagnostics: return transformed
@@ -46,7 +46,7 @@ public final class RunPlayer {
         }
 
         public subscript(dynamicMember keyPath: KeyPath<Variant.Type, ReadingPurpose>) -> Run {
-            run(for: Variant.self[keyPath: keyPath])
+            callAsFunction(for: Variant.self[keyPath: keyPath])
         }
     }
     
@@ -84,7 +84,7 @@ public final class RunPlayer {
 
     // MARK: Dependencies
 
-    public var transformers: [RunTransformerOption] = [] {
+    public var transformers: [any RunTransformer] = [] {
         didSet {
             let original = runs.original
             let process = self.process
@@ -92,7 +92,7 @@ public final class RunPlayer {
         }
     }
 
-    public private(set) var interpolator: RunInterpolatorOption = .linear {
+    public var interpolator: any RunInterpolator = LinearRunInterpolator() {
         didSet {
             let original = runs.original
             let process = self.process
@@ -141,8 +141,12 @@ public final class RunPlayer {
 
     // MARK: - Init
 
-    public init(transformers: [RunTransformerOption] = []) {
+    public init(
+        transformers: [any RunTransformer] = [],
+        interpolator: any RunInterpolator = .linear
+    ) {
         self.transformers = transformers
+        self.interpolator = interpolator
     }
 
     // MARK: - Playback Controls
@@ -181,7 +185,7 @@ public final class RunPlayer {
         for purpose: ReadingPurpose,
         at progress: Double
     ) -> Run.Segment {
-        let segments = runs.run(for: purpose).segments
+        let segments = runs(for: purpose).segments
         guard !segments.isEmpty else { return .zero }
         let index = min(Int(progress.clamped(0, 1) * Double(segments.count)), segments.count - 1)
         return segments[index]
@@ -214,28 +218,6 @@ public final class RunPlayer {
     ) async throws {
         stop()
         try await process { parser.run(from: track) }
-    }
-
-    /// Updates the transformer and reprocesses all run variants
-    /// without stopping the current playback.
-    ///
-    /// Wraps the given transformer in an anonymous `RunTransformerOption`
-    /// and replaces the entire chain with that single entry.
-    ///
-    public func setTransformer(_ transformer: RunTransformer) {
-        let option = RunTransformerOption(
-            label: "Custom",
-            description: "",
-            transformer: transformer
-        )
-        transformers = [option]
-    }
-
-    /// Swaps the active interpolator and reprocesses all run variants
-    /// without stopping the current playback.
-    ///
-    public func setInterpolator(_ option: RunInterpolatorOption) {
-        interpolator = option
     }
 
     // MARK: - Private
@@ -276,14 +258,13 @@ public final class RunPlayer {
             let run = makeRun()
             let playbackDuration = duration(for: run.duration)
             let timing = Timing(duration: playbackDuration, fps: 60)
-            let chain = TransformerChain(transformers: transformers.map(\.transformer))
-            let transformed = run
-                .transform(by: chain)
-                .interpolate(by: interpolator.interpolator, with: timing)
+            let transformed = transformers
+                .reduce(run) { $0.transform(by: $1) }
+                .interpolate(by: interpolator, with: timing)
             return Runs(
                 original: run,
                 transformed: transformed,
-                normalised: transformed.transform(by: .normalised)
+                normalised: transformed.transform(by: NormalisedRun())
             )
         }
         processTask = task
