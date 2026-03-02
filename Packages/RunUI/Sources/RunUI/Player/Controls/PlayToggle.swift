@@ -7,8 +7,8 @@ import RunKit
 ///
 public struct PlayToggle: View {
     
-    @PlayerState(\.runs)
-    private var runs
+    @PlayerState(\.runs.animation)
+    private var run
 
     @PlayerState(\.isPlaying)
     private var isPlaying
@@ -25,6 +25,6 @@ public struct PlayToggle: View {
         ) {
             togglePlay()
         }
-        .disabled(runs == nil)
+        .disabled(run.duration <= 0)
     }
 }

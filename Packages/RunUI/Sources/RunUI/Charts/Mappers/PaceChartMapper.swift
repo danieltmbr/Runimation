@@ -13,14 +13,17 @@ import RunKit
 ///
 public struct PaceChartMapper: RunChartMapper {
 
-    public func map(run: Run, progress: Double) -> RunChart.Data {
+    public func value(from segment: Run.Segment) -> String {
+        segment.speed.formatted(.pace)
+    }
+
+    public func map(run: Run) -> RunChart.Data {
         let origin = run.segments.first?.time.start ?? Date()
         let segments = movingSegments(from: run)
         return RunChart.Data(
             points: points(from: segments, origin: origin),
             xDomain: 0...totalDurationMinutes(run),
             yDomain: yDomain(for: segments, run: run),
-            playheadX: playheadMinutes(progress: progress, run: run),
             yAxisFormatter: .pace
         )
     }
@@ -59,3 +62,8 @@ public struct PaceChartMapper: RunChartMapper {
 extension RunChartMapper where Self == PaceChartMapper {
     public static var pace: PaceChartMapper { .init() }
 }
+
+extension RunChartDataMapper where Self == PaceChartMapper {
+    public static var pace: PaceChartMapper { .init() }
+}
+

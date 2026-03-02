@@ -6,7 +6,8 @@ struct RunMetricsView: View {
 
     let run: Run
 
-    @State private var scrubProgress: Double = 0
+    @State
+    private var scrubProgress: Double = 0
 
     var body: some View {
         let seg = segment(at: scrubProgress, in: run)
@@ -18,13 +19,13 @@ struct RunMetricsView: View {
 
                 chartSection("Pace", value: (seg?.speed ?? 0).formatted(.pace)) {
                     RunChart(
-                        data: run.mapped(by: .pace, progress: scrubProgress),
+                        data: run.mapped(by: .pace),
                         progress: $scrubProgress
                     )
                 }
                 chartSection("Elevation", value: (seg?.elevation ?? 0).formatted(.elevation)) {
                     RunChart(
-                        data: run.mapped(by: .elevation, progress: scrubProgress),
+                        data: run.mapped(by: .elevation),
                         progress: $scrubProgress
                     )
                     .runChartKind(.filled)
@@ -32,7 +33,7 @@ struct RunMetricsView: View {
                 }
                 chartSection("Heart Rate", value: (seg?.heartRate ?? 0).formatted(.heartRate)) {
                     RunChart(
-                        data: run.mapped(by: .heartRate, progress: scrubProgress),
+                        data: run.mapped(by: .heartRate),
                         progress: $scrubProgress
                     )
                     .runChartKind(.filled)

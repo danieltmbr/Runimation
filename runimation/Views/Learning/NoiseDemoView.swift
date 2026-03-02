@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct NoiseView: View {
+struct NoiseDemoView: View {
     
     @State
     private var interpolationMode: InterpolationMode = .linear
@@ -92,6 +92,6 @@ struct NoiseView: View {
 
 #Preview {
     NavigationStack {
-        NoiseView()
+        NoiseDemoView()
     }
 }

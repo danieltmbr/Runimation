@@ -48,7 +48,7 @@ public struct Run: Equatable, Sendable {
         ///
         public let time: DateInterval
 
-        /// An "empty" segment with all zero values.
+        /// A segment with all zero values and current time.
         ///
         public static let zero = Segment(
             direction: .zero,
@@ -89,6 +89,18 @@ public struct Run: Equatable, Sendable {
         /// Total distance of the run: 0...totalMeters
         ///
         public let distance: ClosedRange<Double>
+        
+        /// A spectrum where each range's magnitude is zero
+        ///
+        public static let zero = Spectrum(
+            cadence: 0...0,
+            elevation: 0...0,
+            elevationRate: 0...0,
+            heartRate: 0...0,
+            speed: 0...0,
+            time: 0...0,
+            distance: 0...0
+        )
     }
 
     /// Total run distance in meters.
@@ -110,6 +122,10 @@ public struct Run: Equatable, Sendable {
     /// Spectrum of the metrics during the run
     ///
     public let spectrum: Spectrum
+    
+    /// A run with no segments and all zero spectrums
+    ///
+    public static let zero = Run(segments: [], spectrum: .zero)
 }
 
 extension Run.Spectrum {

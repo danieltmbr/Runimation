@@ -10,8 +10,8 @@ public struct ElapsedTimeLabel: View {
     @PlayerState(\.progress)
     private var progress
 
-    @PlayerState(\.runs)
-    private var runs
+    @PlayerState(\.runs.metrics)
+    private var run
 
     @PlayerState(\.duration)
     private var duration
@@ -24,7 +24,6 @@ public struct ElapsedTimeLabel: View {
     }
 
     private var elapsed: TimeInterval {
-        guard let run = runs?.run(for: .metrics) else { return 0 }
-        return progress * duration(for: run.duration)
+        progress * duration(for: run.duration)
     }
 }

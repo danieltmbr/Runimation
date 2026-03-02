@@ -16,7 +16,12 @@ public final class RunPlayer {
     /// The `transformed` and `normalised` runs are
     /// always derived from the `original` run.
     ///
+    @dynamicMemberLookup
     public struct Runs: Equatable, Sendable {
+
+        /// Runs with zero segments and all zero spectrums
+        ///
+        public static let zero = Runs(original: .zero, transformed: .zero, normalised: .zero)
 
         /// Unmodified run, good for displaying precise metrics.
         ///
@@ -39,21 +44,59 @@ public final class RunPlayer {
             case .animation: return normalised
             }
         }
+
+        public subscript(dynamicMember keyPath: KeyPath<Variant.Type, ReadingPurpose>) -> Run {
+            run(for: Variant.self[keyPath: keyPath])
+        }
+    }
+    
+    /// A namespace for reading the current playback segment
+    /// under each reading purpose, enabling KeyPath-based access:
+    /// `@PlayerState(\.segment.animation)`.
+    ///
+    @dynamicMemberLookup
+    @MainActor public struct Segments {
+        
+        private let player: RunPlayer
+        
+        fileprivate init(_ player: RunPlayer) {
+            self.player = player
+        }
+        
+        public subscript(dynamicMember keyPath: KeyPath<Variant.Type, ReadingPurpose>) -> Run.Segment {
+            player.segment(for: Variant.self[keyPath: keyPath], at: player.progress)
+        }
+    }
+    
+    /// A keypath-friendly namespace for addressing the three run data variants.
+    ///
+    /// Used with `@dynamicMemberLookup` on both `Runs` and `Segments` to enable
+    /// KeyPath-based access such as `\.runs.animation` or `\.segment.metrics`.
+    ///
+    public struct Variant {
+        
+        public static let animation  = ReadingPurpose.animation
+        
+        public static let diagnostics = ReadingPurpose.diagnostics
+        
+        public static let metrics    = ReadingPurpose.metrics
     }
 
     // MARK: Dependencies
 
     public var transformers: [RunTransformerOption] = [] {
         didSet {
-            guard let original = runs?.original else { return }
-            Task { [weak self] in try? await self?.process { original } }
+            let original = runs.original
+            let process = self.process
+            Task { try? await process { original } }
         }
     }
 
     public private(set) var interpolator: RunInterpolatorOption = .linear {
         didSet {
-            guard let original = runs?.original else { return }
-            Task { [weak self] in try? await self?.process { original } }
+            let original = runs.original
+            let process = self.process
+            Task { try? await process { original } }
         }
     }
 
@@ -61,8 +104,9 @@ public final class RunPlayer {
 
     public var duration: Duration = .thirtySeconds {
         didSet {
-            guard let original = runs?.original else { return }
-            Task { [weak self] in try? await self?.process { original } }
+            let original = runs.original
+            let process = self.process
+            Task { try? await process { original } }
         }
     }
 
@@ -82,7 +126,14 @@ public final class RunPlayer {
     /// The run and its transformations that the player
     /// has currently loaded and playing.
     ///
-    public private(set) var runs: Runs? = nil
+    public private(set) var runs: Runs = .zero
+    
+    /// The current playback segments for all reading purposes.
+    ///
+    /// Updates on every playback tick because it reads from `progress`
+    /// and `runs`, which are both `@Observable` stored properties.
+    ///
+    public var segment: Segments { Segments(self) }
 
     private var playbackTask: Task<Void, Never>?
     
@@ -126,11 +177,13 @@ public final class RunPlayer {
     /// array rather than interpolating at runtime, so the interpolation
     /// strategy is fully owned by the `RunInterpolator` implementation.
     ///
-    public func segment(for purpose: ReadingPurpose) -> Run.Segment {
-        guard let run = runs?.run(for: purpose) else { return .zero }
-        let segments = run.segments
+    public func segment(
+        for purpose: ReadingPurpose,
+        at progress: Double
+    ) -> Run.Segment {
+        let segments = runs.run(for: purpose).segments
         guard !segments.isEmpty else { return .zero }
-        let index = min(Int(progress * Double(segments.count)), segments.count - 1)
+        let index = min(Int(progress.clamped(0, 1) * Double(segments.count)), segments.count - 1)
         return segments[index]
     }
 
@@ -188,7 +241,6 @@ public final class RunPlayer {
     // MARK: - Private
 
     private func advance(by dt: TimeInterval) {
-        guard let runs else { return }
         let playbackDuration = duration(for: runs.original.duration)
         guard playbackDuration > 0 else { return }
         let newProgress = progress + dt / playbackDuration
@@ -262,35 +314,4 @@ private extension Duration {
     var asTimeInterval: TimeInterval {
         TimeInterval(components.seconds) + TimeInterval(components.attoseconds) * 1e-18
     }
-}
-
-// MARK: - Segments
-
-extension RunPlayer {
-
-    /// A namespace for reading the current playback segment
-    /// under each reading purpose, enabling KeyPath-based access:
-    /// `@PlayerState(\.segment.animation)`.
-    ///
-    @MainActor public struct Segments {
-
-        private let player: RunPlayer
-
-        fileprivate init(_ player: RunPlayer) {
-            self.player = player
-        }
-
-        public var animation: Run.Segment { player.segment(for: .animation) }
-
-        public var diagnostics: Run.Segment { player.segment(for: .diagnostics) }
-
-        public var metrics: Run.Segment { player.segment(for: .metrics) }
-    }
-
-    /// The current playback segments for all reading purposes.
-    ///
-    /// Updates on every playback tick because it reads from `progress`
-    /// and `runs`, which are both `@Observable` stored properties.
-    ///
-    public var segment: Segments { Segments(self) }
 }

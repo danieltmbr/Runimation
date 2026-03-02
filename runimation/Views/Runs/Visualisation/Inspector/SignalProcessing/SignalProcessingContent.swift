@@ -14,12 +14,6 @@ import RunUI
 ///
 struct SignalProcessingContent: View {
 
-    @PlayerState(\.runs)
-    private var runs
-
-    @PlayerState(\.progress)
-    private var progress
-
     var body: some View {
         List {
             previews
@@ -45,18 +39,17 @@ struct SignalProcessingContent: View {
 
     private var previews: some View {
         Section {
-            DiagnosticMetricChart(label: "Speed", mapper: .pace, valueLabel: paceLabel)
+            DiagnosticMetricChart(label: "Speed", mapper: .pace)
                 .runChartShapeStyle(.orange)
 
-            DiagnosticMetricChart(label: "Heart Rate", mapper: .heartRate, valueLabel: heartRateLabel)
+            DiagnosticMetricChart(label: "Heart Rate", mapper: .heartRate)
                 .runChartShapeStyle(.red)
-            
-            DiagnosticMetricChart(label: "Elevation", mapper: .elevation, valueLabel: elevationLabel)
+
+            DiagnosticMetricChart(label: "Elevation", mapper: .elevation)
                 .runChartShapeStyle(.green)
             
             VStack(alignment: .leading) {
-                MetricHeader(title: "Direction", value: "")
-                
+                MetricHeader(title: "Direction", mapper: nil)
                 CompassRose()
                     .frame(width: 100, height: 100)
                     .frame(maxWidth: .infinity)
@@ -86,30 +79,6 @@ struct SignalProcessingContent: View {
         .deleteDisabled(true)
     }
 
-    // MARK: - Playhead Values
-
-    private var currentSegment: Run.Segment? {
-        guard let run = runs?.run(for: .diagnostics) else { return nil }
-        let segments = run.segments
-        guard !segments.isEmpty else { return nil }
-        let index = min(Int(progress * Double(segments.count)), segments.count - 1)
-        return segments[index]
-    }
-
-    private var paceLabel: String {
-        guard let speed = currentSegment?.speed else { return "" }
-        return speed.formatted(.pace)
-    }
-
-    private var heartRateLabel: String {
-        guard let hr = currentSegment?.heartRate, hr > 0 else { return "" }
-        return hr.formatted(.heartRate)
-    }
-
-    private var elevationLabel: String {
-        guard let elevation = currentSegment?.elevation else { return "" }
-        return elevation.formatted(.elevation)
-    }
 }
 
 // MARK: - ActiveSheet

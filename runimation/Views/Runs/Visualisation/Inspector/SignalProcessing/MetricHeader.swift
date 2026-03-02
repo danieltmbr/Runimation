@@ -1,19 +1,22 @@
 import SwiftUI
+import RunUI
 
 struct MetricHeader: View {
     
     let title: String
     
-    let value: String
+    let mapper: (any RunChartValueMapper)?
     
     var body: some View {
         HStack {
             Text(title)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
-            if !value.isEmpty {
+            
+            if let mapper {
                 Spacer()
-                Text(value)
+                
+                ChartCurrentValueLabel(mapper: mapper)
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.secondary)
             }

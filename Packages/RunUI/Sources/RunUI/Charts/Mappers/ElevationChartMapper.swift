@@ -8,19 +8,26 @@ import RunKit
 ///
 public struct ElevationChartMapper: RunChartMapper {
 
-    public func map(run: Run, progress: Double) -> RunChart.Data {
+    public func value(from segment: Run.Segment) -> String {
+        segment.elevation.formatted(.elevation)
+    }
+
+    public func map(run: Run) -> RunChart.Data {
         let origin = run.segments.first?.time.start ?? Date()
         let sampled = downsample(run.segments)
         return RunChart.Data(
             points: sampled.map { .init(x: minutes(of: $0, origin: origin), y: $0.elevation) },
             xDomain: 0...totalDurationMinutes(run),
             yDomain: (run.spectrum.elevation.lowerBound - 5)...(run.spectrum.elevation.upperBound + 5),
-            playheadX: playheadMinutes(progress: progress, run: run),
             yAxisFormatter: .elevation
         )
     }
 }
 
 extension RunChartMapper where Self == ElevationChartMapper {
+    public static var elevation: ElevationChartMapper { .init() }
+}
+
+extension RunChartDataMapper where Self == ElevationChartMapper {
     public static var elevation: ElevationChartMapper { .init() }
 }

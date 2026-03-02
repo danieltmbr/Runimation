@@ -8,7 +8,7 @@ import SwiftUI
 /// modifiers rather than init parameters, following SwiftUI conventions:
 ///
 /// ```swift
-/// RunChart(data: run.mapped(by: .pace, progress: progress))
+/// RunChart(data: run.mapped(by: .pace))
 ///     .runChartKind(.filled)
 ///     .runChartShapeStyle(.blue)
 /// ```
@@ -53,21 +53,17 @@ public struct RunChart: View {
     public struct Data {
 
         public struct Point {
-            
+
             let x: Double
-            
+
             let y: Double
         }
 
         let points: [Point]
-        
-        let xDomain: ClosedRange<Double>
-        
-        let yDomain: ClosedRange<Double>
 
-        /// X position of the playhead, in the same unit as `xDomain`.
-        ///
-        let playheadX: Double
+        let xDomain: ClosedRange<Double>
+
+        let yDomain: ClosedRange<Double>
 
         /// Formats Y-axis tick values into display strings.
         ///
@@ -118,9 +114,6 @@ public struct RunChart: View {
     @Environment(\.runChartShapeStyle)
     private var shapeStyle
 
-    @Environment(\.runChartPlayheadStyle)
-    private var playheadStyle
-
     @Environment(\.runChartAxisVisibility)
     private var axisVisibility
 
@@ -130,7 +123,7 @@ public struct RunChart: View {
     let data: Data
     
     /// When provided, the chart becomes interactive: dragging updates this binding
-    /// with a normalised [0, 1] progress value. The playhead follows the scrub position.
+    /// with a normalised [0, 1] progress value.
     var progress: Binding<Double>? = nil
     
     public init(
@@ -191,7 +184,6 @@ public struct RunChart: View {
             if kind.contains(.line) {
                 lineMarks
             }
-            playheadMark
         }
         .chartXScale(domain: data.xDomain)
         .chartYScale(domain: data.yDomain)
@@ -226,12 +218,6 @@ public struct RunChart: View {
             .foregroundStyle(AnyShapeStyle(shapeStyle))
             .interpolationMethod(.catmullRom)
         }
-    }
-
-    private var playheadMark: some ChartContent {
-        RuleMark(x: .value("Now", data.playheadX))
-            .foregroundStyle(playheadStyle)
-            .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
     }
 }
 
@@ -276,27 +262,6 @@ extension View {
     ///
     public func runChartShapeStyle(_ style: some ShapeStyle) -> some View {
         environment(\.runChartShapeStyle, style)
-    }
-}
-
-// MARK: - Environment: Playhead style
-
-private struct RunChartPlayheadStyleKey: EnvironmentKey {
-    static let defaultValue: AnyShapeStyle = AnyShapeStyle(.primary.opacity(0.5))
-}
-
-private extension EnvironmentValues {
-    var runChartPlayheadStyle: AnyShapeStyle {
-        get { self[RunChartPlayheadStyleKey.self] }
-        set { self[RunChartPlayheadStyleKey.self] = newValue }
-    }
-}
-
-extension View {
-    /// Sets the style of `RunChart`'s playhead rule mark.
-    ///
-    public func runChartPlayheadStyle(_ style: some ShapeStyle) -> some View {
-        environment(\.runChartPlayheadStyle, AnyShapeStyle(style))
     }
 }
 

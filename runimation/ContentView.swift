@@ -26,15 +26,7 @@ struct ContentView: View {
                 }
                 Tab("Metrics", systemImage: "chart.xyaxis.line", value: "metrics") {
                     if let player {
-                        if let run = player.runs?.run(for: .metrics) {
-                            RunMetricsView(run: run)
-                        } else {
-                            ContentUnavailableView(
-                                "Run Unavailable",
-                                systemImage: "chart.xyaxis.line",
-                                description: Text("The run data could not be loaded.")
-                            )
-                        }
+                        RunMetricsView(run: player.runs.run(for: .metrics))
                     } else {
                         ProgressView("Loading run data...")
                     }
@@ -43,13 +35,13 @@ struct ContentView: View {
 
             TabSection("Learnings") {
                 Tab("Noise", systemImage: "waveform", value: "noise") {
-                    NoiseView()
+                    NoiseDemoView()
                 }
                 Tab("fBM", systemImage: "function", value: "fbm") {
-                    FbmView()
+                    FbmDemoView()
                 }
                 Tab("Warp", systemImage: "waveform.path.ecg", value: "warp") {
-                    WarpView()
+                    WarpDemoView()
                 }
             }
         }

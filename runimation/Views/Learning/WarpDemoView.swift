@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct FbmView: View {
+struct WarpDemoView: View {
     @State
     private var h: Double = 0.5
     
@@ -20,7 +20,7 @@ struct FbmView: View {
                 .visualEffect { content, geometryProxy in
                     content
                         .colorEffect(
-                            ShaderLibrary.fbmShader(
+                            ShaderLibrary.warpShader(
                                 .float(time),
                                 .float(octaves),
                                 .float(h),
@@ -59,7 +59,7 @@ struct FbmView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     
-                    Slider(value: $octaves, in: 1...24, step: 1)
+                    Slider(value: $octaves, in: 1...12, step: 1)
                 }
             }
             .padding()
@@ -74,5 +74,5 @@ struct FbmView: View {
 }
 
 #Preview {
-    FbmView()
+    WarpDemoView()
 }
