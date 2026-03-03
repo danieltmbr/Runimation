@@ -3,8 +3,12 @@ import simd
 
 /// Extracts a `ColorPalette` from a photo using k-means clustering.
 ///
-/// The image is downscaled then k-means runs directly on sRGB pixel values
-/// read via `createCGImage`. Entries are sorted by hue for a smooth gradient.
+/// Uses `CIKMeans` for clustering, following Apple's recommended pattern:
+/// https://developer.apple.com/documentation/accelerate/calculating-the-dominant-colors-in-an-image
+///
+/// The critical step is `settingAlphaOne` on the filter output — `CIKMeans` produces
+/// pixels with alpha=0, and Core Image's premultiplied-alpha pipeline zeros out every
+/// colour channel unless alpha is explicitly set to 1 before rendering.
 public enum PhotoColorExtractor {
 
     /// Extracts dominant colors from a `CIImage`.
@@ -23,16 +27,17 @@ public enum PhotoColorExtractor {
         clusterCount: Int = 5
     ) async -> ColorPalette {
         let context = CIContext(options: [.useSoftwareRenderer: false])
-        let resized = resized(image, to: downsamplingSize)
+        let resized  = resized(image, to: downsamplingSize)
 
-        guard let pixels = srgbPixels(from: resized, context: context), !pixels.isEmpty else {
+        guard let centers = clusterCentroids(from: resized, sourceColorSpace: image.colorSpace, context: context, count: clusterCount),
+              !centers.isEmpty,
+              let pixels = pixels(from: resized, sourceColorSpace: image.colorSpace, context: context)
+        else {
             return .default
         }
 
-        let centroids = kMeans(pixels: pixels, k: clusterCount)
-        let weights   = weights(pixels: pixels, nearestTo: centroids)
-
-        let entries = zip(centroids, weights)
+        let weights = weights(pixels: pixels, nearestTo: centers)
+        let entries = zip(centers, weights)
             .map { ColorPalette.Entry(color: $0, weight: $1) }
             .sorted { hue(of: $0.color) < hue(of: $1.color) }
 
@@ -50,21 +55,63 @@ private extension PhotoColorExtractor {
         return image.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
     }
 
-    /// Reads all pixels from the image as gamma-corrected sRGB floats (0–1 per channel).
+    /// Runs `CIKMeans` and returns the cluster centroid colors.
     ///
-    /// Using `createCGImage` with an explicit sRGB colorspace is the most reliable path:
-    /// it handles color profile conversion internally and guarantees values that match
-    /// what SwiftUI's `Color(red:green:blue:)` expects.
-    static func srgbPixels(from image: CIImage, context: CIContext) -> [SIMD3<Float>]? {
-        guard let srgb = CGColorSpace(name: CGColorSpace.sRGB),
-              let cgImage = context.createCGImage(image, from: image.extent, format: .RGBA8, colorSpace: srgb),
-              let data = cgImage.dataProvider?.data
-        else { return nil }
+    /// - `inputPerceptual: true` clusters in a perceptual color space for more natural results.
+    /// - `settingAlphaOne` is mandatory: `CIKMeans` outputs alpha=0, and Core Image's
+    ///    premultiplied pipeline zeroes every channel without it.
+    /// - Rendering uses the source image's color space so component values match the
+    ///    original photo's encoding, which is what `Color(red:green:blue:)` expects.
+    static func clusterCentroids(
+        from image: CIImage,
+        sourceColorSpace: CGColorSpace?,
+        context: CIContext,
+        count: Int
+    ) -> [SIMD3<Float>]? {
+        guard let filter = CIFilter(name: "CIKMeans") else { return nil }
 
-        let bytes = CFDataGetBytePtr(data)!
-        let pixelCount = cgImage.width * cgImage.height
+        filter.setValue(image,                              forKey: kCIInputImageKey)
+        filter.setValue(CIVector(cgRect: image.extent),    forKey: "inputExtent")
+        filter.setValue(count as NSNumber,                 forKey: "inputCount")
+        filter.setValue(10 as NSNumber,                    forKey: "inputPasses")
+        filter.setValue(true as NSNumber,                  forKey: "inputPerceptual")
 
-        return (0..<pixelCount).map { i in
+        guard var output = filter.outputImage else { return nil }
+
+        // Without this, alpha=0 in CI's premultiplied space zeroes all colour channels.
+        output = output.settingAlphaOne(in: output.extent)
+
+        let colorSpace = sourceColorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!
+        var bitmap = [UInt8](repeating: 0, count: count * 4)
+        context.render(output, toBitmap: &bitmap, rowBytes: count * 4,
+                       bounds: output.extent, format: .RGBA8, colorSpace: colorSpace)
+
+        return (0..<count).map { i in
+            let base = i * 4
+            return SIMD3<Float>(
+                Float(bitmap[base])     / 255.0,
+                Float(bitmap[base + 1]) / 255.0,
+                Float(bitmap[base + 2]) / 255.0
+            )
+        }
+    }
+
+    /// Reads all pixels from the downsampled image for cluster weight computation.
+    static func pixels(
+        from image: CIImage,
+        sourceColorSpace: CGColorSpace?,
+        context: CIContext
+    ) -> [SIMD3<Float>]? {
+        let width  = Int(image.extent.width)
+        let height = Int(image.extent.height)
+        guard width > 0, height > 0 else { return nil }
+
+        let colorSpace = sourceColorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        context.render(image, toBitmap: &bytes, rowBytes: width * 4,
+                       bounds: image.extent, format: .RGBA8, colorSpace: colorSpace)
+
+        return (0..<(width * height)).map { i in
             let base = i * 4
             return SIMD3<Float>(
                 Float(bytes[base])     / 255.0,
@@ -74,44 +121,6 @@ private extension PhotoColorExtractor {
         }
     }
 
-    /// Lloyd's k-means on sRGB pixel values.
-    ///
-    /// Centroids are seeded by evenly spacing across the pixel array (avoids empty
-    /// clusters common with purely random initialisation on bimodal images).
-    static func kMeans(pixels: [SIMD3<Float>], k: Int, iterations: Int = 20) -> [SIMD3<Float>] {
-        guard pixels.count >= k else { return Array(pixels.prefix(k)) }
-
-        let step = pixels.count / k
-        var centroids = (0..<k).map { pixels[$0 * step] }
-
-        for _ in 0..<iterations {
-            var sums   = [SIMD3<Float>](repeating: .zero, count: k)
-            var counts = [Int](repeating: 0, count: k)
-
-            for pixel in pixels {
-                let i = nearestIndex(to: pixel, in: centroids)
-                sums[i]   += pixel
-                counts[i] += 1
-            }
-
-            for i in 0..<k where counts[i] > 0 {
-                centroids[i] = sums[i] / Float(counts[i])
-            }
-        }
-
-        return centroids
-    }
-
-    static func nearestIndex(to pixel: SIMD3<Float>, in centroids: [SIMD3<Float>]) -> Int {
-        var minDist = Float.infinity
-        var nearest = 0
-        for (i, center) in centroids.enumerated() {
-            let d = dot(pixel - center, pixel - center)
-            if d < minDist { minDist = d; nearest = i }
-        }
-        return nearest
-    }
-
     static func weights(pixels: [SIMD3<Float>], nearestTo centers: [SIMD3<Float>]) -> [Float] {
         var counts = [Int](repeating: 0, count: centers.count)
         for pixel in pixels {
@@ -119,6 +128,16 @@ private extension PhotoColorExtractor {
         }
         let total = Float(pixels.count)
         return counts.map { Float($0) / total }
+    }
+
+    static func nearestIndex(to pixel: SIMD3<Float>, in centers: [SIMD3<Float>]) -> Int {
+        var minDist = Float.infinity
+        var nearest = 0
+        for (i, center) in centers.enumerated() {
+            let d = dot(pixel - center, pixel - center)
+            if d < minDist { minDist = d; nearest = i }
+        }
+        return nearest
     }
 
     /// Returns the hue (0–1) of an RGB color for perceptual sorting.
