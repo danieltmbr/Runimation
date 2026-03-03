@@ -22,23 +22,23 @@ public struct GuassianRun: RunTransformer {
 
         /// Sigma parameter for direction smoothing (seconds per axis).
         ///
-        let direction: CGPoint
+        public var direction: CGPoint
 
         /// Sigma parameter for elevation smoothing.
         ///
-        let elevation: Double
+        public var elevation: Double
 
         /// Sigma parameter for elevation rate smoothing.
         ///
-        let elevationRate: Double
+        public var elevationRate: Double
 
         /// Sigma parameter for heart rate smoothing.
         ///
-        let heartRate: Double
+        public var heartRate: Double
 
         /// Sigma parameter for speed smoothing.
         ///
-        let speed: Double
+        public var speed: Double
 
         public init(
             direction: CGPoint = CGPoint(x: 25, y: 25),
@@ -59,7 +59,7 @@ public struct GuassianRun: RunTransformer {
 
     public let description = "Smooths run metrics using a time-based Gaussian kernel, reducing noise from GPS anomalies and brief stops while preserving meaningful signal changes."
 
-    private let configuration: Configuration
+    public let configuration: Configuration
 
     public init(configuration: Configuration = Configuration()) {
         self.configuration = configuration

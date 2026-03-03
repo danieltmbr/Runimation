@@ -11,7 +11,7 @@ public struct SpeedWeightedRun: RunTransformer {
         /// Speed in m/s at or above which direction amplitude is fully preserved.
         /// Below this threshold direction fades linearly to zero.
         ///
-        let threshold: Double
+        public var threshold: Double
 
         public init(threshold: Double = 1.0) {
             self.threshold = threshold
@@ -22,7 +22,7 @@ public struct SpeedWeightedRun: RunTransformer {
 
     public let description = "Fades direction amplitude toward zero when the runner is moving slowly or stopped, and clips speed outliers at the 98th percentile to prevent GPS spikes."
 
-    private let configuration: Configuration
+    public let configuration: Configuration
 
     public init(configuration: Configuration = Configuration()) {
         self.configuration = configuration

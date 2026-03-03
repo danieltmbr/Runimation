@@ -17,7 +17,7 @@ struct ChartPlayhead: View {
             let frame = geo[plotFrame]
             Rectangle()
                 .fill(style)
-                .frame(width: 1.5, height: frame.height)
+                .frame(width: 2, height: frame.height)
                 .offset(x: frame.minX + frame.width * CGFloat(progress) - 0.75, y: frame.minY)
         }
     }
