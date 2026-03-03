@@ -1,4 +1,5 @@
 import Foundation
+import CoreKit
 
 /// RunInterpolator densifies a run's segments so that
 /// the animation can advance at a smooth frame rate.

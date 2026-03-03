@@ -17,8 +17,8 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // Local package dependency on RunKit (adjust path if needed)
         .package(path: "../RunKit"),
+        .package(path: "../CoreUI"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -27,6 +27,7 @@ let package = Package(
             name: "RunUI",
             dependencies: [
                 .product(name: "RunKit", package: "RunKit"),
+                .product(name: "CoreUI", package: "CoreUI"),
             ]
         ),
         .testTarget(

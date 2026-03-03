@@ -7,8 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E2FB3BAD2F54905400126ACC /* RunKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BAC2F54905400126ACC /* RunKit */; };
-		E2FB3BAF2F54905400126ACC /* RunUI in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BAE2F54905400126ACC /* RunUI */; };
+		E2FB3BF82F56FBC000126ACC /* CoreKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BF72F56FBC000126ACC /* CoreKit */; };
+		E2FB3BFB2F56FBD700126ACC /* CoreUI in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BFA2F56FBD700126ACC /* CoreUI */; };
+		E2FB3BFE2F56FBE800126ACC /* RunKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BFD2F56FBE800126ACC /* RunKit */; };
+		E2FB3C012F56FBF700126ACC /* RunUI in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C002F56FBF700126ACC /* RunUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,8 +34,6 @@
 		E263D3112F3F8E920089E1E8 /* Runimation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runimation.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E263D31E2F3F8E920089E1E8 /* RunimationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunimationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E263D3282F3F8E920089E1E8 /* RunimationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunimationUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E2FB3AF52F5443A100126ACC /* RunUI */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RunUI; sourceTree = "<group>"; };
-		E2FB3BAA2F54448800126ACC /* RunKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RunKit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -59,8 +59,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E2FB3BAF2F54905400126ACC /* RunUI in Frameworks */,
-				E2FB3BAD2F54905400126ACC /* RunKit in Frameworks */,
+				E2FB3C012F56FBF700126ACC /* RunUI in Frameworks */,
+				E2FB3BF82F56FBC000126ACC /* CoreKit in Frameworks */,
+				E2FB3BFE2F56FBE800126ACC /* RunKit in Frameworks */,
+				E2FB3BFB2F56FBD700126ACC /* CoreUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,7 +86,6 @@
 		E263D3082F3F8E910089E1E8 = {
 			isa = PBXGroup;
 			children = (
-				E2FB3AF32F535ABC00126ACC /* Packages */,
 				E263D3132F3F8E920089E1E8 /* Runimation */,
 				E263D3212F3F8E920089E1E8 /* RunimationTests */,
 				E263D32B2F3F8E920089E1E8 /* RunimationUITests */,
@@ -101,15 +102,6 @@
 				E263D3282F3F8E920089E1E8 /* RunimationUITests.xctest */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		E2FB3AF32F535ABC00126ACC /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				E2FB3BAA2F54448800126ACC /* RunKit */,
-				E2FB3AF52F5443A100126ACC /* RunUI */,
-			);
-			path = Packages;
 			sourceTree = "<group>";
 		};
 		E2FB3BAB2F54905400126ACC /* Frameworks */ = {
@@ -139,8 +131,10 @@
 			);
 			name = Runimation;
 			packageProductDependencies = (
-				E2FB3BAC2F54905400126ACC /* RunKit */,
-				E2FB3BAE2F54905400126ACC /* RunUI */,
+				E2FB3BF72F56FBC000126ACC /* CoreKit */,
+				E2FB3BFA2F56FBD700126ACC /* CoreUI */,
+				E2FB3BFD2F56FBE800126ACC /* RunKit */,
+				E2FB3C002F56FBF700126ACC /* RunUI */,
 			);
 			productName = runimation;
 			productReference = E263D3112F3F8E920089E1E8 /* Runimation.app */;
@@ -224,6 +218,12 @@
 			);
 			mainGroup = E263D3082F3F8E910089E1E8;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E2FB3BF62F56FBC000126ACC /* XCLocalSwiftPackageReference "Packages/CoreKit" */,
+				E2FB3BF92F56FBD700126ACC /* XCLocalSwiftPackageReference "Packages/CoreUI" */,
+				E2FB3BFC2F56FBE800126ACC /* XCLocalSwiftPackageReference "Packages/RunKit" */,
+				E2FB3BFF2F56FBF700126ACC /* XCLocalSwiftPackageReference "Packages/RunUI" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E263D3122F3F8E920089E1E8 /* Products */;
 			projectDirPath = "";
@@ -649,12 +649,39 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		E2FB3BF62F56FBC000126ACC /* XCLocalSwiftPackageReference "Packages/CoreKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/CoreKit;
+		};
+		E2FB3BF92F56FBD700126ACC /* XCLocalSwiftPackageReference "Packages/CoreUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/CoreUI;
+		};
+		E2FB3BFC2F56FBE800126ACC /* XCLocalSwiftPackageReference "Packages/RunKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/RunKit;
+		};
+		E2FB3BFF2F56FBF700126ACC /* XCLocalSwiftPackageReference "Packages/RunUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/RunUI;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
-		E2FB3BAC2F54905400126ACC /* RunKit */ = {
+		E2FB3BF72F56FBC000126ACC /* CoreKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CoreKit;
+		};
+		E2FB3BFA2F56FBD700126ACC /* CoreUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CoreUI;
+		};
+		E2FB3BFD2F56FBE800126ACC /* RunKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RunKit;
 		};
-		E2FB3BAE2F54905400126ACC /* RunUI */ = {
+		E2FB3C002F56FBF700126ACC /* RunUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RunUI;
 		};

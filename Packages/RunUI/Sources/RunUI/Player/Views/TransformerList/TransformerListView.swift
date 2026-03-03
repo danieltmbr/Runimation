@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreUI
 import RunKit
 
 /// Displays the active transformer chain and the available catalog,

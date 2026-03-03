@@ -1,4 +1,5 @@
 import Foundation
+import CoreKit
 
 /// Run Transformer transforms the data of a run depending
 /// on its internal implementation while keeping the strucutre
