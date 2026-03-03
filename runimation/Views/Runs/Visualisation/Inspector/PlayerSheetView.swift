@@ -1,5 +1,6 @@
 import SwiftUI
-import RunKit
+import CoreUI
+import Animations
 import RunUI
 
 #if os(iOS)
@@ -16,8 +17,7 @@ import RunUI
 struct PlayerSheetView: View {
 
     @Binding var selectedPanel: InspectorFocus
-    @Binding var baseH: Double
-    @Binding var octaves: Double
+    @Binding var warp: Warp
 
     var body: some View {
         VStack(spacing: 0) {
@@ -46,7 +46,7 @@ struct PlayerSheetView: View {
         switch selectedPanel {
         case .animation:
             ScrollView {
-                AnimationPreferencesContent(baseH: $baseH, octaves: $octaves)
+                AdjustableForm(value: $warp)
             }
         case .pipeline:
             SignalProcessingContent()

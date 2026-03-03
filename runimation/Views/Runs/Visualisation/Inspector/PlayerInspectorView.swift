@@ -1,4 +1,6 @@
 import SwiftUI
+import CoreUI
+import Animations
 
 #if os(macOS)
 
@@ -17,10 +19,7 @@ struct PlayerInspectorView: View {
     var selectedPanel: InspectorFocus
 
     @Binding
-    var baseH: Double
-
-    @Binding
-    var octaves: Double
+    var warp: Warp
 
     var body: some View {
         VStack(spacing: 0) {
@@ -76,7 +75,7 @@ struct PlayerInspectorView: View {
         switch selectedPanel {
         case .animation:
             ScrollView {
-                AnimationPreferencesContent(baseH: $baseH, octaves: $octaves)
+                AdjustableForm(value: $warp)
             }
         case .pipeline:
             SignalProcessingContent()

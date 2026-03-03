@@ -1,58 +1,52 @@
 import SwiftUI
-import RunKit
-import RunUI
 
-struct WarpView: View {
-    
-    @PlayerState(\.segment.animation)
-    private var animationSegment
-    
-    @PlayerState(\.progress.animation)
-    private var progress
+/// A full-screen Metal-rendered domain warp animation.
+///
+/// Driven by an `AnimationState` value (constructed from run metrics in the app layer)
+/// and a `Warp` configuration binding for user-adjustable parameters.
+/// Supports pinch-to-zoom and pan gestures for noise-space navigation.
+///
+public struct WarpView: View {
 
-    @PlayerState(\.run.animation)
-    private var run
-    
-    @PlayerState(\.duration)
-    private var duration
-    
+    let state: AnimationState
+
+    var configuration: Binding<Warp>
+
     @State
     private var scale: Float = 0.007
-    
+
     @State
     private var baseScale: Float = 0.007
-    
+
     @State
     private var offset: SIMD2<Float> = .zero
-    
+
     @State
     private var baseOffset: SIMD2<Float> = .zero
-    
-    var smoothness: Binding<Double>
-    
-    var details: Binding<Double>
-    
-    var body: some View {
-        
-        // RunPlayer.progress changes every ~16ms on the main actor via its
-        // internal Task timer. @Observable tracks the access to `progress`
-        // (and `runs`) made here in body, so SwiftUI automatically re-renders
-        // this view on each tick — no TimelineView needed.
-        let segment  = animationSegment
-        let animTime = Float(progress * duration(for: run.duration))
-        let speed    = Float(segment.speed)
+
+    public init(state: AnimationState, configuration: Binding<Warp>) {
+        self.state = state
+        self.configuration = configuration
+    }
+
+    public var body: some View {
+
+        // `state` changes every ~16ms when driven by a 60fps PlayerState observer.
+        // SwiftUI re-renders this view on each tick — no TimelineView needed.
+        let animTime = state.time
+        let speed    = state.speed
         let scale    = self.scale
-        let hr       = Float(segment.heartRate)
-        let dx       = Float(segment.direction.x)
-        let dy       = Float(segment.direction.y)
-        let h        = shaderH(elevation: segment.elevation)
+        let hr       = state.heartRate
+        let dx       = state.direction.x
+        let dy       = state.direction.y
+        let h        = shaderH(elevation: state.elevation)
         let offset   = self.offset
-        let octaves  = Float(self.details.wrappedValue)
-        
+        let octaves  = Float(configuration.wrappedValue.details)
+
         Rectangle()
             .visualEffect { content, _ in
                 content.colorEffect(
-                    ShaderLibrary.runShader(
+                    ShaderLibrary.bundle(.module).runShader(
                         .float(animTime),
                         .float(octaves),
                         .float(h),
@@ -69,16 +63,16 @@ struct WarpView: View {
             .gesture(magnifyGesture)
             .simultaneousGesture(panGesture)
     }
-    
+
     // MARK: - Private
-        
-    private func shaderH(elevation: Double) -> Float {
-        let elevationOffset = (1.0 - elevation - 0.5) * 0.3
-        return Float(max(0, min(1, smoothness.wrappedValue + elevationOffset)))
+
+    private func shaderH(elevation: Float) -> Float {
+        let elevationOffset = (1.0 - Double(elevation) - 0.5) * 0.3
+        return Float(max(0, min(1, configuration.wrappedValue.smoothness + elevationOffset)))
     }
-    
+
     // MARK: - Gestures
-    
+
     private var magnifyGesture: some Gesture {
         MagnifyGesture()
             .onChanged { value in
@@ -98,7 +92,7 @@ struct WarpView: View {
                 baseOffset = offset
             }
     }
-    
+
     private var panGesture: some Gesture {
         DragGesture()
             .onChanged { value in
@@ -109,13 +103,12 @@ struct WarpView: View {
                 baseOffset = offset
             }
     }
-    
+
     private func clamp(_ value: Float, min lo: Float, max hi: Float) -> Float {
         Swift.min(hi, Swift.max(lo, value))
     }
-
 }
 
 #Preview {
-    WarpView(smoothness: .constant(1), details: .constant(5))
+    WarpView(state: .zero, configuration: .constant(Warp()))
 }

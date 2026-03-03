@@ -1,21 +1,21 @@
 import SwiftUI
 
-struct NoiseDemoView: View {
-    
+public struct NoiseDemoView: View {
+
     @State
     private var interpolationMode: InterpolationMode = .linear
-    
+
     @State
     private var startTime = Date()
-    
+
     @State
     private var scale: Double = 1
 
-    
+
     enum InterpolationMode: String, CaseIterable, Sendable {
         case linear = "Linear (Fractional)"
         case smooth = "Smooth (Quintic)"
-        
+
         var modeValue: Float {
             switch self {
             case .linear: return 0.0
@@ -23,8 +23,10 @@ struct NoiseDemoView: View {
             }
         }
     }
-    
-    var body: some View {
+
+    public init() {}
+
+    public var body: some View {
         VStack(spacing: 0) {
             // The noise visualization
             TimelineView(.animation) { timeline in
@@ -33,7 +35,7 @@ struct NoiseDemoView: View {
                     .visualEffect { content, proxy in
                         content
                             .colorEffect(
-                                ShaderLibrary.noiseShader(
+                                ShaderLibrary.bundle(.module).noiseShader(
                                     .float(elapsed),
                                     .float(scale),
                                     .float(interpolationMode.modeValue)
@@ -41,13 +43,13 @@ struct NoiseDemoView: View {
                             )
                     }
             }
-            
+
             // Control panel
             VStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Interpolation Mode")
                         .font(.headline)
-                    
+
                     Picker("Mode", selection: $interpolationMode) {
                         ForEach(InterpolationMode.allCases, id: \.self) { mode in
                             Text(mode.rawValue).tag(mode)
@@ -55,22 +57,22 @@ struct NoiseDemoView: View {
                     }
                     .pickerStyle(.segmented)
                 }
-                
+
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Scale: \(scale, specifier: "%.4f")")
                         .font(.headline)
                     Text("Zoom level (smaller = more zoomed out)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    
+
                     Slider(value: $scale, in: 1...1000)
                 }
-                
+
                 VStack(alignment: .leading, spacing: 8) {
                     Text("What you're seeing:")
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                    
+
                     if interpolationMode == .linear {
                         Text("• Using raw fractional values for interpolation\n• Notice the grid artifacts and discontinuities\n• Colors change abruptly at cell boundaries")
                             .font(.caption)
