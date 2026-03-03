@@ -8,6 +8,7 @@
 ## Coding Conventions
 
 - **Break complex functions into smaller, named helpers.** Each function should have a single clear responsibility. If a function needs a comment to explain a section, that section is a candidate for its own private helper.
+- **Never write free-standing global functions as helpers.** All helper functions belong inside the type they serve as `private` (or `private extension`) members. A global free function is only appropriate when it genuinely belongs to no type (which is rare).
 - **Think systematically in small composable bits of implementations.** When you find yourself implementing repeating patterns, make them a composable component instead of a private method burried deep inside a feature. This is true for UI as well as functional components like the `RunTransformer`.
 - **Don't fight the system, follow its conventions.** 
     - For UI follow Apple's SwiftUI conventions.

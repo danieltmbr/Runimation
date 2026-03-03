@@ -10,29 +10,6 @@ struct WarpResult {
 };
 
 float fbm(float2 position, float octaves, float h);
-float3 color(float t, float3 a, float3 b, float3 c, float3 d);
-
-// Heart-rate-driven palette: interpolates from cool (rest) to warm (exertion)
-float3 runPalette(float t, float energy) {
-    // Cool palette (low HR) — blues and teals
-    float3 a_cool = float3(0.5, 0.6, 0.7);
-    float3 b_cool = float3(0.3, 0.3, 0.4);
-    float3 c_cool = float3(1.0, 1.0, 1.0);
-    float3 d_cool = float3(0.0, 0.25, 0.5);
-
-    // Warm palette (high HR) — reds and golds
-    float3 a_warm = float3(0.8, 0.5, 0.4);
-    float3 b_warm = float3(0.3, 0.4, 0.2);
-    float3 c_warm = float3(1.0, 1.0, 1.0);
-    float3 d_warm = float3(0.0, 0.10, 0.20);
-
-    float3 a = mix(a_cool, a_warm, energy);
-    float3 b = mix(b_cool, b_warm, energy);
-    float3 c = mix(c_cool, c_warm, energy);
-    float3 d = mix(d_cool, d_warm, energy);
-
-    return color(t, a, b, c, d);
-}
 
 // Domain warp driven by pace-weighted time + running direction.
 //
@@ -90,7 +67,8 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
     float dirX,       // speed-weighted direction X (East+, West-)
     float dirY,       // speed-weighted direction Y (North+, South-)
     float offsetX,    // noise-space pan offset
-    float offsetY
+    float offsetY,
+    texture2d<half, access::sample> palette [[texture(0)]]
 )
 {
     float2 uv = position * scale + float2(offsetX, offsetY);
@@ -114,8 +92,12 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
     float2 r = w.r;
 
     // === COLORING ===
+    // Sample the photo-derived palette LUT using warp magnitude as the base UV.
+    // Low HR stays near the cool (low-u) region; high HR shifts toward the warm end.
+    constexpr sampler paletteSampler(coord::normalized, address::clamp_to_edge, filter::linear);
     float warpMag = clamp(length(q) * 0.5 + length(r) * 0.3, 0.0, 1.0);
-    float3 c = runPalette(warpMag, heartRate);
+    float u = clamp(warpMag * 0.8 + heartRate * 0.2, 0.0, 1.0);
+    float3 c = float3(palette.sample(paletteSampler, float2(u, 0.5)).rgb);
 
     float rStrength = clamp(dot(r, r) * (0.2 + heartRate * 0.3), 0.0, 1.0);
     float3 highlight = mix(float3(0.9, 0.95, 1.0), float3(1.0, 0.85, 0.7), heartRate);

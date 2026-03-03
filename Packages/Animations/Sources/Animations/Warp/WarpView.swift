@@ -24,6 +24,9 @@ public struct WarpView: View {
     @State
     private var baseOffset: SIMD2<Float> = .zero
 
+    @State
+    private var paletteImage: Image = PaletteGradientRenderer.image(.default)
+
     public init(state: AnimationState, configuration: Binding<Warp>) {
         self.state = state
         self.configuration = configuration
@@ -56,12 +59,16 @@ public struct WarpView: View {
                         .float(dx),
                         .float(dy),
                         .float(offset.x),
-                        .float(offset.y)
+                        .float(offset.y),
+                        .image(paletteImage)
                     )
                 )
             }
             .gesture(magnifyGesture)
             .simultaneousGesture(panGesture)
+            .onChange(of: configuration.wrappedValue.palette) { _, newPalette in
+                paletteImage = PaletteGradientRenderer.image(newPalette)
+            }
     }
 
     // MARK: - Private

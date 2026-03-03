@@ -16,7 +16,7 @@ let package = Package(
                 .product(name: "CoreKit", package: "CoreKit"),
                 .product(name: "CoreUI", package: "CoreUI"),
             ],
-            resources: [.process("../../Shaders")]
+            resources: [.process("Resources/Shaders")]
         )
     ]
 )
