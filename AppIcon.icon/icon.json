@@ -1,0 +1,112 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:0.89313,0.43785,0.58968,1.00000",
+      "display-p3:0.78027,0.27441,0.44312,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.5,
+        "y" : 0
+      },
+      "stop" : {
+        "x" : 0.5,
+        "y" : 0.7
+      }
+    }
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "Bold-Logo 2.svg",
+          "name" : "Bold-Logo 2",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              40
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "Oval 2.svg",
+          "name" : "Oval 2",
+          "opacity" : 0.2,
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              -60
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "blur-material" : 0.5,
+      "hidden" : true,
+      "layers" : [
+        {
+          "fill" : {
+            "automatic-gradient" : "display-p3:0.99219,0.98438,0.90967,1.00000"
+          },
+          "glass" : true,
+          "image-name" : "Shape.svg",
+          "name" : "Shape",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -6.33428953733528e-09,
+              -35.0102017824247
+            ]
+          }
+        },
+        {
+          "image-name" : "Bold-Logo.svg",
+          "name" : "Bold-Logo"
+        },
+        {
+          "image-name" : "Oval.svg",
+          "name" : "Oval"
+        }
+      ],
+      "lighting" : "combined",
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.46
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

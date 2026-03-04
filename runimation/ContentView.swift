@@ -1,36 +1,44 @@
-import SwiftUI
+import Animations
 import RunKit
 import RunUI
-import Animations
+import StravaKit
+import SwiftUI
 
 struct ContentView: View {
-    
+
     @State
-    private var player: RunPlayer?
-    
+    private var player = RunPlayer(
+        transformers: [GuassianRun(), SpeedWeightedRun(), WaveSamplingTransformer()]
+    )
+
+    @State
+    private var stravaClient = StravaClient()
+
     @State
     private var showInspector = false
-    
+
     @State
     private var selectedTab: String = "visualiser"
+
+    private var hasRun: Bool {
+        !player.run.metrics.segments.isEmpty
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
             TabSection("Runs") {
                 Tab("Visualisation", systemImage: "sparkles", value: "visualiser") {
-                    if let player {
+                    if hasRun {
                         VisualiserView(showInspector: $showInspector)
-                            .player(player)
                     } else {
-                        ProgressView("Loading run data...")
+                        ProgressView("Loading run data…")
                     }
                 }
                 Tab("Metrics", systemImage: "chart.xyaxis.line", value: "metrics") {
-                    if let player {
-                        RunMetricsView(run: player.run.metrics)
-                    } else {
-                        ProgressView("Loading run data...")
-                    }
+                    RunMetricsView(run: player.run.metrics)
+                }
+                Tab("Library", systemImage: "figure.run", value: "library") {
+                    StravaRunsView { selectedTab = "visualiser" }
                 }
             }
 
@@ -47,29 +55,23 @@ struct ContentView: View {
             }
         }
         .tabViewStyle(.sidebarAdaptable)
+        .player(player)
+        .environment(stravaClient)
 #if os(iOS)
-        .tabViewBottomAccessory(isEnabled: selectedTab == "visualiser" && player != nil) {
-            if let player {
-                PlaybackControls()
-                    .playbackControlsStyle(.compact)
-                    .onTapGesture { showInspector.toggle() }
-                    .player(player)
-            }
+        .tabViewBottomAccessory(isEnabled: selectedTab == "visualiser" && hasRun) {
+            PlaybackControls()
+                .playbackControlsStyle(.compact)
+                .onTapGesture { showInspector.toggle() }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
 #endif
         .task {
-            if player == nil {
-                player = try? await Task.detached {
-                    let gpxParser = GPX.Parser()
-                    guard let track = gpxParser.parse(fileNamed: "run-01").first else { return nil }
-                    let p = await RunPlayer(
-                        transformers: [GuassianRun(), SpeedWeightedRun(), WaveSamplingTransformer()]
-                    )
-                    try await p.setRun(track)
-                    return p
-                }.value
-            }
+            guard !hasRun else { return }
+            let track = await Task.detached {
+                GPX.Parser().parse(fileNamed: "run-01").first
+            }.value
+            guard let track else { return }
+            try? await player.setRun(track)
         }
     }
 }

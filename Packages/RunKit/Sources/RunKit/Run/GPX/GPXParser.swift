@@ -3,27 +3,49 @@ import Foundation
 public enum GPX: Equatable, Sendable {
 
     public struct Point: Equatable, Sendable {
-        
-        let cadence: Int
-        
-        let elevation: Double
-        
-        let heartRate: Int
-        
-        let latitude: Double
-        
-        let longitude: Double
-        
-        let time: Date
+
+        public let cadence: Int
+
+        public let elevation: Double
+
+        public let heartRate: Int
+
+        public let latitude: Double
+
+        public let longitude: Double
+
+        public let time: Date
+
+        public init(
+            cadence: Int,
+            elevation: Double,
+            heartRate: Int,
+            latitude: Double,
+            longitude: Double,
+            time: Date
+        ) {
+            self.cadence = cadence
+            self.elevation = elevation
+            self.heartRate = heartRate
+            self.latitude = latitude
+            self.longitude = longitude
+            self.time = time
+        }
     }
 
     public struct Track: Equatable, Sendable {
-        
-        fileprivate(set) var name: String
-        
-        fileprivate(set) var points: [Point]
-        
-        fileprivate(set) var type: String
+
+        public fileprivate(set) var name: String
+
+        public fileprivate(set) var points: [Point]
+
+        public fileprivate(set) var type: String
+
+        public init(name: String, points: [Point] = [], type: String = "") {
+            self.name = name
+            self.points = points
+            self.type = type
+        }
     }
     
     public final class Parser {

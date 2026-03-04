@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E278DFE02F587C94002420C0 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = E278DFDF2F587C94002420C0 /* AppIcon.icon */; };
 		E2FB3BF82F56FBC000126ACC /* CoreKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BF72F56FBC000126ACC /* CoreKit */; };
 		E2FB3BFB2F56FBD700126ACC /* CoreUI in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BFA2F56FBD700126ACC /* CoreUI */; };
 		E2FB3BFE2F56FBE800126ACC /* RunKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BFD2F56FBE800126ACC /* RunKit */; };
 		E2FB3C012F56FBF700126ACC /* RunUI in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C002F56FBF700126ACC /* RunUI */; };
 		E2FB3C042F57140000126ACC /* Animations in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C032F57140000126ACC /* Animations */; };
+		E2FB3C7D2F578B6200126ACC /* StravaKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C7C2F578B6200126ACC /* StravaKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,11 +37,25 @@
 		E263D3112F3F8E920089E1E8 /* Runimation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runimation.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E263D31E2F3F8E920089E1E8 /* RunimationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunimationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E263D3282F3F8E920089E1E8 /* RunimationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunimationUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E278DFDF2F587C94002420C0 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E278E0582F587FB0002420C0 /* Exceptions for "Runimation" folder in "Runimation" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = E263D3102F3F8E920089E1E8 /* Runimation */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E263D3132F3F8E920089E1E8 /* Runimation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E278E0582F587FB0002420C0 /* Exceptions for "Runimation" folder in "Runimation" target */,
+			);
 			path = Runimation;
 			sourceTree = "<group>";
 		};
@@ -62,6 +78,7 @@
 			files = (
 				E2FB3C042F57140000126ACC /* Animations in Frameworks */,
 				E2FB3C012F56FBF700126ACC /* RunUI in Frameworks */,
+				E2FB3C7D2F578B6200126ACC /* StravaKit in Frameworks */,
 				E2FB3BF82F56FBC000126ACC /* CoreKit in Frameworks */,
 				E2FB3BFE2F56FBE800126ACC /* RunKit in Frameworks */,
 				E2FB3BFB2F56FBD700126ACC /* CoreUI in Frameworks */,
@@ -93,6 +110,7 @@
 				E263D32B2F3F8E920089E1E8 /* RunimationUITests */,
 				E2FB3BAB2F54905400126ACC /* Frameworks */,
 				E263D3122F3F8E920089E1E8 /* Products */,
+				E278DFDF2F587C94002420C0 /* AppIcon.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -138,6 +156,7 @@
 				E2FB3BFD2F56FBE800126ACC /* RunKit */,
 				E2FB3C002F56FBF700126ACC /* RunUI */,
 				E2FB3C032F57140000126ACC /* Animations */,
+				E2FB3C7C2F578B6200126ACC /* StravaKit */,
 			);
 			productName = runimation;
 			productReference = E263D3112F3F8E920089E1E8 /* Runimation.app */;
@@ -227,6 +246,7 @@
 				E2FB3BFC2F56FBE800126ACC /* XCLocalSwiftPackageReference "Packages/RunKit" */,
 				E2FB3BFF2F56FBF700126ACC /* XCLocalSwiftPackageReference "Packages/RunUI" */,
 				E2FB3C022F5713FF00126ACC /* XCLocalSwiftPackageReference "Packages/Animations" */,
+				E2FB3C7B2F578B6200126ACC /* XCLocalSwiftPackageReference "Packages/StravaKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E263D3122F3F8E920089E1E8 /* Products */;
@@ -245,6 +265,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E278DFE02F587C94002420C0 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -420,6 +441,8 @@
 		};
 		E263D3332F3F8E920089E1E8 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = E263D3132F3F8E920089E1E8 /* Runimation */;
+			baseConfigurationReferenceRelativePath = Config/Secrets.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -431,8 +454,11 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Runimation/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Runimation;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_STRAVA_CLIENT_ID = "$(STRAVA_CLIENT_ID)";
+				INFOPLIST_KEY_STRAVA_CLIENT_SECRET = "$(STRAVA_CLIENT_SECRET)";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -466,6 +492,8 @@
 		};
 		E263D3342F3F8E920089E1E8 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = E263D3132F3F8E920089E1E8 /* Runimation */;
+			baseConfigurationReferenceRelativePath = Config/Secrets.xcconfig;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -477,8 +505,11 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Runimation/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Runimation;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_STRAVA_CLIENT_ID = "$(STRAVA_CLIENT_ID)";
+				INFOPLIST_KEY_STRAVA_CLIENT_SECRET = "$(STRAVA_CLIENT_SECRET)";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -674,6 +705,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/Animations;
 		};
+		E2FB3C7B2F578B6200126ACC /* XCLocalSwiftPackageReference "Packages/StravaKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/StravaKit;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -696,6 +731,10 @@
 		E2FB3C032F57140000126ACC /* Animations */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Animations;
+		};
+		E2FB3C7C2F578B6200126ACC /* StravaKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = StravaKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
