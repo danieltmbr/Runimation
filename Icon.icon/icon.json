@@ -1,0 +1,97 @@
+{
+  "fill" : {
+    "automatic-gradient" : "display-p3:0.90766,0.32492,0.52259,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "Bold-Logo.svg",
+          "name" : "Bold-Logo"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "hidden" : true,
+      "layers" : [
+        {
+          "glass" : true,
+          "hidden" : true,
+          "image-name" : "Shape.svg",
+          "name" : "Shape"
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "blur-material" : null,
+      "hidden" : true,
+      "layers" : [
+        {
+          "fill" : {
+            "automatic-gradient" : "display-p3:0.42749,0.10980,0.19214,1.00000"
+          },
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "Flag.svg",
+          "name" : "Flag",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -33.22169156395921,
+              919.4682241347894
+            ]
+          }
+        },
+        {
+          "fill" : {
+            "automatic-gradient" : "display-p3:0.96826,0.92920,0.84717,1.00000"
+          },
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "Patch.svg",
+          "name" : "Patch",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              60.58260719865666,
+              306.1488011828683
+            ]
+          }
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

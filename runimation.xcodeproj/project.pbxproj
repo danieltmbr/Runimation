@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E278DFE02F587C94002420C0 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = E278DFDF2F587C94002420C0 /* AppIcon.icon */; };
+		E20E5B512F5C63590004D558 /* Icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = E20E5B502F5C63590004D558 /* Icon.icon */; };
 		E2FB3BF82F56FBC000126ACC /* CoreKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BF72F56FBC000126ACC /* CoreKit */; };
 		E2FB3BFB2F56FBD700126ACC /* CoreUI in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BFA2F56FBD700126ACC /* CoreUI */; };
 		E2FB3BFE2F56FBE800126ACC /* RunKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BFD2F56FBE800126ACC /* RunKit */; };
@@ -34,10 +34,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E20E5B502F5C63590004D558 /* Icon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = Icon.icon; sourceTree = "<group>"; };
 		E263D3112F3F8E920089E1E8 /* Runimation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runimation.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E263D31E2F3F8E920089E1E8 /* RunimationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunimationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E263D3282F3F8E920089E1E8 /* RunimationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunimationUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E278DFDF2F587C94002420C0 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -110,7 +110,7 @@
 				E263D32B2F3F8E920089E1E8 /* RunimationUITests */,
 				E2FB3BAB2F54905400126ACC /* Frameworks */,
 				E263D3122F3F8E920089E1E8 /* Products */,
-				E278DFDF2F587C94002420C0 /* AppIcon.icon */,
+				E20E5B502F5C63590004D558 /* Icon.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -265,7 +265,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E278DFE02F587C94002420C0 /* AppIcon.icon in Resources */,
+				E20E5B512F5C63590004D558 /* Icon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -444,7 +444,7 @@
 			baseConfigurationReferenceAnchor = E263D3132F3F8E920089E1E8 /* Runimation */;
 			baseConfigurationReferenceRelativePath = Config/Secrets.xcconfig;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = Icon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -495,7 +495,7 @@
 			baseConfigurationReferenceAnchor = E263D3132F3F8E920089E1E8 /* Runimation */;
 			baseConfigurationReferenceRelativePath = Config/Secrets.xcconfig;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = Icon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
