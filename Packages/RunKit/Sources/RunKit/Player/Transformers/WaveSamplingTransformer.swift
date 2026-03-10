@@ -63,8 +63,9 @@ public struct WaveSamplingTransformer: RunTransformer {
         let meanDuration = window.map(\.time.duration).reduce(0.0, +) / Double(window.count)
 
         return Run.Segment(
-            direction: meanDirection(from: window),
-            cadence:      nth(window.map(\.cadence),      highest: pickHighest),
+            cadence:       nth(window.map(\.cadence),      highest: pickHighest),
+            coordinate:    meanCoordinate(from: window),
+            direction:     meanDirection(from: window),
             elevation:     nth(window.map(\.elevation),     highest: pickHighest),
             elevationRate: nth(window.map(\.elevationRate), highest: pickHighest),
             heartRate:     nth(window.map(\.heartRate),     highest: pickHighest),
@@ -81,6 +82,16 @@ public struct WaveSamplingTransformer: RunTransformer {
     private func nth(_ values: [Double], highest: Bool) -> Double {
         let sorted = highest ? values.sorted(by: >) : values.sorted(by: <)
         return sorted[min(rank - 1, sorted.count - 1)]
+    }
+
+    /// Returns the mean coordinate of the window (geographic centroid of the time slice).
+    ///
+    private func meanCoordinate(from window: [Run.Segment]) -> CGPoint {
+        let count = Double(window.count)
+        return CGPoint(
+            x: window.reduce(0.0) { $0 + $1.coordinate.x } / count,
+            y: window.reduce(0.0) { $0 + $1.coordinate.y } / count
+        )
     }
 
     /// Returns the normalised vector mean of the window's direction fields.

@@ -39,8 +39,9 @@ public struct LinearRunInterpolator: RunInterpolator {
             let end = startDate.addingTimeInterval(t + timeStep)
             let s = segment(at: t, in: run)
             return Run.Segment(
-                direction: s.direction,
                 cadence: s.cadence,
+                coordinate: s.coordinate,
+                direction: s.direction,
                 elevation: s.elevation,
                 elevationRate: s.elevationRate,
                 heartRate: s.heartRate,
@@ -90,11 +91,15 @@ public struct LinearRunInterpolator: RunInterpolator {
         let t = dt > 0 ? (timeOffset - a.time.start.timeIntervalSince(origin)) / dt : 0
 
         return Run.Segment(
+            cadence: a.cadence + (b.cadence - a.cadence) * t,
+            coordinate: CGPoint(
+                x: a.coordinate.x + (b.coordinate.x - a.coordinate.x) * t,
+                y: a.coordinate.y + (b.coordinate.y - a.coordinate.y) * t
+            ),
             direction: CGPoint(
                 x: a.direction.x + (b.direction.x - a.direction.x) * t,
                 y: a.direction.y + (b.direction.y - a.direction.y) * t
             ),
-            cadence: a.cadence + (b.cadence - a.cadence) * t,
             elevation: a.elevation + (b.elevation - a.elevation) * t,
             elevationRate: a.elevationRate + (b.elevationRate - a.elevationRate) * t,
             heartRate: a.heartRate + (b.heartRate - a.heartRate) * t,

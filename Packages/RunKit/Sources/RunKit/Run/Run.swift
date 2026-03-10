@@ -7,26 +7,34 @@ public struct Run: Equatable, Sendable {
     ///
     public struct Segment: Equatable, Sendable {
 
+        /// Steps per minute. Zero indicates missing sensor data.
+        ///
+        public let cadence: Double
+
+        /// Geographic position of the segment's endpoint.
+        ///
+        /// X: longitude (degrees)
+        /// Y: latitude (degrees)
+        ///
+        public let coordinate: CGPoint
+
         /// Direction of the run
         ///
         /// X: east+, west-
         /// Y: north+, south-
         ///
         public let direction: CGPoint
-
+        
+        /// Distance covered in this segment, in meters.
+        ///
+        public var distance: Double { speed * duration }
+        
+        
         /// Duration of the segment
         ///
         public var duration: TimeInterval {
             time.duration
         }
-
-        /// Distance covered in this segment, in meters.
-        ///
-        public var distance: Double { speed * duration }
-
-        /// Steps per minute. Zero indicates missing sensor data.
-        ///
-        public let cadence: Double
 
         /// Elevation in meter
         public let elevation: Double
@@ -51,8 +59,9 @@ public struct Run: Equatable, Sendable {
         /// A segment with all zero values and current time.
         ///
         public static let zero = Segment(
-            direction: .zero,
             cadence: 0,
+            coordinate: .zero,
+            direction: .zero,
             elevation: 0,
             elevationRate: 0,
             heartRate: 0,
@@ -72,6 +81,14 @@ public struct Run: Equatable, Sendable {
         ///
         public let cadence: ClosedRange<Double>
 
+        /// Bounding box of all segment coordinates (meters, equirectangular).
+        ///
+        public let coordinateBounds: CGRect
+
+        /// Total distance of the run: 0...totalMeters
+        ///
+        public let distance: ClosedRange<Double>
+
         public let elevation: ClosedRange<Double>
 
         /// Rate of elevation change in m/s. Negative = descending, positive = ascending.
@@ -86,20 +103,17 @@ public struct Run: Equatable, Sendable {
 
         public let time: ClosedRange<TimeInterval>
 
-        /// Total distance of the run: 0...totalMeters
-        ///
-        public let distance: ClosedRange<Double>
-        
         /// A spectrum where each range's magnitude is zero
         ///
         public static let zero = Spectrum(
             cadence: 0...0,
+            coordinateBounds: .zero,
+            distance: 0...0,
             elevation: 0...0,
             elevationRate: 0...0,
             heartRate: 0...0,
             speed: 0...0,
-            time: 0...0,
-            distance: 0...0
+            time: 0...0
         )
     }
 
@@ -142,14 +156,19 @@ extension Run.Spectrum {
         let nonZeroHR = segments.map(\.heartRate).filter { $0 > 0 }
         let nonZeroCadence = segments.map(\.cadence).filter { $0 > 0 }
         let totalDistance = segments.reduce(0.0) { $0 + $1.distance }
+        let xs = segments.map(\.coordinate.x)
+        let ys = segments.map(\.coordinate.y)
+        let minX = xs.min() ?? 0, maxX = xs.max() ?? 0
+        let minY = ys.min() ?? 0, maxY = ys.max() ?? 0
         self.init(
             cadence: (nonZeroCadence.min() ?? 0)...(nonZeroCadence.max() ?? 0),
+            coordinateBounds: CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY),
+            distance: 0...totalDistance,
             elevation: (elevations.min() ?? 0)...(elevations.max() ?? 0),
             elevationRate: (elevationRates.min() ?? 0)...(elevationRates.max() ?? 0),
             heartRate: (nonZeroHR.min() ?? 0)...(nonZeroHR.max() ?? 0),
             speed: (speeds.min() ?? 0)...(speeds.max() ?? 0),
-            time: time,
-            distance: 0...totalDistance
+            time: time
         )
     }
 }

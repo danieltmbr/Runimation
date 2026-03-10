@@ -81,11 +81,12 @@ extension Run {
             let dirLen = sqrt(dx * dx + dy * dy)
 
             return Segment(
+                cadence: Double(curr.cadence),
+                coordinate: CGPoint(x: curr.longitude, y: curr.latitude),
                 direction: CGPoint(
                     x: dirLen > 1e-12 ? dx / dirLen : 0,
                     y: dirLen > 1e-12 ? dy / dirLen : 0
                 ),
-                cadence: Double(curr.cadence),
                 elevation: curr.elevation,
                 elevationRate: elevationRate,
                 heartRate: Double(curr.heartRate),
@@ -106,5 +107,7 @@ extension Run {
             let y = dLat
             return R * sqrt(x * x + y * y)
         }
+
     }
+
 }

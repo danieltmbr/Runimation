@@ -53,11 +53,12 @@ public struct SpeedWeightedRun: RunTransformer {
                 ? min(clampedSpeed / configuration.threshold, 1.0)
                 : 1.0
             return Run.Segment(
+                cadence: segment.cadence,
+                coordinate: segment.coordinate,
                 direction: CGPoint(
                     x: segment.direction.x * weight,
                     y: segment.direction.y * weight
                 ),
-                cadence: segment.cadence,
                 elevation: segment.elevation,
                 elevationRate: segment.elevationRate,
                 heartRate: segment.heartRate,

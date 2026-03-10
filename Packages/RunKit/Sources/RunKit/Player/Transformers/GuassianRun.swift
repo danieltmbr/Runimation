@@ -20,6 +20,10 @@ public struct GuassianRun: RunTransformer {
 
     public struct Configuration: Sendable {
 
+        /// Sigma parameter for coordinate smoothing (seconds per axis).
+        ///
+        public var coordinate: CGPoint
+
         /// Sigma parameter for direction smoothing (seconds per axis).
         ///
         public var direction: CGPoint
@@ -41,12 +45,14 @@ public struct GuassianRun: RunTransformer {
         public var speed: Double
 
         public init(
+            coordinate: CGPoint = CGPoint(x: 25, y: 25),
             direction: CGPoint = CGPoint(x: 25, y: 25),
             elevation: Double = 10,
             elevationRate: Double = 10,
             heartRate: Double = 10,
             speed: Double = 20
         ) {
+            self.coordinate = coordinate
             self.direction = direction
             self.elevation = elevation
             self.elevationRate = elevationRate
@@ -103,6 +109,16 @@ public struct GuassianRun: RunTransformer {
             times: times,
             sigma: configuration.heartRate
         )
+        let coordX = gaussianSmooth(
+            segments.map { Double($0.coordinate.x) },
+            times: times,
+            sigma: Double(configuration.coordinate.x)
+        )
+        let coordY = gaussianSmooth(
+            segments.map { Double($0.coordinate.y) },
+            times: times,
+            sigma: Double(configuration.coordinate.y)
+        )
         let dirX = gaussianSmooth(
             segments.map { Double($0.direction.x) },
             times: times,
@@ -116,8 +132,9 @@ public struct GuassianRun: RunTransformer {
 
         return (0..<segments.count).map { i in
             Run.Segment(
-                direction: CGPoint(x: dirX[i], y: dirY[i]),
                 cadence: segments[i].cadence,
+                coordinate: CGPoint(x: coordX[i], y: coordY[i]),
+                direction: CGPoint(x: dirX[i], y: dirY[i]),
                 elevation: elevation[i],
                 elevationRate: elevRate[i],
                 heartRate: heartRate[i],

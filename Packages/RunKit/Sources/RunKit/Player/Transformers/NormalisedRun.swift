@@ -1,4 +1,5 @@
 import Foundation
+import CoreGraphics
 
 /// The Normalised Run interpolator maps the values
 /// of each run segment between a [0, 1] or [-1, 1]
@@ -20,7 +21,7 @@ public struct NormalisedRun: RunTransformer {
         guard !run.segments.isEmpty else { return run }
         let scale = elevationRateScale(for: run.spectrum)
         let normalised = normalise(run.segments, using: run.spectrum, elevationRateScale: scale)
-        let spectrum = normalisedSpectrum(from: run.spectrum, elevationRateScale: scale)
+        let spectrum = normalisedSpectrum(from: run.spectrum, elevationRateScale: scale, normalised: normalised)
         return Run(segments: normalised, spectrum: spectrum)
     }
 
@@ -35,10 +36,15 @@ public struct NormalisedRun: RunTransformer {
         using spectrum: Run.Spectrum,
         elevationRateScale scale: Double
     ) -> [Run.Segment] {
-        segments.map { s in
+        let bounds = spectrum.coordinateBounds
+        let center = CGPoint(x: bounds.midX, y: bounds.midY)
+        let cosLat = cos(center.y * .pi / 180.0)
+        let halfSpan = max(bounds.width * cosLat, bounds.height) / 2.0
+        return segments.map { s in
             Run.Segment(
-                direction: s.direction,
                 cadence: normalise(s.cadence, in: spectrum.cadence),
+                coordinate: normaliseCoordinate(s.coordinate, center: center, cosLat: cosLat, halfSpan: halfSpan),
+                direction: s.direction,
                 elevation: normalise(s.elevation, in: spectrum.elevation),
                 elevationRate: scale > 0 ? s.elevationRate / scale : 0,
                 heartRate: normalise(s.heartRate, in: spectrum.heartRate),
@@ -48,22 +54,52 @@ public struct NormalisedRun: RunTransformer {
         }
     }
 
+    /// Maps a raw lat/lon coordinate to the normalised plane, preserving aspect ratio.
+    ///
+    /// Applies the equirectangular correction to the longitude axis (`cosLat`) so that
+    /// one unit on x equals the same physical distance as one unit on y.
+    /// The longer geographic axis maps to [-1, 1]; the shorter axis maps within that range.
+    ///
+    private func normaliseCoordinate(
+        _ coordinate: CGPoint,
+        center: CGPoint,
+        cosLat: Double,
+        halfSpan: Double
+    ) -> CGPoint {
+        guard halfSpan > 0 else { return .zero }
+        return CGPoint(
+            x: (coordinate.x - center.x) * cosLat / halfSpan,
+            y: (coordinate.y - center.y) / halfSpan
+        )
+    }
+
     /// Builds a fully normalised spectrum for the output run.
     /// elevationRate preserves its asymmetric range rather than clamping to [-1, 1],
     /// reflecting the actual peak in each direction.
+    /// coordinateBounds reflects the actual normalised extent, which may be narrower
+    /// than [-1, 1] on the shorter axis due to aspect-ratio preservation.
     ///
-    private func normalisedSpectrum(from spectrum: Run.Spectrum, elevationRateScale scale: Double) -> Run.Spectrum {
+    private func normalisedSpectrum(
+        from spectrum: Run.Spectrum,
+        elevationRateScale scale: Double,
+        normalised: [Run.Segment]
+    ) -> Run.Spectrum {
         let elevationRate: ClosedRange<Double> = scale > 0
             ? (spectrum.elevationRate.lowerBound / scale)...(spectrum.elevationRate.upperBound / scale)
             : 0...0
+        let xs = normalised.map(\.coordinate.x)
+        let ys = normalised.map(\.coordinate.y)
+        let minX = xs.min() ?? 0, maxX = xs.max() ?? 0
+        let minY = ys.min() ?? 0, maxY = ys.max() ?? 0
         return Run.Spectrum(
             cadence: 0...1,
+            coordinateBounds: CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY),
+            distance: spectrum.distance,
             elevation: 0...1,
             elevationRate: elevationRate,
             heartRate: 0...1,
             speed: 0...1,
-            time: spectrum.time,
-            distance: spectrum.distance
+            time: spectrum.time
         )
     }
 
