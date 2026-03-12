@@ -147,8 +147,14 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
     float lineWidth = 0.005;
     float line = 1.0 - smoothstep(0.0, lineWidth, minDist);
     
-//    float3 color = float3(uv.y, uv.x, 0);
-//    color += line;
+    float3 color = float3(line);
     
-    return half4(half3(line), 1.0);
+    if (length(coordinates - uv) < (0.03 + 0.01*(cos(time*2) * cos(time*2)))) {
+        color = float3(0.18, 0.44, 0.93) * 0.5;
+    }
+    if (length(coordinates - uv) < 0.02) {
+        color = float3(0.18, 0.44, 0.93);
+    }
+    
+    return half4(half3(color), 1.0);
 }
