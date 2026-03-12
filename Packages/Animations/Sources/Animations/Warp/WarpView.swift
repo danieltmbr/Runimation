@@ -49,7 +49,7 @@ public struct WarpView: View {
         Rectangle()
             .visualEffect { content, _ in
                 content.colorEffect(
-                    ShaderLibrary.bundle(.module).runShader(
+                    ShaderLibrary.bundle(.module).runWarpShader(
                         .float(animTime),
                         .float(octaves),
                         .float(h),

@@ -51,7 +51,7 @@ public struct SmoothStepRunInterpolator: RunInterpolator {
             )
         }
 
-        return Run(segments: segments, spectrum: run.spectrum)
+        return Run(coordinates: run.coordinates, segments: segments, spectrum: run.spectrum)
     }
 
     // MARK: - Private

@@ -263,13 +263,11 @@ public final class RunPlayer {
             let rawRun = makeRun()
             let playbackDuration = duration(for: rawRun.duration)
             let timing = Timing(duration: playbackDuration, fps: 60)
-            let transformed = transformers
-                .reduce(rawRun) { $0.transform(by: $1) }
-                .interpolate(by: interpolator, with: timing)
+            let transformed = transformers.reduce(rawRun) { $0.transform(by: $1) }
             return Runs(
                 original: rawRun,
-                transformed: transformed,
-                normalised: transformed.transform(by: NormalisedRun())
+                transformed: transformed.interpolate(by: interpolator, with: timing),
+                normalised: transformed.transform(by: NormalisedRun()).interpolate(by: interpolator, with: timing)
             )
         }
         processTask = task

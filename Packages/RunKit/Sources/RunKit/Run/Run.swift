@@ -81,7 +81,7 @@ public struct Run: Equatable, Sendable {
         ///
         public let cadence: ClosedRange<Double>
 
-        /// Bounding box of all segment coordinates (meters, equirectangular).
+        /// Bounding box of all segment coordinates in raw lat/lon degrees.
         ///
         public let coordinateBounds: CGRect
 
@@ -122,12 +122,19 @@ public struct Run: Equatable, Sendable {
     public var distance: Double {
         spectrum.distance.upperBound
     }
-    
+
     /// Total run duration in seconds.
     ///
     public var duration: TimeInterval {
         spectrum.time.upperBound - spectrum.time.lowerBound
     }
+
+    /// Flat array of segment coordinates, pre-extracted for efficient rendering.
+    ///
+    /// Equivalent to `segments.map(\.coordinate)` but computed once at init time
+    /// so 60fps views can read it without remapping on every frame.
+    ///
+    public let coordinates: [CGPoint]
 
     /// Segments of the run
     ///
@@ -136,7 +143,40 @@ public struct Run: Equatable, Sendable {
     /// Spectrum of the metrics during the run
     ///
     public let spectrum: Spectrum
-    
+
+    /// Designated initialiser — allows interpolators to preserve the original
+    /// geographic path independently of the densified segments.
+    ///
+    /// Prefer `init(segments:spectrum:)` for transformers and the parser.
+    /// See `RunInterpolator` for the full rationale.
+    ///
+    init(coordinates: [CGPoint], segments: [Segment], spectrum: Spectrum) {
+        self.coordinates = coordinates
+        self.segments = segments
+        self.spectrum = spectrum
+        
+        guard coordinates.count > 1 else { return }
+        print("Number of coordinates: \(coordinates.count)")
+        for i in 1 ..< coordinates.count {
+            if coordinates[i] == coordinates[i - 1] {
+                print("DUPLICATED COORDINATES: \(coordinates[i - 1]) - \(coordinates[i])")
+            }
+        }
+    }
+
+    /// Convenience initialiser — derives `coordinates` from `segments`.
+    ///
+    /// Use for transformers and the parser, where the output segments
+    /// define the geographic path. Do NOT use in interpolators.
+    ///
+    init(segments: [Segment], spectrum: Spectrum) {
+        self.init(
+            coordinates: segments.map(\.coordinate),
+            segments: segments,
+            spectrum: spectrum
+        )
+    }
+
     /// A run with no segments and all zero spectrums
     ///
     public static let zero = Run(segments: [], spectrum: .zero)

@@ -3,50 +3,26 @@ import RunKit
 import RunUI
 import Animations
 
-struct VisualiserView: View {
-
+struct PathView: View {
+    
     @Environment(RunPlayer.self)
     private var player
-
-    @Binding
-    var showInspector: Bool
-
-    @State
-    private var selectedPanel: InspectorFocus = .animation
-
-    @State
-    private var warp = Warp()
-
+    
     var body: some View {
-        PlayerDrivenView(configuration: $warp)
+        PlayerDrivenView()
             .ignoresSafeArea()
             .backgroundExtensionEffect()
 #if os(iOS)
-        .toolbar(.hidden, for: .navigationBar)
+            .toolbar(.hidden, for: .navigationBar)
 #endif
-        .inspector(isPresented: $showInspector) {
+            .toolbar {
 #if os(macOS)
-            PlayerInspectorView(selectedPanel: $selectedPanel, warp: $warp)
-                .inspectorColumnWidth(min: 200, ideal: 270, max: 400)
-                .player(player)
-#else
-            PlayerSheetView(selectedPanel: $selectedPanel, warp: $warp)
-                .player(player)
-#endif
-        }
-        .toolbar {
-#if os(macOS)
-            ToolbarItem(placement: .principal) {
-                PlaybackControls()
-                    .playbackControlsStyle(.toolbar)
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Button { showInspector.toggle() } label: {
-                    Image(systemName: "sidebar.right")
+                ToolbarItem(placement: .principal) {
+                    PlaybackControls()
+                        .playbackControlsStyle(.toolbar)
                 }
-            }
 #endif
-        }
+            }
     }
 }
 
@@ -58,23 +34,21 @@ struct VisualiserView: View {
 /// animation frame rate — `VisualiserView` and the inspector remain unaffected.
 ///
 private struct PlayerDrivenView: View {
-
+    
     @PlayerState(\.segment.animation)
     private var segment
-
+    
     @PlayerState(\.progress.animation)
     private var progress
-
+    
     @PlayerState(\.run.animation)
     private var run
-
+    
     @PlayerState(\.duration)
     private var duration
-
-    var configuration: Binding<Warp>
-
+        
     var body: some View {
-        WarpView(
+        RunPathView(
             state: AnimationState(
                 coordinates: SIMD2(Float(segment.coordinate.x), Float(segment.coordinate.y)),
                 direction: SIMD2(Float(segment.direction.x), Float(segment.direction.y)),
@@ -83,8 +57,7 @@ private struct PlayerDrivenView: View {
                 path: run.coordinates.map { SIMD2(Float($0.x), Float($0.y)) },
                 speed: Float(segment.speed),
                 time: Float(progress * duration(for: run.duration))
-            ),
-            configuration: configuration
+            )
         )
     }
 }

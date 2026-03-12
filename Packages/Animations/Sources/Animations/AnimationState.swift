@@ -6,37 +6,61 @@ import Foundation
 /// Keeps the Animations package independent of RunKit.
 ///
 public struct AnimationState: Sendable {
+    
+    /// Normalised coordinates (-1, 1)
+    ///
+    public var coordinates: SIMD2<Float>
 
+    /// Normalised heading unit vector (-1, 1).
+    ///
+    public var direction: SIMD2<Float>
+    
+    /// Normalised elevation (0, 1).
+    ///
+    public var elevation: Float
+    
+    /// Normalised heart rate (0, 1).
+    ///
+    public var heartRate: Float
+    
+    /// A list of normalised coordinates,
+    /// representing the full path of the run.  (-1, 1).
+    ///
+    public var path: [SIMD2<Float>]
+    
+    /// Normalised running speed (0, 1).
+    ///
+    public var speed: Float
+    
     /// Pace-weighted animation clock (seconds).
+    ///
     public var time: Float
 
-    /// Normalised running speed (0–1).
-    public var speed: Float
-
-    /// Normalised heart rate (0–1).
-    public var heartRate: Float
-
-    /// Normalised elevation (0–1).
-    public var elevation: Float
-
-    /// Speed-weighted heading unit vector.
-    public var direction: SIMD2<Float>
-
     public static let zero = AnimationState(
-        time: 0, speed: 0, heartRate: 0, elevation: 0, direction: .zero
+        coordinates: SIMD2<Float>(0, 0),
+        direction: .zero,
+        elevation: 0,
+        heartRate: 0,
+        path: [],
+        speed: 0,
+        time: 0
     )
-
+    
     public init(
-        time: Float,
-        speed: Float,
-        heartRate: Float,
+        coordinates: SIMD2<Float>,
+        direction: SIMD2<Float>,
         elevation: Float,
-        direction: SIMD2<Float>
+        heartRate: Float,
+        path: [SIMD2<Float>],
+        speed: Float,
+        time: Float
     ) {
-        self.time = time
-        self.speed = speed
-        self.heartRate = heartRate
-        self.elevation = elevation
+        self.coordinates = coordinates
         self.direction = direction
+        self.elevation = elevation
+        self.heartRate = heartRate
+        self.path = path
+        self.speed = speed
+        self.time = time
     }
 }

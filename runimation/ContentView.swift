@@ -8,7 +8,7 @@ struct ContentView: View {
 
     @State
     private var player = RunPlayer(
-        transformers: [GuassianRun(), SpeedWeightedRun(), WaveSamplingTransformer()]
+        transformers: [GuassianRun()]
     )
 
     @State
@@ -30,6 +30,13 @@ struct ContentView: View {
                 Tab("Visualisation", systemImage: "sparkles", value: "visualiser") {
                     if hasRun {
                         VisualiserView(showInspector: $showInspector)
+                    } else {
+                        ProgressView("Loading run data…")
+                    }
+                }
+                Tab("Path", systemImage: "point.bottomleft.forward.to.arrow.triangle.scurvepath", value: "path") {
+                    if hasRun {
+                        PathView()
                     } else {
                         ProgressView("Loading run data…")
                     }

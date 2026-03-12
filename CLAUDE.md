@@ -18,6 +18,7 @@
 - **Identify components based on functionality rahter than look.** Functionally identical views that have different layouts can be implemented with a shared view API but different layout style implementation. Just like how SwiftUI Picker has so many different style implementation: https://developer.apple.com/documentation/swiftui/pickerstyle Read thorugh `/.claude/docs/SwiftUI-Architecture-Proposal.pdf` and `/.claude/docs/SwiftUI-Architecture-CaseStudy.pdf` to see how to implement them.  
 - **Add header comments** to implementations. Especially to reusable components.
 - **Read documentations.** When learning about new APIs or design, the main source of information should be the official documentation.
+- **Always read a file in full before modifying it.** Do not rely on memory or earlier reads from the same session — re-read immediately before every edit. Skipping this step causes incorrect edits and wastes time.
 
 ## Project Overview
 The main purpose of this project is simply to learn computer graphics programming in Metal in a fun way.

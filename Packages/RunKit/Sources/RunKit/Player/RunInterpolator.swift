@@ -9,6 +9,14 @@ import CoreKit
 /// to produce at least `timing.fps` updates per second
 /// over `timing.duration`.
 ///
+/// > Warning: Preserve `run.coordinates`
+/// Interpolation changes temporal resolution only; it must not alter the
+/// geographic path. Always construct the output run with the designated
+/// initialiser, passing the input run's coordinates through: `Run(coordinates: run.coordinates, segments: interpolated, spectrum: run.spectrum)`
+/// Using `Run(segments:spectrum:)` would re-derive coordinates from the
+/// densified segments, producing 60× more path points and making any
+/// map-rendering shader catastrophically expensive.
+///
 public protocol RunInterpolator: Option, Sendable {
     func interpolate(_ run: Run, timing: RunPlayer.Timing) -> Run
 }

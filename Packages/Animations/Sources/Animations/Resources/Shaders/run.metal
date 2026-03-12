@@ -55,21 +55,21 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
     return result;
 }
 
-[[ stitchable ]] half4 runShader(
-    float2 position,
-    half4 currentColor,
-    float time,       // pace-weighted animation time from PlaybackEngine.animationTime
-    float octaves,
-    float h,          // from elevation (inverted: high elevation → lower h → rougher)
-    float scale,      // zoom level
-    float speed,      // 0..1 normalized speed
-    float heartRate,  // 0..1 normalized heart rate
-    float dirX,       // speed-weighted direction X (East+, West-)
-    float dirY,       // speed-weighted direction Y (North+, South-)
-    float offsetX,    // noise-space pan offset
-    float offsetY,
-    texture2d<half, access::sample> palette [[texture(0)]]
-)
+[[ stitchable ]] half4 runWarpShader(
+                                     float2 position,
+                                     half4 currentColor,
+                                     float time,       // pace-weighted animation time from PlaybackEngine.animationTime
+                                     float octaves,
+                                     float h,          // from elevation (inverted: high elevation → lower h → rougher)
+                                     float scale,      // zoom level
+                                     float speed,      // 0..1 normalized speed
+                                     float heartRate,  // 0..1 normalized heart rate
+                                     float dirX,       // speed-weighted direction X (East+, West-)
+                                     float dirY,       // speed-weighted direction Y (North+, South-)
+                                     float offsetX,    // noise-space pan offset
+                                     float offsetY,
+                                     texture2d<half, access::sample> palette [[texture(0)]]
+                                     )
 {
     float2 uv = position * scale + float2(offsetX, offsetY);
 
@@ -111,4 +111,44 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
     c += sin(time * breathRate * 0.5) * 0.04;
 
     return half4(half3(clamp(c, 0.0, 1.0)), 1.0);
+}
+
+[[ stitchable ]] half4 runPathShader(
+                                     float2 position,
+                                     half4 currentColor,
+                                     float time,
+                                     float2 size,
+                                     float scale,
+                                     float2 offset,
+                                     float2 coordinates,
+                                     float2 direction,
+                                     float elevation,
+                                     float heartRate,
+                                     device const void* pathBuffer,
+                                     int pathBytes,
+                                     float speed
+                                     )
+{
+    device const float2* path = (device const float2*)pathBuffer;
+    int pathCount = pathBytes / sizeof(float2);
+    float2 uv = float2(position.x - size.x * 0.5, size.y * 0.5 - position.y) / (size.y * 0.5) * scale + offset;
+
+    float minDist = 1e9;
+    for (int i = 1; i < pathCount; i++) {
+        float2 a = path[i - 1];
+        float2 b = path[i];
+        // project uv onto segment a→b, clamped to [0,1]
+        float2 ab = b - a;
+        float t = clamp(dot(uv - a, ab) / dot(ab, ab), 0.0, 1.0);
+        float2 closest = a + t * ab;
+        minDist = min(minDist, length(uv - closest));
+    }
+    
+    float lineWidth = 0.005;
+    float line = 1.0 - smoothstep(0.0, lineWidth, minDist);
+    
+//    float3 color = float3(uv.y, uv.x, 0);
+//    color += line;
+    
+    return half4(half3(line), 1.0);
 }
