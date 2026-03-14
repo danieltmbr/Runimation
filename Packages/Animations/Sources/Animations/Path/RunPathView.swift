@@ -50,7 +50,7 @@ public struct RunPathView: View {
         Rectangle()
             .visualEffect { content, proxy in
                 content.colorEffect(
-                    ShaderLibrary.bundle(.module).runPathShader(
+                    ShaderLibrary.bundle(.module).runPathWarpShader(
                         .float(animTime),
                         .float2(proxy.size),
                         .float(scale),

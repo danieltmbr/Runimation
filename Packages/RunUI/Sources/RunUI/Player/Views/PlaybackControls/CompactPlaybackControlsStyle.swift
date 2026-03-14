@@ -15,31 +15,27 @@ public struct CompactPlaybackControlsStyle: PlaybackControlsStyle {
 // MARK: - Layout
 
 private struct CompactPlaybackControls: View {
+
     var body: some View {
         HStack {
             Spacer()
             RewindButton()
-                .labelStyle(.iconOnly)
                 .imageScale(.small)
-                .buttonStyle(.plain)
             Spacer()
             PlayToggle()
-                .labelStyle(.iconOnly)
                 .imageScale(.large)
-                .buttonStyle(.plain)
             Spacer()
             LoopToggle()
-                .labelStyle(.iconOnly)
                 .imageScale(.small)
             Spacer()
         }
-        .foregroundStyle(.primary)
+        .labelStyle(.iconOnly)
         .padding(.vertical, 14)
+        .foregroundStyle(.primary)
         .background(alignment: .leading) {
             PlayerProgressBar()
                 .opacity(0.5)
                 .allowsHitTesting(false)
         }
-        .contentShape(Rectangle())
     }
 }

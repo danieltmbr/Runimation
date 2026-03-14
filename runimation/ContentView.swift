@@ -65,10 +65,12 @@ struct ContentView: View {
         .player(player)
         .environment(stravaClient)
 #if os(iOS)
-        .tabViewBottomAccessory(isEnabled: selectedTab == "visualiser" && hasRun) {
+        .tabViewBottomAccessory(isEnabled: hasRun) {
             PlaybackControls()
                 .playbackControlsStyle(.compact)
+                .contentShape(Rectangle())
                 .onTapGesture { showInspector.toggle() }
+                .glassEffect()
         }
         .tabBarMinimizeBehavior(.onScrollDown)
 #endif

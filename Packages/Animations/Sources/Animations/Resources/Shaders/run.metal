@@ -132,7 +132,7 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
     device const float2* path = (device const float2*)pathBuffer;
     int pathCount = pathBytes / sizeof(float2);
     float2 uv = float2(position.x - size.x * 0.5, size.y * 0.5 - position.y) / (size.y * 0.5) * scale + offset;
-
+    
     float minDist = 1e9;
     for (int i = 1; i < pathCount; i++) {
         float2 a = path[i - 1];
@@ -144,15 +144,80 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
         minDist = min(minDist, length(uv - closest));
     }
     
-    float lineWidth = 0.005;
+    float lineWidth = 0.01;
     float line = 1.0 - smoothstep(0.0, lineWidth, minDist);
     
     float3 color = float3(line);
     
-    if (length(coordinates - uv) < (0.03 + 0.01*(cos(time*2) * cos(time*2)))) {
+    float circleDiameter = 0.03;
+    float outerCircleDiameter = 0.045 + 0.015*(cos(time*2) * cos(time*2));
+    
+    if (length(coordinates - uv) < outerCircleDiameter) {
         color = float3(0.18, 0.44, 0.93) * 0.5;
     }
-    if (length(coordinates - uv) < 0.02) {
+    if (length(coordinates - uv) < circleDiameter) {
+        color = float3(0.18, 0.44, 0.93);
+    }
+    
+    return half4(half3(color), 1.0);
+}
+
+[[ stitchable ]] half4 runPathWarpShader(
+                                     float2 position,
+                                     half4 currentColor,
+                                     float time,
+                                     float2 size,
+                                     float scale,
+                                     float2 offset,
+                                     float2 coordinates,
+                                     float2 direction,
+                                     float elevation,
+                                     float heartRate,
+                                     device const void* pathBuffer,
+                                     int pathBytes,
+                                     float speed
+                                     )
+{
+    device const float2* path = (device const float2*)pathBuffer;
+    int pathCount = pathBytes / sizeof(float2);
+    float2 uv = float2(position.x - size.x * 0.5, size.y * 0.5 - position.y) / (size.y * 0.5) * scale + offset;
+    
+    WarpResult w = runWarp(uv, 6, 0.95, time, direction);
+    float2 q = w.q;
+    float2 r = w.r;
+    float warpStrength = 0.2;
+    
+    uv += q * warpStrength;
+    
+    float minDist = 1e9;
+    for (int i = 1; i < pathCount; i++) {
+        float2 a = path[i - 1];
+        float2 b = path[i];
+        // project uv onto segment a→b, clamped to [0,1]
+        float2 ab = b - a;
+        float t = clamp(dot(uv - a, ab) / dot(ab, ab), 0.0, 1.0);
+        float2 closest = a + t * ab;
+        minDist = min(minDist, length(uv - closest));
+    }
+    
+    float c = length(coordinates - uv);
+    
+    float lineWidth = 0.01 + (0.005 * length(r));
+    lineWidth += 0.2 * (1 - smoothstep(0.0, 0.25, abs(c)));
+    float line = 1.0 - smoothstep(0.0, lineWidth, minDist);
+    
+    float3 color = float3(line);
+    
+    float circleDiameter = 0.03;
+    float outerCircleDiameter = 0.045 + 0.015*(cos(time*2) * cos(time*2));
+    
+    circleDiameter += 0.01 * length(r);
+    outerCircleDiameter += 0.01 * length(r);
+    
+    if (c < outerCircleDiameter) {
+        color = float3(0.18, 0.44, 0.93) * 0.5;
+    }
+    if (c < circleDiameter) {
         color = float3(0.18, 0.44, 0.93);
     }
     

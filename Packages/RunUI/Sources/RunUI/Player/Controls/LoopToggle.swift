@@ -18,6 +18,6 @@ public struct LoopToggle: View {
         Button("Loop", systemImage: "repeat") {
             loop.toggle()
         }
-        .foregroundStyle(loop ? .primary : .tertiary)
+        .foregroundStyle(loop ? .primary : .secondary)
     }
 }
