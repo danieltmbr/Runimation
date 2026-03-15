@@ -200,10 +200,10 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
         minDist = min(minDist, length(uv - closest));
     }
     
-    float c = length(coordinates - uv);
+    float cd = length(coordinates - uv);
     
     float lineWidth = 0.01 + (0.005 * length(r));
-    lineWidth += 0.2 * (1 - smoothstep(0.0, 0.25, abs(c)));
+    lineWidth += 0.12 * (1 - smoothstep(0.0, 0.25, abs(cd)));
     float line = 1.0 - smoothstep(0.0, lineWidth, minDist);
     
     float3 color = float3(line);
@@ -214,10 +214,10 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
     circleDiameter += 0.01 * length(r);
     outerCircleDiameter += 0.01 * length(r);
     
-    if (c < outerCircleDiameter) {
+    if (cd < outerCircleDiameter) {
         color = float3(0.18, 0.44, 0.93) * 0.5;
     }
-    if (c < circleDiameter) {
+    if (cd < circleDiameter) {
         color = float3(0.18, 0.44, 0.93);
     }
     

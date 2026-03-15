@@ -119,3 +119,13 @@ public struct WarpView: View {
 #Preview {
     WarpView(state: .zero, configuration: .constant(Warp()))
 }
+
+// MARK: - Visualisation
+
+extension Warp: Visualisation {
+
+    /// Produces a `WarpView` driven by the given state and configuration binding.
+    public func canvas(state: AnimationState, binding: Binding<Warp>) -> some View {
+        WarpView(state: state, configuration: binding)
+    }
+}

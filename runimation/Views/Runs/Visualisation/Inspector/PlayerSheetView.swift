@@ -1,15 +1,15 @@
 import SwiftUI
-import CoreUI
 import Animations
 import RunUI
+internal import CoreUI
 
 #if os(iOS)
 
 /// Bottom sheet inspector shown on iOS.
 ///
-/// Scrollable content area shows animation controls by default. Two toggle buttons
+/// Scrollable content area shows visualisation controls by default. Two toggle buttons
 /// at the bottom switch to the signal processing or stats panels — mirroring the Apple Music
-/// "lyrics / queue" pattern. Tapping an active button returns to animation.
+/// "lyrics / queue" pattern. Tapping an active button returns to the visualisation panel.
 /// Playback controls are always visible at the bottom of the sheet.
 ///
 /// Requires `RunPlayer` in the environment via `.player(_:)`.
@@ -17,7 +17,11 @@ import RunUI
 struct PlayerSheetView: View {
 
     @Binding var selectedPanel: InspectorFocus
-    @Binding var warp: Warp
+
+    /// Stored directly to avoid `@Binding` property-wrapper synthesis issues
+    /// with existential types. `Binding.wrappedValue` has a `nonmutating` setter,
+    /// so reads and writes work correctly on a `let` stored property.
+    let visualisation: Binding<any Visualisation>
 
     var body: some View {
         VStack(spacing: 0) {
@@ -44,9 +48,10 @@ struct PlayerSheetView: View {
     @ViewBuilder
     private var scrollableContent: some View {
         switch selectedPanel {
-        case .animation:
+        case .visualisation:
             ScrollView {
-                AdjustableForm(value: $warp)
+                VisualisationPicker(visualisation: visualisation)
+                makeForm(for: visualisation.wrappedValue)
             }
         case .pipeline:
             SignalProcessingContent()
@@ -81,7 +86,7 @@ struct PlayerSheetView: View {
     private func panelToggleButton(panel: InspectorFocus, icon: String) -> some View {
         let isActive = selectedPanel == panel
         return Button {
-            selectedPanel = isActive ? .animation : panel
+            selectedPanel = isActive ? .visualisation : panel
         } label: {
             Image(systemName: icon)
                 .font(.system(size: 20))
@@ -92,6 +97,18 @@ struct PlayerSheetView: View {
         .buttonStyle(.plain)
     }
 
+    // MARK: - Private
+
+    /// SE-0352 opens `any Visualisation` to concrete `V`, then renders its
+    /// configuration form. Returns `AnyView` so the return type does not depend
+    /// on the opened type `V` — a requirement for SE-0352 implicit opening.
+    ///
+    private func makeForm<V: Visualisation>(for vis: V) -> AnyView {
+        AnyView(vis.form(for: Binding(
+            get: { visualisation.wrappedValue as! V },
+            set: { visualisation.wrappedValue = $0 }
+        )))
+    }
 }
 
 #endif

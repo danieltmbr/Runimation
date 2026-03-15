@@ -6,8 +6,8 @@ import RunKit
 
 extension GuassianRun: FormAdjustable {
     @MainActor
-    public func form(for binding: Binding<GuassianRun>) -> AnyView {
-        AnyView(GuassianRunForm(value: binding))
+    public func form(for binding: Binding<GuassianRun>) -> some View {
+        GuassianRunForm(value: binding)
     }
 }
 

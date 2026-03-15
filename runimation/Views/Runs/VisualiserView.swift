@@ -12,13 +12,13 @@ struct VisualiserView: View {
     var showInspector: Bool
 
     @State
-    private var selectedPanel: InspectorFocus = .animation
+    private var selectedPanel: InspectorFocus = .visualisation
 
     @State
-    private var warp = Warp()
+    private var visualisation: any Animations.Visualisation = Warp()
 
     var body: some View {
-        PlayerDrivenView(configuration: $warp)
+        PlayerDrivenView(visualisation: $visualisation)
             .ignoresSafeArea()
             .backgroundExtensionEffect()
 #if os(iOS)
@@ -26,11 +26,11 @@ struct VisualiserView: View {
 #endif
         .inspector(isPresented: $showInspector) {
 #if os(macOS)
-            PlayerInspectorView(selectedPanel: $selectedPanel, warp: $warp)
+            PlayerInspectorView(selectedPanel: $selectedPanel, visualisation: $visualisation)
                 .inspectorColumnWidth(min: 200, ideal: 270, max: 400)
                 .player(player)
 #else
-            PlayerSheetView(selectedPanel: $selectedPanel, warp: $warp)
+            PlayerSheetView(selectedPanel: $selectedPanel, visualisation: $visualisation)
                 .player(player)
 #endif
         }
@@ -52,7 +52,7 @@ struct VisualiserView: View {
 
 // MARK: - Player-Driven View
 
-/// Bridges `RunPlayer` state into `WarpView` at 60 fps.
+/// Bridges `RunPlayer` state into `VisualisationCanvas` at 60 fps.
 ///
 /// Kept as a separate named struct so only this view's body re-renders at the
 /// animation frame rate — `VisualiserView` and the inspector remain unaffected.
@@ -71,10 +71,10 @@ private struct PlayerDrivenView: View {
     @PlayerState(\.duration)
     private var duration
 
-    var configuration: Binding<Warp>
+    var visualisation: Binding<any Animations.Visualisation>
 
     var body: some View {
-        WarpView(
+        VisualisationCanvas(
             state: AnimationState(
                 coordinates: SIMD2(Float(segment.coordinate.x), Float(segment.coordinate.y)),
                 direction: SIMD2(Float(segment.direction.x), Float(segment.direction.y)),
@@ -84,7 +84,7 @@ private struct PlayerDrivenView: View {
                 speed: Float(segment.speed),
                 time: Float(progress * duration(for: run.duration))
             ),
-            configuration: configuration
+            visualisation: visualisation
         )
     }
 }

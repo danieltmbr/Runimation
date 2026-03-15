@@ -8,17 +8,14 @@ import SwiftUI
 /// ```swift
 /// // In RunUI — extension on a RunKit type
 /// extension WaveSamplingTransformer: FormAdjustable {
-///     public func form(for binding: Binding<WaveSamplingTransformer>) -> AnyView {
-///         AnyView(WaveSamplingTransformerForm(value: binding))
+///     public func form(for binding: Binding<WaveSamplingTransformer>) -> some View {
+///         WaveSamplingTransformerForm(value: binding)
 ///     }
 /// }
 /// ```
 ///
-/// - Note: `form(for:)` returns `AnyView` to support calling through
-///   `any FormAdjustable` existentials — the same technique SwiftUI uses
-///   internally for style protocols such as `ButtonStyle`.
-///
 public protocol FormAdjustable {
+    associatedtype Form: View
     @MainActor
-    func form(for binding: Binding<Self>) -> AnyView
+    func form(for binding: Binding<Self>) -> Form
 }

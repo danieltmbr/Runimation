@@ -1,12 +1,11 @@
 import SwiftUI
-import CoreUI
 import Animations
 
 #if os(macOS)
 
 /// Trailing sidebar inspector shown on macOS.
 ///
-/// A glass-effect icon button row at the top switches between Animation Preferences,
+/// A glass-effect icon button row at the top switches between Visualisation Preferences,
 /// Signal Preferences, and Run Statistics panels. The selected panel is highlighted
 /// with the accent color and its title is shown below the selector.
 /// Playback controls live in the window toolbar.
@@ -18,8 +17,10 @@ struct PlayerInspectorView: View {
     @Binding
     var selectedPanel: InspectorFocus
 
-    @Binding
-    var warp: Warp
+    /// Stored directly to avoid `@Binding` property-wrapper synthesis issues
+    /// with existential types. `Binding.wrappedValue` has a `nonmutating` setter,
+    /// so reads and writes work correctly on a `let` stored property.
+    let visualisation: Binding<any Visualisation>
 
     var body: some View {
         VStack(spacing: 0) {
@@ -73,9 +74,10 @@ struct PlayerInspectorView: View {
     @ViewBuilder
     private var panelContent: some View {
         switch selectedPanel {
-        case .animation:
+        case .visualisation:
             ScrollView {
-                AdjustableForm(value: $warp)
+                VisualisationPicker(visualisation: visualisation)
+                makeForm(for: visualisation.wrappedValue)
             }
         case .pipeline:
             SignalProcessingContent()
@@ -84,6 +86,19 @@ struct PlayerInspectorView: View {
                 RunStatisticsContent()
             }
         }
+    }
+
+    // MARK: - Private
+
+    /// SE-0352 opens `any Visualisation` to concrete `V`, then renders its
+    /// configuration form. Returns `AnyView` so the return type does not depend
+    /// on the opened type `V` — a requirement for SE-0352 implicit opening.
+    ///
+    private func makeForm<V: Visualisation>(for vis: V) -> AnyView {
+        AnyView(vis.form(for: Binding(
+            get: { visualisation.wrappedValue as! V },
+            set: { visualisation.wrappedValue = $0 }
+        )))
     }
 }
 

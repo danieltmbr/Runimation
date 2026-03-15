@@ -49,18 +49,20 @@ public struct OptionDetail<Value: Sendable>: View {
 
     // MARK: - Private
 
-    /// Bridges `Binding<Item<Value>>` to a typed `Binding<T>` and wraps it in
+    /// Bridges `Binding<Item<Value>>` to a typed `Binding<T>` and renders it via
     /// `AdjustableForm`. SE-0352 opens the `any FormAdjustable` existential when
     /// passed to the generic `T` parameter. The force-cast in the setter is safe
     /// because `T` was retrieved from `item.value`, guaranteeing the cast succeeds.
+    /// Returns `AnyView` so the return type is independent of the opened type `T`,
+    /// satisfying SE-0352's requirement that opened types not escape the call.
     ///
     private func formView<T: FormAdjustable>(
         for value: T,
         itemBinding: Binding<Item<Value>>
-    ) -> AdjustableForm {
-        AdjustableForm(value: Binding<T>(
+    ) -> AnyView {
+        AnyView(AdjustableForm(value: Binding<T>(
             get: { itemBinding.wrappedValue.value as! T },
             set: { itemBinding.wrappedValue = itemBinding.wrappedValue.with($0 as! Value) }
-        ))
+        )))
     }
 }

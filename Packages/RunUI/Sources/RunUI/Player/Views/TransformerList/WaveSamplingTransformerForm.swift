@@ -6,8 +6,8 @@ import RunKit
 
 extension WaveSamplingTransformer: FormAdjustable {
     @MainActor
-    public func form(for binding: Binding<WaveSamplingTransformer>) -> AnyView {
-        AnyView(WaveSamplingTransformerForm(value: binding))
+    public func form(for binding: Binding<WaveSamplingTransformer>) -> some View {
+        WaveSamplingTransformerForm(value: binding)
     }
 }
 

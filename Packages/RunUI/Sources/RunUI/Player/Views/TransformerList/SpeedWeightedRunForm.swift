@@ -6,8 +6,8 @@ import RunKit
 
 extension SpeedWeightedRun: FormAdjustable {
     @MainActor
-    public func form(for binding: Binding<SpeedWeightedRun>) -> AnyView {
-        AnyView(SpeedWeightedRunForm(value: binding))
+    public func form(for binding: Binding<SpeedWeightedRun>) -> some View {
+        SpeedWeightedRunForm(value: binding)
     }
 }
 

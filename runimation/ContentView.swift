@@ -34,13 +34,6 @@ struct ContentView: View {
                         ProgressView("Loading run data…")
                     }
                 }
-                Tab("Path", systemImage: "point.bottomleft.forward.to.arrow.triangle.scurvepath", value: "path") {
-                    if hasRun {
-                        PathView()
-                    } else {
-                        ProgressView("Loading run data…")
-                    }
-                }
                 Tab("Metrics", systemImage: "chart.xyaxis.line", value: "metrics") {
                     RunMetricsView(run: player.run.metrics)
                 }

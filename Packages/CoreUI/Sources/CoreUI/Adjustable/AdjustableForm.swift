@@ -2,32 +2,23 @@ import SwiftUI
 
 /// A view that renders the configuration form for any `FormAdjustable` type.
 ///
-/// Delegates entirely to `FormAdjustable.form(for:)`, keeping this view
-/// free of any knowledge about the concrete type being configured.
+/// Delegates entirely to `FormAdjustable.form(for:)`. SwiftUI receives a fully
+/// typed view and can diff it correctly — no `AnyView` is involved here.
 ///
 /// ```swift
-/// // Direct binding — no wrapper types involved
 /// AdjustableForm(value: $warpConfig)
-///
-/// // Transformer case — caller constructs the typed binding
 /// AdjustableForm(value: transformerBinding)
 /// ```
 ///
-public struct AdjustableForm: View {
+public struct AdjustableForm<T: FormAdjustable>: View {
 
-    private let content: AnyView
+    private let value: Binding<T>
 
-    /// Creates an adjustable form for any `FormAdjustable` type.
-    ///
-    /// The generic parameter is resolved at the call site, allowing SE-0352
-    /// to open existentials when needed. `AnyView` is stored once here so
-    /// the struct itself carries no generic parameter.
-    ///
-    public init<T: FormAdjustable>(value: Binding<T>) {
-        content = value.wrappedValue.form(for: value)
+    public init(value: Binding<T>) {
+        self.value = value
     }
 
     public var body: some View {
-        content
+        value.wrappedValue.form(for: value)
     }
 }
