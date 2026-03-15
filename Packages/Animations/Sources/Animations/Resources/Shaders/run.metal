@@ -182,10 +182,10 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
     int pathCount = pathBytes / sizeof(float2);
     float2 uv = float2(position.x - size.x * 0.5, size.y * 0.5 - position.y) / (size.y * 0.5) * scale + offset;
     
-    WarpResult w = runWarp(uv, 6, 0.95, time, direction);
+    WarpResult w = runWarp(uv, 5, 0.94, time, direction);
     float2 q = w.q;
     float2 r = w.r;
-    float warpStrength = 0.2;
+    float warpStrength = 0.17;
     
     uv += q * warpStrength;
     
@@ -211,14 +211,24 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
     float circleDiameter = 0.03;
     float outerCircleDiameter = 0.045 + 0.015*(cos(time*2) * cos(time*2));
     
+    float cd1 = length(coordinates - (uv + sin(time - r) * circleDiameter));
+    float cd2 = length(coordinates - (uv + sin(time + M_PI_F + r) * circleDiameter));
+    
     circleDiameter += 0.01 * length(r);
     outerCircleDiameter += 0.01 * length(r);
     
-    if (cd < outerCircleDiameter) {
+    if (cd1 < outerCircleDiameter) {
         color = float3(0.18, 0.44, 0.93) * 0.5;
     }
-    if (cd < circleDiameter) {
+    if (cd1 < circleDiameter) {
         color = float3(0.18, 0.44, 0.93);
+    }
+    
+    if (cd2 < outerCircleDiameter) {
+        color = float3(1.0, 0.22, 0.23) * 0.5;
+    }
+    if (cd2 < circleDiameter) {
+        color = float3(1.0, 0.22, 0.23);
     }
     
     return half4(half3(color), 1.0);

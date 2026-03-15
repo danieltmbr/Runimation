@@ -1,5 +1,5 @@
+import CoreKit
 import Foundation
-import RunKit
 
 /// Converts Strava stream data into a `GPX.Track` for processing by `RunPlayer`.
 ///

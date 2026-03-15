@@ -1,6 +1,6 @@
 import AuthenticationServices
+import CoreKit
 import Foundation
-import RunKit
 
 /// Manages Strava authentication and data fetching.
 ///

@@ -1,5 +1,11 @@
 import Foundation
 
+/// Namespace for GPX data types and file parsing.
+///
+/// `GPX.Point` and `GPX.Track` are the raw data model exchanged between
+/// data-fetching layers (e.g. StravaKit) and run-processing layers (e.g. RunKit).
+/// `GPX.Parser` reads `.gpx` files from the main bundle.
+///
 public enum GPX: Equatable, Sendable {
 
     public struct Point: Equatable, Sendable {
@@ -47,10 +53,11 @@ public enum GPX: Equatable, Sendable {
             self.type = type
         }
     }
-    
+
     public final class Parser {
+
         private let dateFormatter: ISO8601DateFormatter
-        
+
         public init(dateFormatter: ISO8601DateFormatter = .init()) {
             self.dateFormatter = dateFormatter
         }
@@ -83,17 +90,17 @@ private extension GPX {
     final class Delegate: NSObject, XMLParserDelegate {
 
         private struct PointInProgress {
-            
+
             var latitude: Double?
-            
+
             var longitude: Double?
-            
+
             var elevation: Double?
-            
+
             var time: Date?
-            
+
             var heartRate: Int?
-            
+
             var cadence: Int?
 
             func build() -> Point? {
@@ -113,11 +120,11 @@ private extension GPX {
         }
 
         private let dateFormatter: ISO8601DateFormatter
-        
+
         private var point: PointInProgress?
-        
+
         private var text: String = ""
-        
+
         private var track: Track?
 
         var results: [Track] = []

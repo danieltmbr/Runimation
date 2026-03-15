@@ -1,5 +1,6 @@
 import SwiftUI
 import Animations
+internal import CoreUI
 
 #if os(macOS)
 

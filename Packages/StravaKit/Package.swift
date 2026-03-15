@@ -15,12 +15,12 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(path: "../RunKit"),
+        .package(path: "../CoreKit"),
     ],
     targets: [
         .target(
             name: "StravaKit",
-            dependencies: [.product(name: "RunKit", package: "RunKit")]
+            dependencies: [.product(name: "CoreKit", package: "CoreKit")]
         ),
     ]
 )

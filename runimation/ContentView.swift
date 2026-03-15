@@ -1,4 +1,5 @@
 import Animations
+import CoreKit
 import RunKit
 import RunUI
 import StravaKit

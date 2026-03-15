@@ -1,5 +1,6 @@
 import Foundation
 import RunKit
+import CoreKit
 
 /// Loads a run into the player, stopping any current playback.
 ///
