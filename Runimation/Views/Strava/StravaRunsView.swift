@@ -135,10 +135,13 @@ struct StravaRunsView: View {
     // MARK: - Actions
 
     private func authenticate() {
-        let anchor = presentationAnchor
         Task {
             do {
-                try await client.authenticate(presentingFrom: anchor)
+                #if os(macOS)
+                try await client.authenticate()
+                #else
+                try await client.authenticate(presentingFrom: presentationAnchor)
+                #endif
                 await loadActivities()
             } catch {
                 fetchError = error
@@ -204,4 +207,5 @@ struct StravaRunsView: View {
             .first(where: \.isKeyWindow) ?? UIWindow()
         #endif
     }
+
 }

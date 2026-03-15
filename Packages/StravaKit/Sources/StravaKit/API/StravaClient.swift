@@ -1,6 +1,9 @@
 import AuthenticationServices
 import CoreKit
 import Foundation
+#if os(macOS)
+import AppKit
+#endif
 
 /// Manages Strava authentication and data fetching.
 ///
@@ -25,6 +28,11 @@ public final class StravaClient {
     public private(set) var isAuthenticated: Bool = false
 
     // MARK: - Private
+
+    #if os(macOS)
+    /// Stores the continuation awaiting the OAuth callback URL delivered via `onOpenURL`.
+    private var pendingAuthContinuation: CheckedContinuation<String, Error>?
+    #endif
 
     private let clientID: String
     
@@ -54,6 +62,42 @@ public final class StravaClient {
 
     // MARK: - Authentication
 
+    #if os(macOS)
+    /// Opens the system browser for Strava authorization.
+    ///
+    /// The flow completes when the app receives the OAuth callback URL.
+    /// Wire up `handleCallbackURL(_:)` via `.onOpenURL` in the root view.
+    ///
+    public func authenticate() async throws {
+        let auth = StravaAuth(clientID: clientID, clientSecret: clientSecret)
+        // Cancel any previously abandoned auth attempt.
+        pendingAuthContinuation?.resume(throwing: CancellationError())
+        let code = try await withCheckedThrowingContinuation { continuation in
+            pendingAuthContinuation = continuation
+            NSWorkspace.shared.open(auth.authURL)
+        }
+        pendingAuthContinuation = nil
+        let newToken = try await auth.exchangeCode(code)
+        newToken.save()
+        token = newToken
+        isAuthenticated = true
+    }
+
+    /// Resolves a pending Strava OAuth flow with the callback URL the system delivered.
+    ///
+    /// Call this from `.onOpenURL` in the root view so the `authenticate()` continuation
+    /// can resume once the browser redirects back to the app.
+    ///
+    public func handleCallbackURL(_ url: URL) {
+        guard let code = StravaAuth.extractCode(from: url) else {
+            pendingAuthContinuation?.resume(throwing: StravaError.missingAuthCode)
+            pendingAuthContinuation = nil
+            return
+        }
+        pendingAuthContinuation?.resume(returning: code)
+        pendingAuthContinuation = nil
+    }
+    #else
     /// Opens the Strava authorization page and exchanges the result for a token.
     ///
     /// The token is stored in the Keychain and persists across launches.
@@ -65,6 +109,7 @@ public final class StravaClient {
         token = newToken
         isAuthenticated = true
     }
+    #endif
 
     /// Removes the stored token and marks the client as unauthenticated.
     public func signOut() {

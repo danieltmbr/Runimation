@@ -2,7 +2,6 @@ import Animations
 import CoreKit
 import RunKit
 import RunUI
-import StravaKit
 import SwiftUI
 
 struct ContentView: View {
@@ -11,9 +10,6 @@ struct ContentView: View {
     private var player = RunPlayer(
         transformers: [GuassianRun()]
     )
-
-    @State
-    private var stravaClient = StravaClient()
 
     @State
     private var showInspector = false
@@ -57,7 +53,6 @@ struct ContentView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .player(player)
-        .environment(stravaClient)
 #if os(iOS)
         .tabViewBottomAccessory(isEnabled: hasRun) {
             PlaybackControls()

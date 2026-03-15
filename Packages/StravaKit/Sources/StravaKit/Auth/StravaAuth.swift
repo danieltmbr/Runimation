@@ -3,8 +3,9 @@ import Foundation
 
 /// Performs the Strava OAuth2 authorization code flow.
 ///
-/// Uses `ASWebAuthenticationSession` to open the Strava authorization page in
-/// the system browser, then exchanges the returned code for an access token.
+/// Provides the shared steps — building the auth URL, extracting the callback
+/// code, and exchanging it for a token — used by `StravaClient` on all platforms.
+/// The browser interaction itself is platform-specific and handled in `StravaClient`.
 ///
 @MainActor
 struct StravaAuth {
@@ -12,22 +13,11 @@ struct StravaAuth {
     let clientID: String
     let clientSecret: String
 
-    private let redirectScheme = "runimation"
     private let redirectURI = "runimation://oauth/strava"
 
-    // MARK: - Public
+    // MARK: - Shared
 
-    /// Runs the full OAuth2 flow: opens the browser, waits for the callback,
-    /// then exchanges the code for a `StravaToken`.
-    ///
-    func authenticate(presentingFrom anchor: ASPresentationAnchor) async throws -> StravaToken {
-        let code = try await requestAuthCode(from: anchor)
-        return try await exchangeCode(code)
-    }
-
-    // MARK: - Private
-
-    private var authURL: URL {
+    var authURL: URL {
         var components = URLComponents(string: "https://www.strava.com/oauth/authorize")!
         components.queryItems = [
             URLQueryItem(name: "client_id", value: clientID),
@@ -39,39 +29,14 @@ struct StravaAuth {
         return components.url!
     }
 
-    private func requestAuthCode(from anchor: ASPresentationAnchor) async throws -> String {
-        // Hold a strong reference so the session isn't deallocated before its callback fires.
-        var sessionRef: ASWebAuthenticationSession?
-        defer { sessionRef = nil }
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let contextProvider = AnchorProvider(anchor: anchor)
-            // Capture contextProvider in the completion handler — presentationContextProvider
-            // is a weak reference, so this closure is the only thing keeping it alive.
-            let session = ASWebAuthenticationSession(
-                url: authURL,
-                callbackURLScheme: redirectScheme
-            ) { [contextProvider] callbackURL, error in
-                _ = contextProvider
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                guard let url = callbackURL,
-                      let code = Self.extractCode(from: url) else {
-                    continuation.resume(throwing: StravaError.missingAuthCode)
-                    return
-                }
-                continuation.resume(returning: code)
-            }
-            session.presentationContextProvider = contextProvider
-            session.prefersEphemeralWebBrowserSession = false
-            sessionRef = session
-            session.start()
-        }
+    static func extractCode(from url: URL) -> String? {
+        URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            .queryItems?
+            .first(where: { $0.name == "code" })?
+            .value
     }
 
-    private func exchangeCode(_ code: String) async throws -> StravaToken {
+    func exchangeCode(_ code: String) async throws -> StravaToken {
         var request = URLRequest(url: URL(string: "https://www.strava.com/oauth/token")!)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -86,21 +51,56 @@ struct StravaAuth {
         return try JSONDecoder().decode(StravaToken.self, from: data)
     }
 
-    private static func extractCode(from url: URL) -> String? {
-        URLComponents(url: url, resolvingAgainstBaseURL: false)?
-            .queryItems?
-            .first(where: { $0.name == "code" })?
-            .value
+    // MARK: - iOS / iPadOS
+
+    #if !os(macOS)
+    /// Runs the full OAuth2 flow via `ASWebAuthenticationSession`.
+    func authenticate(presentingFrom anchor: ASPresentationAnchor) async throws -> StravaToken {
+        let code = try await requestAuthCode(from: anchor)
+        return try await exchangeCode(code)
     }
+
+    private func requestAuthCode(from anchor: ASPresentationAnchor) async throws -> String {
+        // Hold a strong reference so the session isn't deallocated before its callback fires.
+        var sessionRef: ASWebAuthenticationSession?
+        defer { sessionRef = nil }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let contextProvider = AnchorProvider(anchor: anchor)
+            // Capture contextProvider in the completion handler — presentationContextProvider
+            // is a weak reference, so this closure is the only thing keeping it alive.
+            let session = ASWebAuthenticationSession(
+                url: authURL,
+                callbackURLScheme: "runimation"
+            ) { [contextProvider] callbackURL, error in
+                _ = contextProvider
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                guard let url = callbackURL,
+                      let code = Self.extractCode(from: url) else {
+                    continuation.resume(throwing: StravaError.missingAuthCode)
+                    return
+                }
+                continuation.resume(returning: code)
+            }
+            session.presentationContextProvider = contextProvider
+            session.prefersEphemeralWebBrowserSession = true
+            sessionRef = session
+            session.start()
+        }
+    }
+    #endif
 }
 
-// MARK: - Presentation Context Provider
+// MARK: - Presentation Context Provider (iOS / iPadOS only)
 
+#if !os(macOS)
 /// Bridges the `ASPresentationAnchor` into the `ASWebAuthenticationPresentationContextProviding`
 /// protocol required by `ASWebAuthenticationSession`.
 ///
-@MainActor
-private final class AnchorProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
+private final class AnchorProvider: NSObject, ASWebAuthenticationPresentationContextProviding, @unchecked Sendable {
 
     private let anchor: ASPresentationAnchor
 
@@ -112,3 +112,4 @@ private final class AnchorProvider: NSObject, ASWebAuthenticationPresentationCon
         anchor
     }
 }
+#endif

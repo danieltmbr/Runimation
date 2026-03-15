@@ -27,6 +27,9 @@ public struct TransformerListButton: View {
             NavigationStack {
                 TransformerListView()
             }
+            #if os(macOS)
+            .frame(minWidth: 360, minHeight: 300)
+            #endif
         }
     }
 
