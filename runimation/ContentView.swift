@@ -40,6 +40,9 @@ struct ContentView: View {
             }
 
             TabSection("Learnings") {
+                Tab("Colors", systemImage: "paintpalette", value: "colors") {
+                    ColorsDemoView()
+                }
                 Tab("Noise", systemImage: "waveform", value: "noise") {
                     NoiseDemoView()
                 }
