@@ -134,19 +134,19 @@ public final class StravaClient {
         return try activityDecoder.decode([StravaActivity].self, from: data)
     }
 
-    /// Fetches stream data for `activityID` and converts it to a `GPX.Track`
+    /// Fetches stream data for `activity` and converts it to a `GPX.Track`
     /// ready for loading into `RunPlayer.setRun(_:)`.
     ///
-    public func track(for activityID: Int) async throws -> GPX.Track {
+    public func track(for activity: StravaActivity) async throws -> GPX.Track {
         let data = try await fetch(
-            path: "/api/v3/activities/\(activityID)/streams",
+            path: "/api/v3/activities/\(activity.id)/streams",
             params: [
                 "keys": "latlng,altitude,time,heartrate,cadence",
                 "key_by_type": "true",
             ]
         )
         let streams = try streamDecoder.decode(StravaStreams.self, from: data)
-        return StravaTrackMaker.make(from: streams)
+        return StravaTrackMaker.make(from: streams, name: activity.name, date: activity.startDate)
     }
 
     // MARK: - Private Networking

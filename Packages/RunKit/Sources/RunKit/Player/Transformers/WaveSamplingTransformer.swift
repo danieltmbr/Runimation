@@ -53,7 +53,7 @@ public struct WaveSamplingTransformer: RunTransformer {
             return syntheticSegment(from: window, pickHighest: i.isMultiple(of: 2))
         }
 
-        return Run(segments: synthetic, spectrum: .init(from: synthetic, time: run.spectrum.time))
+        return Run(date: run.date, name: run.name, segments: synthetic, spectrum: .init(from: synthetic, time: run.spectrum.time))
     }
 
     // MARK: - Private

@@ -22,7 +22,7 @@ public struct NormalisedRun: RunTransformer {
         let scale = elevationRateScale(for: run.spectrum)
         let normalised = normalise(run.segments, using: run.spectrum, elevationRateScale: scale)
         let spectrum = normalisedSpectrum(from: run.spectrum, elevationRateScale: scale, normalised: normalised)
-        return Run(segments: normalised, spectrum: spectrum)
+        return Run(date: run.date, name: run.name, segments: normalised, spectrum: spectrum)
     }
 
     // MARK: - Private

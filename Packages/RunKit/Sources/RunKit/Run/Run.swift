@@ -116,6 +116,21 @@ public struct Run: Equatable, Sendable {
             time: 0...0
         )
     }
+    
+    /// Flat array of segment coordinates, pre-extracted for efficient rendering.
+    ///
+    /// Equivalent to `segments.map(\.coordinate)` but computed once at init time
+    /// so 60fps views can read it without remapping on every frame.
+    ///
+    public let coordinates: [CGPoint]
+
+    /// Start date of the run. `nil` if unknown (e.g. `Run.zero`).
+    ///
+    public let date: Date?
+
+    /// Display name of the run (e.g. from GPX `<name>` or Strava activity name).
+    ///
+    public let name: String
 
     /// Total run distance in meters.
     ///
@@ -129,13 +144,6 @@ public struct Run: Equatable, Sendable {
         spectrum.time.upperBound - spectrum.time.lowerBound
     }
 
-    /// Flat array of segment coordinates, pre-extracted for efficient rendering.
-    ///
-    /// Equivalent to `segments.map(\.coordinate)` but computed once at init time
-    /// so 60fps views can read it without remapping on every frame.
-    ///
-    public let coordinates: [CGPoint]
-
     /// Segments of the run
     ///
     public let segments: [Segment]
@@ -147,21 +155,15 @@ public struct Run: Equatable, Sendable {
     /// Designated initialiser — allows interpolators to preserve the original
     /// geographic path independently of the densified segments.
     ///
-    /// Prefer `init(segments:spectrum:)` for transformers and the parser.
+    /// Prefer `init(date:name:segments:spectrum:)` for transformers and the parser.
     /// See `RunInterpolator` for the full rationale.
     ///
-    init(coordinates: [CGPoint], segments: [Segment], spectrum: Spectrum) {
+    init(coordinates: [CGPoint], date: Date? = nil, name: String = "", segments: [Segment], spectrum: Spectrum) {
         self.coordinates = coordinates
+        self.date = date
+        self.name = name
         self.segments = segments
         self.spectrum = spectrum
-        
-        guard coordinates.count > 1 else { return }
-        print("Number of coordinates: \(coordinates.count)")
-        for i in 1 ..< coordinates.count {
-            if coordinates[i] == coordinates[i - 1] {
-                print("DUPLICATED COORDINATES: \(coordinates[i - 1]) - \(coordinates[i])")
-            }
-        }
     }
 
     /// Convenience initialiser — derives `coordinates` from `segments`.
@@ -169,9 +171,11 @@ public struct Run: Equatable, Sendable {
     /// Use for transformers and the parser, where the output segments
     /// define the geographic path. Do NOT use in interpolators.
     ///
-    init(segments: [Segment], spectrum: Spectrum) {
+    init(date: Date? = nil, name: String = "", segments: [Segment], spectrum: Spectrum) {
         self.init(
             coordinates: segments.map(\.coordinate),
+            date: date,
+            name: name,
             segments: segments,
             spectrum: spectrum
         )

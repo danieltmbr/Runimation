@@ -76,6 +76,8 @@ public struct GuassianRun: RunTransformer {
         let times = timeOffsets(from: run.segments)
         let smoothed = smooth(run.segments, times: times)
         return Run(
+            date: run.date,
+            name: run.name,
             segments: smoothed,
             spectrum: Run.Spectrum(from: smoothed, time: run.spectrum.time)
         )

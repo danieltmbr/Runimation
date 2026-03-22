@@ -41,13 +41,20 @@ public enum GPX: Equatable, Sendable {
 
     public struct Track: Equatable, Sendable {
 
+        /// Start date of the track. For GPX files, derived from the first trackpoint's
+        /// timestamp. For Strava tracks, set explicitly from the activity's `startDate`
+        /// since stream time offsets are epoch-relative and don't reflect the real date.
+        ///
+        public fileprivate(set) var date: Date?
+
         public fileprivate(set) var name: String
 
         public fileprivate(set) var points: [Point]
 
         public fileprivate(set) var type: String
 
-        public init(name: String, points: [Point] = [], type: String = "") {
+        public init(name: String, points: [Point] = [], type: String = "", date: Date? = nil) {
+            self.date = date
             self.name = name
             self.points = points
             self.type = type

@@ -12,8 +12,8 @@ import CoreKit
 /// > Warning: Preserve `run.coordinates`
 /// Interpolation changes temporal resolution only; it must not alter the
 /// geographic path. Always construct the output run with the designated
-/// initialiser, passing the input run's coordinates through: `Run(coordinates: run.coordinates, segments: interpolated, spectrum: run.spectrum)`
-/// Using `Run(segments:spectrum:)` would re-derive coordinates from the
+/// initialiser, passing the input run's coordinates through: `Run(coordinates: run.coordinates, date: run.date, name: run.name, segments: interpolated, spectrum: run.spectrum)`
+/// Using `Run(date:name:segments:spectrum:)` would re-derive coordinates from the
 /// densified segments, producing 60× more path points and making any
 /// map-rendering shader catastrophically expensive.
 ///

@@ -50,7 +50,7 @@ public struct LinearRunInterpolator: RunInterpolator {
             )
         }
 
-        return Run(coordinates: run.coordinates, segments: segments, spectrum: run.spectrum)
+        return Run(coordinates: run.coordinates, date: run.date, name: run.name, segments: segments, spectrum: run.spectrum)
     }
 
     // MARK: - Private

@@ -13,11 +13,13 @@ enum StravaTrackMaker {
     ///
     /// - Parameter streams: Raw streams from the Strava API (lat/lng + time required).
     /// - Parameter name: Optional display name; defaults to `"Strava Run"`.
+    /// - Parameter date: Activity start date from `StravaActivity.startDate`. Required
+    ///   because stream time offsets are epoch-relative, not absolute timestamps.
     /// - Returns: A `GPX.Track` ready for `RunPlayer.setRun(_:)`.
     ///
-    static func make(from streams: StravaStreams, name: String = "Strava Run") -> GPX.Track {
+    static func make(from streams: StravaStreams, name: String = "Strava Run", date: Date? = nil) -> GPX.Track {
         let points = makePoints(from: streams)
-        return GPX.Track(name: name, points: points, type: "running")
+        return GPX.Track(name: name, points: points, type: "running", date: date)
     }
 
     // MARK: - Private

@@ -21,18 +21,22 @@ extension Run {
 
         func run(from track: GPX.Track) -> Run {
             let points = track.points
+            let name = track.name
+            let date = track.date ?? track.points.first?.time
             guard points.count >= 2 else {
-                return Run(segments: [], spectrum: Spectrum(from: [], time: 0...0))
+                return Run(date: date, name: name, segments: [], spectrum: Spectrum(from: [], time: 0...0))
             }
 
             let unique = filterDuplicates(points)
             guard unique.count >= 2 else {
-                return Run(segments: [], spectrum: Spectrum(from: [], time: 0...0))
+                return Run(date: date, name: name, segments: [], spectrum: Spectrum(from: [], time: 0...0))
             }
 
             let segments = makeSegments(from: unique)
             let duration = unique.last!.time.timeIntervalSince(unique.first!.time)
             return Run(
+                date: date,
+                name: name,
                 segments: segments,
                 spectrum: Spectrum(from: segments, time: 0...duration)
             )

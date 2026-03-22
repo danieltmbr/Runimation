@@ -33,6 +33,8 @@ public struct SpeedWeightedRun: RunTransformer {
         let cap = speedCap(from: run.segments)
         let weighted = weightedSegments(from: run.segments, cap: cap)
         return Run(
+            date: run.date,
+            name: run.name,
             segments: weighted,
             spectrum: Run.Spectrum(from: weighted, time: run.spectrum.time)
         )

@@ -176,7 +176,7 @@ struct StravaRunsView: View {
         loadingRunID = activity.id
         defer { loadingRunID = nil }
         do {
-            let track = try await client.track(for: activity.id)
+            let track = try await client.track(for: activity)
             try await player.setRun(track)
             onRunLoaded()
         } catch {
