@@ -1,7 +1,7 @@
 import SwiftUI
 import RunKit
 import RunUI
-import Animations
+import Visualiser
 
 struct VisualiserView: View {
 
@@ -15,7 +15,7 @@ struct VisualiserView: View {
     private var selectedPanel: InspectorFocus = .visualisation
 
     @State
-    private var visualisation: any Animations.Visualisation = Warp()
+    private var visualisation: any Visualiser.Visualisation = Warp()
 
     var body: some View {
         PlayerDrivenView(visualisation: $visualisation)
@@ -52,7 +52,7 @@ struct VisualiserView: View {
 
 // MARK: - Player-Driven View
 
-/// Bridges `RunPlayer` state into `VisualisationCanvas` at 60 fps.
+/// Bridges `RunPlayer` state into `VisualiserCanvas` at 60 fps.
 ///
 /// Kept as a separate named struct so only this view's body re-renders at the
 /// animation frame rate — `VisualiserView` and the inspector remain unaffected.
@@ -71,11 +71,11 @@ private struct PlayerDrivenView: View {
     @PlayerState(\.duration)
     private var duration
 
-    var visualisation: Binding<any Animations.Visualisation>
+    var visualisation: Binding<any Visualiser.Visualisation>
 
     var body: some View {
-        VisualisationCanvas(
-            state: AnimationState(
+        VisualiserCanvas(
+            state: VisualiserState(
                 coordinates: SIMD2(Float(segment.coordinate.x), Float(segment.coordinate.y)),
                 direction: SIMD2(Float(segment.direction.x), Float(segment.direction.y)),
                 elevation: Float(segment.elevation),

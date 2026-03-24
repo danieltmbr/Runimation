@@ -3,9 +3,9 @@ import Foundation
 /// All run-derived values the animation shader needs each frame.
 ///
 /// Construct from `RunPlayer` state in the app layer and pass to `WarpView`.
-/// Keeps the Animations package independent of RunKit.
+/// Keeps the Visualiser package independent of RunKit.
 ///
-public struct AnimationState: Sendable {
+public struct VisualiserState: Sendable {
     
     /// Normalised coordinates (-1, 1)
     ///
@@ -36,7 +36,7 @@ public struct AnimationState: Sendable {
     ///
     public var time: Float
 
-    public static let zero = AnimationState(
+    public static let zero = VisualiserState(
         coordinates: SIMD2<Float>(0, 0),
         direction: .zero,
         elevation: 0,

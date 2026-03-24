@@ -18,7 +18,7 @@ import CoreGraphics
 ///
 public struct RunPathView: View {
 
-    let state: AnimationState
+    let state: VisualiserState
 
     @State private var scale: CGFloat = 2
     
@@ -32,7 +32,7 @@ public struct RunPathView: View {
     
     @State private var visiblePath: [SIMD2<Float>] = []
 
-    public init(state: AnimationState) {
+    public init(state: VisualiserState) {
         self.state = state
     }
 

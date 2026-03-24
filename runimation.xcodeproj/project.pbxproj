@@ -12,7 +12,7 @@
 		E2FB3BFB2F56FBD700126ACC /* CoreUI in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BFA2F56FBD700126ACC /* CoreUI */; };
 		E2FB3BFE2F56FBE800126ACC /* RunKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3BFD2F56FBE800126ACC /* RunKit */; };
 		E2FB3C012F56FBF700126ACC /* RunUI in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C002F56FBF700126ACC /* RunUI */; };
-		E2FB3C042F57140000126ACC /* Animations in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C032F57140000126ACC /* Animations */; };
+		E2FB3C042F57140000126ACC /* Visualiser in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C032F57140000126ACC /* Visualiser */; };
 		E2FB3C7D2F578B6200126ACC /* StravaKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C7C2F578B6200126ACC /* StravaKit */; };
 /* End PBXBuildFile section */
 
@@ -76,7 +76,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E2FB3C042F57140000126ACC /* Animations in Frameworks */,
+				E2FB3C042F57140000126ACC /* Visualiser in Frameworks */,
 				E2FB3C012F56FBF700126ACC /* RunUI in Frameworks */,
 				E2FB3C7D2F578B6200126ACC /* StravaKit in Frameworks */,
 				E2FB3BF82F56FBC000126ACC /* CoreKit in Frameworks */,
@@ -155,7 +155,7 @@
 				E2FB3BFA2F56FBD700126ACC /* CoreUI */,
 				E2FB3BFD2F56FBE800126ACC /* RunKit */,
 				E2FB3C002F56FBF700126ACC /* RunUI */,
-				E2FB3C032F57140000126ACC /* Animations */,
+				E2FB3C032F57140000126ACC /* Visualiser */,
 				E2FB3C7C2F578B6200126ACC /* StravaKit */,
 			);
 			productName = runimation;
@@ -245,7 +245,7 @@
 				E2FB3BF92F56FBD700126ACC /* XCLocalSwiftPackageReference "Packages/CoreUI" */,
 				E2FB3BFC2F56FBE800126ACC /* XCLocalSwiftPackageReference "Packages/RunKit" */,
 				E2FB3BFF2F56FBF700126ACC /* XCLocalSwiftPackageReference "Packages/RunUI" */,
-				E2FB3C022F5713FF00126ACC /* XCLocalSwiftPackageReference "Packages/Animations" */,
+				E2FB3C022F5713FF00126ACC /* XCLocalSwiftPackageReference "Packages/Visualiser" */,
 				E2FB3C7B2F578B6200126ACC /* XCLocalSwiftPackageReference "Packages/StravaKit" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -721,9 +721,9 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/RunUI;
 		};
-		E2FB3C022F5713FF00126ACC /* XCLocalSwiftPackageReference "Packages/Animations" */ = {
+		E2FB3C022F5713FF00126ACC /* XCLocalSwiftPackageReference "Packages/Visualiser" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = Packages/Animations;
+			relativePath = Packages/Visualiser;
 		};
 		E2FB3C7B2F578B6200126ACC /* XCLocalSwiftPackageReference "Packages/StravaKit" */ = {
 			isa = XCLocalSwiftPackageReference;
@@ -748,9 +748,9 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = RunUI;
 		};
-		E2FB3C032F57140000126ACC /* Animations */ = {
+		E2FB3C032F57140000126ACC /* Visualiser */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = Animations;
+			productName = Visualiser;
 		};
 		E2FB3C7C2F578B6200126ACC /* StravaKit */ = {
 			isa = XCSwiftPackageProductDependency;

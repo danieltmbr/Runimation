@@ -1,6 +1,10 @@
+import Visualiser
 import SwiftUI
 
-public struct NoiseDemoView: View {
+/// Interactive demo exploring 2D value noise interpolation modes.
+/// Compare linear (fractional) interpolation — which shows grid artifacts —
+/// against quintic smoothing (C² continuity) used in production shaders.
+struct NoiseDemoView: View {
 
     @State
     private var interpolationMode: InterpolationMode = .linear
@@ -24,21 +28,21 @@ public struct NoiseDemoView: View {
         }
     }
 
-    public init() {}
-
-    public var body: some View {
+    var body: some View {
         VStack(spacing: 0) {
             // The noise visualization
             TimelineView(.animation) { timeline in
-                let elapsed: TimeInterval = timeline.date.timeIntervalSince(startTime)
+                let elapsed   = timeline.date.timeIntervalSince(startTime)
+                let scale     = self.scale
+                let modeValue = self.interpolationMode.modeValue
                 Rectangle()
                     .visualEffect { content, proxy in
                         content
                             .colorEffect(
-                                ShaderLibrary.bundle(.module).noiseShader(
+                                ShaderLibrary.bundle(.visualiser).noiseShader(
                                     .float(elapsed),
                                     .float(scale),
-                                    .float(interpolationMode.modeValue)
+                                    .float(modeValue)
                                 )
                             )
                     }

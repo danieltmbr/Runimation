@@ -9,9 +9,9 @@ import SwiftUI
 /// Adding a new visualisation type requires no changes here — only to `Visualisation`
 /// conformances and `VisualisationPicker.catalog`.
 ///
-public struct VisualisationCanvas: View {
+public struct VisualiserCanvas: View {
 
-    let state: AnimationState
+    let state: VisualiserState
 
     /// Stored directly to avoid `@Binding` property-wrapper synthesis issues
     /// with existential types. `Binding.wrappedValue` has a `nonmutating` setter,
@@ -19,7 +19,7 @@ public struct VisualisationCanvas: View {
     private let visualisation: Binding<any Visualisation>
 
     public init(
-        state: AnimationState,
+        state: VisualiserState,
         visualisation: Binding<any Visualisation>
     ) {
         self.state = state
@@ -48,5 +48,5 @@ public struct VisualisationCanvas: View {
 }
 
 #Preview {
-    VisualisationCanvas(state: .zero, visualisation: .constant(Warp() as any Visualisation))
+    VisualiserCanvas(state: .zero, visualisation: .constant(Warp() as any Visualisation))
 }

@@ -2,13 +2,13 @@ import SwiftUI
 
 /// A full-screen Metal-rendered domain warp animation.
 ///
-/// Driven by an `AnimationState` value (constructed from run metrics in the app layer)
+/// Driven by an `VisualiserState` value (constructed from run metrics in the app layer)
 /// and a `Warp` configuration binding for user-adjustable parameters.
 /// Supports pinch-to-zoom and pan gestures for noise-space navigation.
 ///
 public struct WarpView: View {
 
-    let state: AnimationState
+    let state: VisualiserState
 
     var configuration: Binding<Warp>
 
@@ -27,7 +27,7 @@ public struct WarpView: View {
     @State
     private var paletteImage: Image = PaletteGradientRenderer.image(.default)
 
-    public init(state: AnimationState, configuration: Binding<Warp>) {
+    public init(state: VisualiserState, configuration: Binding<Warp>) {
         self.state = state
         self.configuration = configuration
     }
@@ -125,7 +125,7 @@ public struct WarpView: View {
 extension Warp: Visualisation {
 
     /// Produces a `WarpView` driven by the given state and configuration binding.
-    public func canvas(state: AnimationState, binding: Binding<Warp>) -> some View {
+    public func canvas(state: VisualiserState, binding: Binding<Warp>) -> some View {
         WarpView(state: state, configuration: binding)
     }
 }

@@ -1,4 +1,4 @@
-import Animations
+import Visualiser
 import CoreKit
 import RunKit
 import RunUI
@@ -36,21 +36,6 @@ struct ContentView: View {
                 }
                 Tab("Library", systemImage: "figure.run", value: "library") {
                     StravaRunsView { selectedTab = "visualiser" }
-                }
-            }
-
-            TabSection("Learnings") {
-                Tab("Colors", systemImage: "paintpalette", value: "colors") {
-                    ColorsDemoView()
-                }
-                Tab("Noise", systemImage: "waveform", value: "noise") {
-                    NoiseDemoView()
-                }
-                Tab("fBM", systemImage: "function", value: "fbm") {
-                    FbmDemoView()
-                }
-                Tab("Warp", systemImage: "waveform.path.ecg", value: "warp") {
-                    WarpDemoView()
                 }
             }
         }

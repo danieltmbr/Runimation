@@ -1,6 +1,13 @@
+import Visualiser
 import SwiftUI
 
-public struct WarpDemoView: View {
+/// Interactive demo exploring domain warping — nested fBM displacement.
+/// Adjust H, octave count, and scale to see the layered distortion effect
+/// that forms the basis of the production run visualisation shader.
+struct WarpDemoView: View {
+
+    @State
+    private var startTime = Date()
 
     @State
     private var h: Double = 0.5
@@ -11,27 +18,27 @@ public struct WarpDemoView: View {
     @State
     private var scale: Double = 0.01
 
-    @State
-    private var time: Double = 0.0
-
-    public init() {}
-
-    public var body: some View {
+    var body: some View {
         VStack(spacing: 20) {
-            // The warp visualization
-            Rectangle()
-                .visualEffect { content, geometryProxy in
-                    content
-                        .colorEffect(
-                            ShaderLibrary.bundle(.module).warpShader(
-                                .float(time),
-                                .float(octaves),
-                                .float(h),
-                                .float(scale)
+            TimelineView(.animation) { timeline in
+                let elapsed = timeline.date.timeIntervalSince(startTime)
+                let h       = self.h
+                let octaves = self.octaves
+                let scale   = self.scale
+                Rectangle()
+                    .visualEffect { content, _ in
+                        content
+                            .colorEffect(
+                                ShaderLibrary.bundle(.visualiser).warpShader(
+                                    .float(elapsed),
+                                    .float(octaves),
+                                    .float(h),
+                                    .float(scale)
+                                )
                             )
-                        )
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
 
             // Controls
             VStack(alignment: .leading, spacing: 16) {
@@ -66,12 +73,6 @@ public struct WarpDemoView: View {
                 }
             }
             .padding()
-        }
-        .onAppear {
-            // Optional: animate time for dynamic effects
-            Timer.scheduledTimer(withTimeInterval: 1/60, repeats: true) { _ in
-                time += 0.016
-            }
         }
     }
 }

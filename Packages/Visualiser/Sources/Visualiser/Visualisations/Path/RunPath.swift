@@ -25,7 +25,7 @@ public struct RunPath: Visualisation, Equatable, Sendable {
 
     // MARK: - Visualisation
 
-    public func canvas(state: AnimationState, binding: Binding<RunPath>) -> some View {
+    public func canvas(state: VisualiserState, binding: Binding<RunPath>) -> some View {
         RunPathView(state: state)
     }
 }
