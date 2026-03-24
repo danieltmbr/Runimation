@@ -5,9 +5,9 @@ import SwiftUI
 ///
 /// The layout and appearance are fully determined by the active style, injected via
 /// `.playbackControlsStyle(_:)`. Three built-in styles are provided:
-/// - `.compact` — minimal icon row with a background progress fill (tab bar accessory)
-/// - `.regular` — progress slider row + large icon row (sheet inspector)
-/// - `.horizontal` — all controls in a single inline row (toolbar)
+/// - `.compact` — run name + play toggle with background progress fill (compact size class / iPhone)
+/// - `.regular` — inline transport + progress row (regular size class / iPad, Mac bottom bar)
+/// - `.panel` — progress slider row + large icon row (playback detail sheet)
 ///
 /// Requires `RunPlayer` in the environment via `.player(_:)`.
 ///
@@ -15,7 +15,7 @@ public struct PlaybackControls: View {
 
     @Environment(\.playbackControlsStyle)
     private var style
-    
+
     public init() {}
 
     public var body: some View {
@@ -25,9 +25,9 @@ public struct PlaybackControls: View {
 
 // MARK: - Style Protocol
 
-public protocol PlaybackControlsStyle {
+public protocol PlaybackControlsStyle: Sendable {
     associatedtype Body: View
-    @ViewBuilder func makeBody() -> Body
+    @MainActor @ViewBuilder func makeBody() -> Body
 }
 
 // MARK: - Static Members
@@ -40,8 +40,8 @@ extension PlaybackControlsStyle where Self == RegularPlaybackControlsStyle {
     public static var regular: Self { .init() }
 }
 
-extension PlaybackControlsStyle where Self == ToolbarPlaybackControlsStyle {
-    public static var toolbar: Self { .init() }
+extension PlaybackControlsStyle where Self == PanelPlaybackControlsStyle {
+    public static var panel: Self { .init() }
 }
 
 // MARK: - View Modifier
@@ -55,12 +55,13 @@ extension View {
 // MARK: - Type Erasure
 
 private struct AnyPlaybackControlsStyle: @unchecked Sendable {
-    private let _makeBody: () -> AnyView
+    private let _makeBody: @MainActor () -> AnyView
 
     init<S: PlaybackControlsStyle>(_ style: S) {
         _makeBody = { AnyView(style.makeBody()) }
     }
 
+    @MainActor
     func makeBody() -> some View {
         _makeBody()
     }

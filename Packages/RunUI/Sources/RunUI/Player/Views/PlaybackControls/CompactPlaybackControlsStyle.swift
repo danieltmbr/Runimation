@@ -1,10 +1,11 @@
 import SwiftUI
 
-/// Minimal playback controls for the tab bar accessory on iOS.
+/// Minimal playback controls for compact size class (iPhone portrait) bottom bar.
 ///
-/// Displays Rewind, Play/Pause, and Loop as small icons with equal spacing.
-/// A translucent `PlayerProgressBar` creeps across the background from leading
-/// to trailing as the animation plays, giving a low-key sense of progress.
+/// Displays the run name on the leading side and a Play/Pause toggle on the
+/// trailing side. A translucent `PlayerProgressBar` creeps across the background
+/// from leading to trailing as the animation plays, giving a low-key sense of
+/// progress without taking up additional space.
 ///
 public struct CompactPlaybackControlsStyle: PlaybackControlsStyle {
     public func makeBody() -> some View {
@@ -16,21 +17,22 @@ public struct CompactPlaybackControlsStyle: PlaybackControlsStyle {
 
 private struct CompactPlaybackControls: View {
 
+    @PlayerState(\.run.metrics)
+    private var run
+
     var body: some View {
         HStack {
-            Spacer()
-            RewindButton()
-                .imageScale(.small)
-            Spacer()
             PlayToggle()
                 .imageScale(.large)
-            Spacer()
-            LoopToggle()
-                .imageScale(.small)
+                .labelStyle(.iconOnly)
+
+            Text(run.name)
+                .lineLimit(2)
+                .truncationMode(.tail)
+            
             Spacer()
         }
-        .labelStyle(.iconOnly)
-        .padding(.vertical, 14)
+        .padding(.horizontal)
         .foregroundStyle(.primary)
         .background(alignment: .leading) {
             PlayerProgressBar()

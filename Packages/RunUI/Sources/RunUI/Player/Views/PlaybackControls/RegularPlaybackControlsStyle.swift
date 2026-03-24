@@ -1,9 +1,12 @@
 import SwiftUI
 
-/// Full-size playback controls for the bottom sheet inspector on iOS.
+/// Compact inline playback controls for regular size class (iPad, Mac) bottom bar.
 ///
-/// Shows a progress slider row (elapsed time, scrubber, duration picker) above
-/// a large icon row (Rewind, Play/Pause, Loop).
+/// All controls sit in a single horizontal row: transport buttons, a fixed-width
+/// progress slider with elapsed time, and a duration picker.
+///
+/// Phase 2 will update this to the Apple Music-style layout with run info and
+/// a hover-to-scrub progress line.
 ///
 public struct RegularPlaybackControlsStyle: PlaybackControlsStyle {
     public func makeBody() -> some View {
@@ -15,31 +18,21 @@ public struct RegularPlaybackControlsStyle: PlaybackControlsStyle {
 
 private struct RegularPlaybackControls: View {
     var body: some View {
-        VStack(spacing: 20) {
-            HStack(spacing: 8) {
-                ElapsedTimeLabel()
-                ProgressSlider()
-                    .sliderThumbVisibility(.automatic)
-                DurationMenu()
-            }
-            .padding(.horizontal)
-
-            HStack {
-                Spacer()
-                RewindButton()
-                    .labelStyle(.iconOnly)
-                    .font(.system(size: 26, weight: .semibold))
-                Spacer()
-                PlayToggle()
-                    .labelStyle(.iconOnly)
-                    .font(.system(size: 46))
-                Spacer()
-                LoopToggle()
-                    .labelStyle(.iconOnly)
-                    .font(.system(size: 26, weight: .semibold))
-                Spacer()
-            }
-            .foregroundStyle(.primary)
+        HStack(spacing: 8) {
+            RewindButton()
+                .labelStyle(.iconOnly)
+            PlayToggle()
+                .labelStyle(.iconOnly)
+            LoopToggle()
+                .labelStyle(.iconOnly)
+            Divider()
+                .frame(height: 16)
+            ElapsedTimeLabel()
+                .foregroundStyle(.secondary)
+            ProgressSlider()
+                .frame(width: 160)
+            DurationMenu()
         }
+        .foregroundStyle(.primary)
     }
 }

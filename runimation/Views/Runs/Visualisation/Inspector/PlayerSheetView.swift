@@ -1,7 +1,7 @@
 import SwiftUI
 import Visualiser
 import RunUI
-internal import CoreUI
+import CoreUI
 
 #if os(iOS)
 
@@ -67,7 +67,7 @@ struct PlayerSheetView: View {
             Divider()
 
             PlaybackControls()
-                .playbackControlsStyle(.regular)
+                .playbackControlsStyle(.panel)
 
             // Panel toggle buttons (pipeline left, stats right)
             HStack {

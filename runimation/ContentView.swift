@@ -1,64 +1,143 @@
-import Visualiser
 import CoreKit
 import RunKit
 import RunUI
+import StravaKit
 import SwiftUI
 
+/// Root view of the Runimation app.
+///
+/// Owns the `RunPlayer` and coordinates top-level navigation: the Run Library,
+/// the Customisation Panel (inspector), and the Share sheet. The full-screen
+/// `VisualiserView` is always the background experience.
+///
 struct ContentView: View {
 
     @State
-    private var player = RunPlayer(
-        transformers: [GuassianRun()]
-    )
+    private var player = RunPlayer(transformers: [GuassianRun()])
 
     @State
     private var showInspector = false
 
     @State
-    private var selectedTab: String = "visualiser"
+    private var showLibrary = false
+
+    @Environment(StravaClient.self)
+    private var stravaClient
 
     private var hasRun: Bool {
         !player.run.metrics.segments.isEmpty
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            TabSection("Runs") {
-                Tab("Visualisation", systemImage: "sparkles", value: "visualiser") {
-                    if hasRun {
-                        VisualiserView(showInspector: $showInspector)
-                    } else {
-                        ProgressView("Loading run data…")
+        NavigationStack {
+            VisualiserView(showInspector: $showInspector)
+                .toolbar { topToolbarItems }
+                .safeAreaInset(edge: .bottom) { bottomBar }
+        }
+        .player(player)
+        .sheet(isPresented: $showLibrary) { librarySheet }
+        .task { await loadBundledRunIfNeeded() }
+        .onAppear { autoOpenLibraryIfEmpty() }
+    }
+
+    // MARK: - Top Toolbar
+
+    @ToolbarContentBuilder
+    private var topToolbarItems: some ToolbarContent {
+        ToolbarItem(placement: .navigation) {
+            libraryButton
+        }
+        ToolbarItem(placement: .primaryAction) {
+            shareButton
+        }
+    }
+
+    // MARK: - Bottom Bar
+
+    private var bottomBar: some View {
+        HStack {
+            playbackControls
+                .padding(.vertical, 4)
+                .glassEffect(in: Capsule())
+            Spacer()
+            customisationButton
+                .padding()
+                .glassEffect(in: Circle())
+        }
+        .padding(.horizontal)
+    }
+
+    // MARK: - Toolbar Items
+
+    private var libraryButton: some View {
+        Button {
+            showLibrary = true
+        } label: {
+            Label("Run Library", systemImage: "figure.run")
+        }
+    }
+
+    private var shareButton: some View {
+        Button { } label: {
+            Label("Share", systemImage: "square.and.arrow.up")
+        }
+        .disabled(true)
+    }
+
+    private var customisationButton: some View {
+        Button {
+            showInspector.toggle()
+        } label: {
+            Label("Customise", systemImage: "slider.horizontal.3")
+        }
+        .labelStyle(.iconOnly)
+        .imageScale(.large)
+        .foregroundStyle(.primary)
+    }
+
+    @ViewBuilder
+    private var playbackControls: some View {
+        #if os(iOS)
+        PlaybackControls()
+            .playbackControlsStyle(.compact)
+        #else
+        PlaybackControls()
+            .playbackControlsStyle(.regular)
+        #endif
+    }
+
+    // MARK: - Library Sheet
+
+    private var librarySheet: some View {
+        NavigationStack {
+            StravaRunsView { showLibrary = false }
+                .navigationTitle("Run Library")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close") { showLibrary = false }
                     }
                 }
-                Tab("Metrics", systemImage: "chart.xyaxis.line", value: "metrics") {
-                    RunMetricsView(run: player.run.metrics)
-                }
-                Tab("Library", systemImage: "figure.run", value: "library") {
-                    StravaRunsView { selectedTab = "visualiser" }
-                }
-            }
         }
-        .tabViewStyle(.sidebarAdaptable)
+        #if os(macOS)
+        .frame(minWidth: 400, minHeight: 500)
+        #endif
         .player(player)
-#if os(iOS)
-        .tabViewBottomAccessory(isEnabled: hasRun) {
-            PlaybackControls()
-                .playbackControlsStyle(.compact)
-                .contentShape(Rectangle())
-                .onTapGesture { showInspector.toggle() }
-                .glassEffect()
-        }
-        .tabBarMinimizeBehavior(.onScrollDown)
-#endif
-        .task {
-            guard !hasRun else { return }
-            let track = await Task.detached {
-                GPX.Parser().parse(fileNamed: "run-01").first
-            }.value
-            guard let track else { return }
-            try? await player.setRun(track)
-        }
+        .environment(stravaClient)
+    }
+
+    // MARK: - Initial Load
+
+    private func loadBundledRunIfNeeded() async {
+        guard !hasRun else { return }
+        let track = await Task.detached {
+            GPX.Parser().parse(fileNamed: "run-01").first
+        }.value
+        guard let track else { return }
+        try? await player.setRun(track)
+    }
+
+    private func autoOpenLibraryIfEmpty() {
+        if !hasRun { showLibrary = true }
     }
 }
 

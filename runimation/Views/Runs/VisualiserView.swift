@@ -21,32 +21,16 @@ struct VisualiserView: View {
         PlayerDrivenView(visualisation: $visualisation)
             .ignoresSafeArea()
             .backgroundExtensionEffect()
-#if os(iOS)
-        .toolbar(.hidden, for: .navigationBar)
-#endif
-        .inspector(isPresented: $showInspector) {
+            .inspector(isPresented: $showInspector) {
 #if os(macOS)
-            PlayerInspectorView(selectedPanel: $selectedPanel, visualisation: $visualisation)
-                .inspectorColumnWidth(min: 200, ideal: 270, max: 400)
-                .player(player)
+                PlayerInspectorView(selectedPanel: $selectedPanel, visualisation: $visualisation)
+                    .inspectorColumnWidth(min: 200, ideal: 270, max: 400)
+                    .player(player)
 #else
-            PlayerSheetView(selectedPanel: $selectedPanel, visualisation: $visualisation)
-                .player(player)
+                PlayerSheetView(selectedPanel: $selectedPanel, visualisation: $visualisation)
+                    .player(player)
 #endif
-        }
-        .toolbar {
-#if os(macOS)
-            ToolbarItem(placement: .principal) {
-                PlaybackControls()
-                    .playbackControlsStyle(.toolbar)
             }
-            ToolbarItem(placement: .primaryAction) {
-                Button { showInspector.toggle() } label: {
-                    Image(systemName: "sidebar.right")
-                }
-            }
-#endif
-        }
     }
 }
 

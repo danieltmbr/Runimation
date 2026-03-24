@@ -1,6 +1,6 @@
 import SwiftUI
 import Visualiser
-internal import CoreUI
+import CoreUI
 
 #if os(macOS)
 

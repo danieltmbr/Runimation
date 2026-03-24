@@ -11,6 +11,9 @@ struct RunimationApp: App {
             ContentView()
                 .environment(stravaClient)
 #if os(macOS)
+                .toolbarBackgroundVisibility(
+                    .hidden, for: .windowToolbar
+                )
                 .onOpenURL { stravaClient.handleCallbackURL($0) }
 #endif
         }

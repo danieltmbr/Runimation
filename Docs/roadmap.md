@@ -49,56 +49,57 @@ The app is currently a mix of production features, diagnostics, and shader learn
 
 ---
 
-## Phase 1: App Structure — Visualiser as Root
-**Goal:** Replace the TabView with the Visualiser as the app's root view. Add navigation to Playback, Library, Customisation, and Export.
+## ✅ Phase 1: App Structure — Visualiser as Root
+**Goal:** Replace the TabView with the Visualiser as the app's root view. Add navigation to Library, Customisation, and Export.
 
 ### Tasks
-- [ ] Replace `ContentView`'s TabView with a single full-screen `VisualiserView` as root
-- [ ] Add toolbar buttons: Run Library, Customisation Panel, Export (placeholder)
-- [ ] Add Playback Control Strip to the toolbar (compact: run name + play toggle)
-- [ ] Platform-adaptive layout:
-  - iOS: buttons in bottom toolbar, sheets for panels
-  - macOS: buttons in top toolbar, sidebar/sheet for panels
-  - visionOS: ornaments (future consideration)
-- [ ] Wire up `RunPlayer` and `StravaClient` injection at the root level (currently in `ContentView`)
-- [ ] Auto-open Run Library on first launch when no run is loaded
+- [x] Replace `ContentView`'s TabView with a full-screen `VisualiserView` as root
+- [x] Add toolbar buttons: Run Library (top leading), Customisation Panel (bottom), Share/Export placeholder (top trailing)
+- [x] `PlaybackControls` floats in bottom bar via `.safeAreaInset` with Liquid Glass — `.compact` style on iPhone, `.regular` on iPad/Mac
+- [x] Rename PlaybackControls styles: `toolbar` → `regular`, `regular` → `panel`
+- [x] Update `.compact` style: run name + play toggle + progress background
+- [x] Library opens as sheet (iOS/macOS) — auto-opens when no run loaded; macOS sheet has minimum frame
+- [x] Customisation panel toggles inspector (sidebar macOS, sheet iOS)
+- [x] `PlayToggle` icon swap no longer causes layout jump (ZStack + `contentTransition`)
+
+### Terminology
+- `PlaybackControls` is the playback UI. The style determines layout. No "PlaybackControlStrip".
+- `.compact` — compact size class (iPhone portrait)
+- `.regular` — regular size class (iPad, Mac) bottom bar
+- `.panel` — full detail controls in the playback sheet
 
 ### Key files
-- `Runimation/ContentView.swift` — complete rewrite as Visualiser root
-- `Runimation/Views/Runs/VisualiserView.swift` — promote to root-level view
-- New: `Runimation/Views/PlaybackControlStrip.swift`
-- `Packages/RunUI/` — existing playback controls to adapt
+- `Runimation/ContentView.swift` — rewritten as root coordinator
+- `Runimation/Views/Runs/VisualiserView.swift` — simplified (toolbar items moved to ContentView)
+- `Packages/RunUI/.../CompactPlaybackControlsStyle.swift` — updated layout
+- `Packages/RunUI/.../RegularPlaybackControlsStyle.swift` — renamed from ToolbarPlaybackControlsStyle
+- `Packages/RunUI/.../PanelPlaybackControlsStyle.swift` — renamed from RegularPlaybackControlsStyle
 
 ### Verification
-- App launches directly into full-screen visualisation (or Library if no run)
-- All navigation accessible from root: Library, Customisation, Export placeholder
-- Playback strip visible and functional
-- Works on iOS and macOS (the two v1 platforms)
+- App launches into full-screen visualisation
+- Library auto-opens when no run loaded; selecting a run dismisses it
+- Bottom bar shows playback controls + customisation button
+- Customisation panel opens/closes on both platforms
 
 ---
 
-## Phase 2: Playback UX
-**Goal:** Implement the two-tier playback UI: compact Control Strip (always visible) and detailed Control Panel (on tap).
+## Phase 2: Playback UX Polish
+**Goal:** Polish `PlaybackControls` layouts and add compact-to-panel navigation.
 
 ### Tasks
-- [ ] **Control Strip** (toolbar): current run name + play/pause toggle. Minimal footprint.
-- [ ] **Control Panel** (sheet/popover on tap): progress slider, elapsed time, duration picker, loop toggle, rewind. Resembles a media player.
-- [ ] Platform adaptation:
-  - iOS: Strip in bottom toolbar, Panel as `.sheet` or `.bottomSheet`
-  - macOS: Strip in top toolbar, Panel as popover or panel
-- [ ] Reuse/adapt existing RunUI controls: `PlayToggle`, `ProgressSlider`, `LoopToggle`, `RewindButton`, `ElapsedTimeLabel`, `DurationPicker`
-- [ ] Existing `PlaybackControlsStyle` system may need new styles or refactoring
+- [ ] `.regular` style: Apple Music-like layout — transport buttons left, run name + date/distance centre, subtle progress line below (hover-to-scrub on Mac, tap-to-reveal on iPad)
+- [ ] `.compact` style: tapping opens `.panel` as bottom sheet
+- [ ] macOS top toolbar: light/transparent, no hard background
+- [ ] macOS Library button opens popover (not sheet)
 
 ### Key files
-- `Packages/RunUI/Sources/RunUI/Player/Views/PlaybackControls/` — existing styles
-- `Packages/RunUI/Sources/RunUI/Player/Controls/` — existing control views
-- New or adapted: `CompactPlaybackControlsStyle` → Control Strip style
-- New or adapted: `RegularPlaybackControlsStyle` → Control Panel style
+- `Packages/RunUI/.../RegularPlaybackControlsStyle.swift` — Apple Music-like layout
+- `Packages/RunUI/.../CompactPlaybackControlsStyle.swift` — add tap-to-open-panel
 
 ### Verification
-- Strip shows run name + play toggle, always visible
-- Tapping strip opens Control Panel with all secondary controls
-- Controls work: play/pause, seek, loop, rewind, duration change
+- Mac: bottom bar matches Apple Music reference (controls + run info + hover progress)
+- iPhone: tapping compact bar opens panel sheet with full controls
+- iPad: progress line visible, tap to enter scrub mode
 
 ---
 
@@ -250,3 +251,4 @@ _Updated after each session. Format: `[date] Phase X.Y — what was done`_
 
 [2026-03-23] Roadmap created. Decisions: IFS branch parked, workspace approach for demo separation, iOS+macOS v1.
 [2026-03-24] Phase 0 complete — Runimation.xcworkspace + RuniDemos.xcodeproj created. AnimationsDemos package eliminated; demo views live directly in the RuniDemos app target. Animations package renamed to Visualiser (AnimationState → VisualiserState, VisualisationCanvas → VisualiserCanvas). Learnings tab removed from production ContentView. Swift 6 concurrency warnings fixed in all demo views (TimelineView pattern, @State extracted to locals before .visualEffect). Branch: phase/0-workspace.
+[2026-03-24] Phase 1 complete — TabView removed; VisualiserView is now full-screen root. ContentView rewritten as thin coordinator (library sheet, inspector toggle, share placeholder, bundled-run loading). PlaybackControls styles renamed: toolbar→regular, regular→panel. Compact style updated: run name + play toggle + PlayerProgressBar background. Bottom bar uses .safeAreaInset with individual Liquid Glass elements (capsule for controls, circle for customise). PlayToggle icon swap stabilised with ZStack + contentTransition. macOS library sheet gets minimum frame. Branch: phase/1-visualiser-root.

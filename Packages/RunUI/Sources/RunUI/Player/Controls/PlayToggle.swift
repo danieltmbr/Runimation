@@ -19,12 +19,20 @@ public struct PlayToggle: View {
     public init() {}
 
     public var body: some View {
-        Button(
-            isPlaying ? "Pause" : "Play",
-            systemImage: isPlaying ? "pause.fill" : "play.fill"
-        ) {
+        Button {
             togglePlay()
+        } label: {
+            Label {
+                Text(isPlaying ? "Pause" : "Play")
+            } icon: {
+                ZStack {
+                    Image(systemName: "play").opacity(0)
+                    Image(systemName: isPlaying ? "pause" : "play")
+                }
+            }
         }
+        .contentTransition(.symbolEffect(.replace))
+        .symbolVariant(.fill)
         .disabled(run.duration <= 0)
     }
 }
