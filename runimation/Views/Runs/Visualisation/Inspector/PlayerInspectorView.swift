@@ -82,10 +82,6 @@ struct PlayerInspectorView: View {
             }
         case .pipeline:
             SignalProcessingContent()
-        case .stats:
-            ScrollView {
-                RunStatisticsContent()
-            }
         }
     }
 

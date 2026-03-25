@@ -21,8 +21,7 @@ public struct DurationMenu: View {
                 }
             }
         } label: {
-            Text(duration.label)
-                .font(.caption.monospacedDigit())
+            Label(duration.label, systemImage: "timer")
         }
     }
 }

@@ -21,6 +21,12 @@ struct ContentView: View {
     @State
     private var showLibrary = false
 
+    @State
+    private var showNowPlaying = false
+    
+    @State
+    private var sheetHeight: CGFloat = 0
+
     @Environment(StravaClient.self)
     private var stravaClient
 
@@ -36,6 +42,19 @@ struct ContentView: View {
         }
         .player(player)
         .sheet(isPresented: $showLibrary) { librarySheet }
+        #if os(iOS)
+        .sheet(isPresented: $showNowPlaying) {
+            NowPlayingSheet()
+                .player(player)
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.size.height
+                } action: { newValue in
+                    sheetHeight = newValue
+                }
+                .presentationDetents([.height(sheetHeight)])
+                .presentationDragIndicator(.automatic)
+        }
+        #endif
         .task { await loadBundledRunIfNeeded() }
         .onAppear { autoOpenLibraryIfEmpty() }
     }
@@ -57,14 +76,18 @@ struct ContentView: View {
     private var bottomBar: some View {
         HStack {
             playbackControls
-                .padding(.vertical, 4)
                 .glassEffect(in: Capsule())
+#if os(iOS)
             Spacer()
+#endif
             customisationButton
-                .padding()
                 .glassEffect(in: Circle())
         }
+#if os(iOS)
         .padding(.horizontal)
+#else
+        .padding()
+#endif
     }
 
     // MARK: - Toolbar Items
@@ -89,7 +112,9 @@ struct ContentView: View {
             showInspector.toggle()
         } label: {
             Label("Customise", systemImage: "slider.horizontal.3")
+                .padding(10)
         }
+        .buttonStyle(.plain)
         .labelStyle(.iconOnly)
         .imageScale(.large)
         .foregroundStyle(.primary)
@@ -100,6 +125,8 @@ struct ContentView: View {
         #if os(iOS)
         PlaybackControls()
             .playbackControlsStyle(.compact)
+            .contentShape(Capsule())
+            .onTapGesture { showNowPlaying = true }
         #else
         PlaybackControls()
             .playbackControlsStyle(.regular)

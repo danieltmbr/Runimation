@@ -16,30 +16,39 @@ public struct PanelPlaybackControlsStyle: PlaybackControlsStyle {
 private struct PanelPlaybackControls: View {
     var body: some View {
         VStack(spacing: 20) {
-            HStack(spacing: 8) {
-                ElapsedTimeLabel()
-                ProgressSlider()
-                    .sliderThumbVisibility(.automatic)
-                DurationMenu()
-            }
-            .padding(.horizontal)
-
             HStack {
                 Spacer()
                 RewindButton()
                     .labelStyle(.iconOnly)
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.headline)
                 Spacer()
                 PlayToggle()
                     .labelStyle(.iconOnly)
-                    .font(.system(size: 46))
+                    .font(.largeTitle)
                 Spacer()
                 LoopToggle()
                     .labelStyle(.iconOnly)
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.headline)
                 Spacer()
             }
             .foregroundStyle(.primary)
+
+            VStack(spacing: 8) {
+                ProgressSlider()
+                    .sliderThumbVisibility(.automatic)
+                
+                HStack(alignment: .top) {
+                    ElapsedTimeLabel()
+                    Spacer()
+                    DurationMenu()
+                        .labelStyle(.iconOnly)
+                        .foregroundStyle(.primary)
+                        .font(.headline)
+                    Spacer()
+                    RemainingTimeLabel()
+                }
+                .foregroundStyle(.secondary)
+            }
         }
     }
 }

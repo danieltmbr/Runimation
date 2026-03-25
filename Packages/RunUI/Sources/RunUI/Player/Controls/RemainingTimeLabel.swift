@@ -1,27 +1,27 @@
 import SwiftUI
 import RunKit
 
-/// A label that shows the elapsed playback time formatted as `m:ss` or `h:mm:ss`.
+/// A label that shows the remaining playback time formatted as `-m:ss` or `-h:mm:ss`.
 ///
-/// When a progress binding is passed in through the initialiser with a non-nil value,
-/// the label displays the elapsed time for the given progress.
+/// When a progress is passed in through the initialiser with a non-nil value,
+/// the label displays the remaining time for the given progress.
 ///
 /// Requires `RunPlayer` in the environment via `.player(_:)`.
 ///
-public struct ElapsedTimeLabel: View {
+public struct RemainingTimeLabel: View {
     
     private var displayProgress: TimeInterval {
         progress?.clamped(0, 1) ?? playerProgress
     }
-
+    
     @PlayerState(\.duration)
     private var duration
-    
+
     @PlayerState(\.progress.metrics)
     private var playerProgress
     
     private var progress: TimeInterval?
-    
+
     @PlayerState(\.run.metrics)
     private var run
 
@@ -30,11 +30,11 @@ public struct ElapsedTimeLabel: View {
     }
 
     public var body: some View {
-        Text(elapsed, format: .runDuration)
+        Text(verbatim: "-\(remaining.formatted(.runDuration))")
             .font(.caption.monospacedDigit())
     }
 
-    private var elapsed: TimeInterval {
-        displayProgress * duration(for: run.duration)
+    private var remaining: TimeInterval {
+        (1 - displayProgress) * duration(for: run.duration)
     }
 }

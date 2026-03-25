@@ -126,7 +126,7 @@ public struct Run: Equatable, Sendable {
 
     /// Start date of the run. `nil` if unknown (e.g. `Run.zero`).
     ///
-    public let date: Date?
+    public let date: Date
 
     /// Display name of the run (e.g. from GPX `<name>` or Strava activity name).
     ///
@@ -158,7 +158,13 @@ public struct Run: Equatable, Sendable {
     /// Prefer `init(date:name:segments:spectrum:)` for transformers and the parser.
     /// See `RunInterpolator` for the full rationale.
     ///
-    init(coordinates: [CGPoint], date: Date? = nil, name: String = "", segments: [Segment], spectrum: Spectrum) {
+    init(
+        coordinates: [CGPoint],
+        date: Date = .now,
+        name: String = "",
+        segments: [Segment],
+        spectrum: Spectrum
+    ) {
         self.coordinates = coordinates
         self.date = date
         self.name = name
@@ -169,9 +175,16 @@ public struct Run: Equatable, Sendable {
     /// Convenience initialiser — derives `coordinates` from `segments`.
     ///
     /// Use for transformers and the parser, where the output segments
-    /// define the geographic path. Do NOT use in interpolators.
+    /// define the geographic path.
     ///
-    init(date: Date? = nil, name: String = "", segments: [Segment], spectrum: Spectrum) {
+    /// > Warning: Do **not** use in interpolators.
+    ///
+    init(
+        date: Date = .now,
+        name: String = "",
+        segments: [Segment],
+        spectrum: Spectrum
+    ) {
         self.init(
             coordinates: segments.map(\.coordinate),
             date: date,

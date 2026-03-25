@@ -13,7 +13,7 @@ public struct DurationPicker: View {
     public init() {}
 
     public var body: some View {
-        Picker("Duration", selection: $duration) {
+        Picker("Duration", systemImage: "timer", selection: $duration) {
             ForEach(RunPlayer.Duration.all) { option in
                 Text(option.label).tag(option)
             }

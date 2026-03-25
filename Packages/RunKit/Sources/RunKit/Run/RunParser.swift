@@ -22,7 +22,7 @@ extension Run {
         func run(from track: GPX.Track) -> Run {
             let points = track.points
             let name = track.name
-            let date = track.date ?? track.points.first?.time
+            let date = track.date ?? track.points.first?.time ?? .now
             guard points.count >= 2 else {
                 return Run(date: date, name: name, segments: [], spectrum: Spectrum(from: [], time: 0...0))
             }

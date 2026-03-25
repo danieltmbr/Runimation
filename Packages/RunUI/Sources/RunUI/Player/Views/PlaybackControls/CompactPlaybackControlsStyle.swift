@@ -25,6 +25,7 @@ private struct CompactPlaybackControls: View {
             PlayToggle()
                 .imageScale(.large)
                 .labelStyle(.iconOnly)
+                .padding(.horizontal)
 
             Text(run.name)
                 .lineLimit(2)
@@ -38,6 +39,9 @@ private struct CompactPlaybackControls: View {
             PlayerProgressBar()
                 .opacity(0.5)
                 .allowsHitTesting(false)
+                .mask {
+                    Capsule()
+                }
         }
     }
 }

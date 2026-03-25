@@ -5,12 +5,11 @@ import CoreUI
 
 #if os(iOS)
 
-/// Bottom sheet inspector shown on iOS.
+/// Customisation sheet shown on iOS.
 ///
-/// Scrollable content area shows visualisation controls by default. Two toggle buttons
-/// at the bottom switch to the signal processing or stats panels — mirroring the Apple Music
-/// "lyrics / queue" pattern. Tapping an active button returns to the visualisation panel.
-/// Playback controls are always visible at the bottom of the sheet.
+/// Scrollable content area shows visualisation controls by default. A toggle button
+/// at the bottom switches to the signal processing pipeline panel. Tapping an active
+/// button returns to the visualisation panel.
 ///
 /// Requires `RunPlayer` in the environment via `.player(_:)`.
 ///
@@ -55,27 +54,17 @@ struct PlayerSheetView: View {
             }
         case .pipeline:
             SignalProcessingContent()
-        case .stats:
-            ScrollView {
-                RunStatisticsContent()
-            }
         }
     }
 
     private var fixedControls: some View {
-        VStack(spacing: 20) {
+        VStack {
             Divider()
-
-            PlaybackControls()
-                .playbackControlsStyle(.panel)
-
-            // Panel toggle buttons (pipeline left, stats right)
             HStack {
+                Spacer()
                 panelToggleButton(panel: .pipeline, icon: "waveform.path.ecg")
                 Spacer()
-                panelToggleButton(panel: .stats, icon: "chart.bar")
             }
-            .padding(.horizontal, 36)
             .padding(.bottom)
         }
         .padding(.top, 4)

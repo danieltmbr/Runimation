@@ -13,7 +13,7 @@ public struct ProgressSlider: View {
     @Environment(\.seek)
     private var seek
 
-    @PlayerState(\.progress.diagnostics)
+    @PlayerState(\.progress.animation)
     private var progress
 
     @State
@@ -27,11 +27,14 @@ public struct ProgressSlider: View {
     public var body: some View {
         Slider(value: $localValue, in: 0...1) { editing in
             isEditing = editing
-            if !editing { seek(to: localValue) }
         }
         .onChange(of: progress, initial: true) { _, newValue in
             guard !isEditing else { return }
             localValue = newValue
+        }
+        .onChange(of: localValue, initial: false) {
+            guard isEditing else { return }
+            seek(to: localValue)
         }
     }
 }

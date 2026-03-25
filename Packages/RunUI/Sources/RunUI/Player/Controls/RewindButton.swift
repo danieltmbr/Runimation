@@ -14,7 +14,7 @@ public struct RewindButton: View {
     public init() {}
 
     public var body: some View {
-        Button("Rewind", systemImage: "backward.end.fill") {
+        Button("Rewind", systemImage: "backward.fill") {
             seek(to: 0)
         }
     }
