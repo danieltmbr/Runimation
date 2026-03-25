@@ -83,23 +83,29 @@ The app is currently a mix of production features, diagnostics, and shader learn
 
 ---
 
-## Phase 2: Playback UX Polish
+## ✅ Phase 2: Playback UX Polish
 **Goal:** Polish `PlaybackControls` layouts and add compact-to-panel navigation.
 
 ### Tasks
-- [ ] `.regular` style: Apple Music-like layout — transport buttons left, run name + date/distance centre, subtle progress line below (hover-to-scrub on Mac, tap-to-reveal on iPad)
-- [ ] `.compact` style: tapping opens `.panel` as bottom sheet
-- [ ] macOS top toolbar: light/transparent, no hard background
-- [ ] macOS Library button opens popover (not sheet)
+- [x] `.regular` style: Apple Music-like layout — transport buttons left, run info centre, hover reveals blurred info + time labels + scrub bar
+- [x] `.compact` style: tapping opens Now Playing sheet with `RunInfoView` + `.panel` controls
+- [x] `RunInfoView` extracted as reusable component with `RunInfoViewStyle` protocol (`RunInfoViewStyle`, `CompactRunInfoViewStyle`, `RegularRunInfoViewStyle`)
+- [x] `ProgressSlider` refactored with `ProgressSliderStyle` protocol — `.system` (SwiftUI Slider) and `.minimal` (capsule bar with drag gesture) styles
+- [x] Stats removed from inspector; playback controls removed from inspector sheet
+- [x] `InspectorFocus` simplified to Visualisation + Pipeline only
+- [x] Now Playing sheet uses dynamic height via `.onGeometryChange` + `.presentationDetents`
 
 ### Key files
-- `Packages/RunUI/.../RegularPlaybackControlsStyle.swift` — Apple Music-like layout
-- `Packages/RunUI/.../CompactPlaybackControlsStyle.swift` — add tap-to-open-panel
+- `Packages/RunUI/.../RegularPlaybackControlsStyle.swift` — Apple Music layout with hover progress
+- `Packages/RunUI/.../RunInfo/` — `RunInfoView` + style protocol + two style implementations
+- `Packages/RunUI/.../ProgressSlider/` — `ProgressSlider` + style protocol + system/minimal styles
+- `Runimation/Views/Runs/NowPlayingSheet.swift` — iOS Now Playing sheet
+- `Runimation/Views/Runs/Visualisation/Inspector/InspectorFocus.swift` — stats case removed
 
 ### Verification
-- Mac: bottom bar matches Apple Music reference (controls + run info + hover progress)
-- iPhone: tapping compact bar opens panel sheet with full controls
-- iPad: progress line visible, tap to enter scrub mode
+- Mac: bottom bar shows transport + run info + thin progress line; hover blurs info, shows time labels and scrubbable bar ✓
+- iPhone: tapping compact bar opens Now Playing sheet with run info + panel controls ✓
+- Inspector shows only Visualisation + Pipeline tabs on both platforms ✓
 
 ---
 
@@ -252,3 +258,4 @@ _Updated after each session. Format: `[date] Phase X.Y — what was done`_
 [2026-03-23] Roadmap created. Decisions: IFS branch parked, workspace approach for demo separation, iOS+macOS v1.
 [2026-03-24] Phase 0 complete — Runimation.xcworkspace + RuniDemos.xcodeproj created. AnimationsDemos package eliminated; demo views live directly in the RuniDemos app target. Animations package renamed to Visualiser (AnimationState → VisualiserState, VisualisationCanvas → VisualiserCanvas). Learnings tab removed from production ContentView. Swift 6 concurrency warnings fixed in all demo views (TimelineView pattern, @State extracted to locals before .visualEffect). Branch: phase/0-workspace.
 [2026-03-24] Phase 1 complete — TabView removed; VisualiserView is now full-screen root. ContentView rewritten as thin coordinator (library sheet, inspector toggle, share placeholder, bundled-run loading). PlaybackControls styles renamed: toolbar→regular, regular→panel. Compact style updated: run name + play toggle + PlayerProgressBar background. Bottom bar uses .safeAreaInset with individual Liquid Glass elements (capsule for controls, circle for customise). PlayToggle icon swap stabilised with ZStack + contentTransition. macOS library sheet gets minimum frame. Branch: phase/1-visualiser-root.
+[2026-03-25] Phase 2 complete — RegularPlaybackControlsStyle rewritten: Apple Music layout, hover blurs run info and reveals elapsed/remaining time labels + scrubbable progress bar (overlay approach, width scoped to info). RunInfoView extracted with RunInfoViewStyle protocol (compact + regular styles). ProgressSlider refactored with ProgressSliderStyle protocol (system + minimal styles). Now Playing sheet added for iOS compact tap. Inspector simplified to Visualisation + Pipeline only. CLAUDE.md updated with concrete SwiftUI component architecture rules. Branch: ifs.
