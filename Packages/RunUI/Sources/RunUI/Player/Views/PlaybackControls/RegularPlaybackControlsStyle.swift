@@ -24,12 +24,13 @@ private struct RegularPlaybackControls: View {
             transportControls
 
             infoView
+                .padding(.horizontal)
 
             DurationMenu()
-                .labelStyle(.iconOnly)
                 .font(.headline)
-                .buttonStyle(.plain)
         }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.plain)
         .padding(.horizontal)
         .foregroundStyle(.primary)
     }
@@ -52,14 +53,10 @@ private struct RegularPlaybackControls: View {
     private var transportControls: some View {
         HStack(spacing: 8) {
             RewindButton()
-                .labelStyle(.iconOnly)
             PlayToggle()
-                .labelStyle(.iconOnly)
                 .font(.title)
             LoopToggle()
-                .labelStyle(.iconOnly)
         }
-        .buttonStyle(.plain)
     }
 }
 
@@ -74,27 +71,8 @@ private struct RegularPlaybackControls: View {
 /// the thumb tracks the finger rather than jumping to the player position.
 ///
 private struct HoverProgressBar: View {
-    
-    private var displayProgress: Double {
-        isDragging ? localProgress : progress
-    }
 
     let isHovering: Bool
-
-    @PlayerState(\.progress.metrics)
-    private var progress
-
-    @PlayerState(\.run.metrics)
-    private var run
-
-    @Environment(\.seek)
-    private var seek
-
-    @State
-    private var isDragging = false
-
-    @State
-    private var localProgress: Double = 0
 
     var body: some View {
         VStack {
@@ -102,18 +80,11 @@ private struct HoverProgressBar: View {
             timeLabels
                 .opacity(isHovering ? 1 : 0)
 
-//            ProgressSlider()
-//                .sliderThumbVisibility(isHovering ? .visible : .hidden)
-//                .tint(isHovering ? .accentColor : .secondary)
-            
-            progressBar
+            ProgressSlider()
+                .progressSliderStyle(.minimal)
                 .frame(height: isHovering ? 6 : 2)
         }
         .allowsHitTesting(isHovering)
-        .onChange(of: progress, initial: true) { _, newValue in
-            guard !isDragging else { return }
-            localProgress = newValue
-        }
     }
 
     // MARK: - Subviews
@@ -121,36 +92,11 @@ private struct HoverProgressBar: View {
     /// Elapsed (leading) and remaining (trailing) time labels shown on hover.
     private var timeLabels: some View {
         HStack {
-            ElapsedTimeLabel(progress: displayProgress)
+            ElapsedTimeLabel()
             Spacer()
-            RemainingTimeLabel(progress: displayProgress)
+            RemainingTimeLabel()
         }
-        .font(.caption.monospacedDigit())
+        .font(.caption)
         .foregroundStyle(.secondary)
-    }
-
-    /// Single progress bar — thin at rest, thicker and scrubbable on hover.
-    private var progressBar: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(.primary.opacity(0.15))
-                Capsule()
-                    .fill(.primary)
-                    .frame(width: geo.size.width * displayProgress)
-            }
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { value in
-                        isDragging = true
-                        localProgress = max(0, min(1, value.location.x / geo.size.width))
-                    }
-                    .onEnded { _ in
-                        isDragging = false
-                        seek(to: localProgress)
-                    }
-            )
-        }
     }
 }

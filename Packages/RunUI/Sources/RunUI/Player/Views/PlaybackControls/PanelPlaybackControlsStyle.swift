@@ -39,6 +39,7 @@ private struct PanelPlaybackControls: View {
                 
                 HStack(alignment: .top) {
                     ElapsedTimeLabel()
+                        .font(.caption)
                     Spacer()
                     DurationMenu()
                         .labelStyle(.iconOnly)
@@ -46,6 +47,7 @@ private struct PanelPlaybackControls: View {
                         .font(.headline)
                     Spacer()
                     RemainingTimeLabel()
+                        .font(.caption)
                 }
                 .foregroundStyle(.secondary)
             }
