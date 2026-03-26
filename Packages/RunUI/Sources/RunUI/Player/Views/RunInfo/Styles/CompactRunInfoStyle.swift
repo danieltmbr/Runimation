@@ -1,7 +1,7 @@
 import SwiftUI
 import RunKit
 
-public struct CompactRunInfoViewStyle: RunInfoViewStyle {
+public struct CompactRunInfoStyle: RunInfoStyle {
     public init() {}
     
     public func makeBody(configuration: Configuration) -> some View {
@@ -18,7 +18,7 @@ private struct CompactRunInfoView: View {
     }
     
     var body: some View {
-        VStack(alignment: .center) {
+        VStack(alignment: configuration.alignment) {
             configuration.name
                 .font(.subheadline.weight(.semibold))
 

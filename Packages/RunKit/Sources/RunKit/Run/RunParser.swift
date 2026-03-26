@@ -19,7 +19,7 @@ extension Run {
         
         public init() {}
 
-        func run(from track: GPX.Track) -> Run {
+        public func run(from track: GPX.Track) -> Run {
             let points = track.points
             let name = track.name
             let date = track.date ?? track.points.first?.time ?? .now

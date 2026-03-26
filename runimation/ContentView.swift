@@ -1,7 +1,6 @@
 import CoreKit
 import RunKit
 import RunUI
-import StravaKit
 import SwiftUI
 
 /// Root view of the Runimation app.
@@ -23,12 +22,20 @@ struct ContentView: View {
 
     @State
     private var showNowPlaying = false
-    
+
     @State
     private var sheetHeight: CGFloat = 0
 
-    @Environment(StravaClient.self)
-    private var stravaClient
+    /// iOS: navigation path for stats within the library sheet.
+    @State
+    private var libraryNavPath: [LibraryEntry] = []
+
+    /// macOS: entry to show in stats destination on the main NavigationStack.
+    @State
+    private var statsEntry: LibraryEntry?
+
+    @Environment(RunLibrary.self)
+    private var library
 
     private var hasRun: Bool {
         !player.run.metrics.segments.isEmpty
@@ -39,10 +46,14 @@ struct ContentView: View {
             VisualiserView(showInspector: $showInspector)
                 .toolbar { topToolbarItems }
                 .safeAreaInset(edge: .bottom) { bottomBar }
+                .navigationDestination(item: $statsEntry) { entry in
+                    RunStatsDestination(entry: entry)
+                        .library(library, player: player)
+                }
         }
         .player(player)
-        .sheet(isPresented: $showLibrary) { librarySheet }
         #if os(iOS)
+        .sheet(isPresented: $showLibrary) { librarySheet }
         .sheet(isPresented: $showNowPlaying) {
             NowPlayingSheet()
                 .player(player)
@@ -55,8 +66,10 @@ struct ContentView: View {
                 .presentationDragIndicator(.automatic)
         }
         #endif
-        .task { await loadBundledRunIfNeeded() }
-        .onAppear { autoOpenLibraryIfEmpty() }
+        .task {
+            await loadBundledRunIfNeeded()
+            if !hasRun { showLibrary = true }
+        }
     }
 
     // MARK: - Top Toolbar
@@ -98,6 +111,20 @@ struct ContentView: View {
         } label: {
             Label("Run Library", systemImage: "figure.run")
         }
+        #if os(macOS)
+        .popover(isPresented: $showLibrary) {
+            RunLibraryView(
+                onRunLoaded: { showLibrary = false },
+                onShowStats: { entry in
+                    showLibrary = false
+                    statsEntry = entry
+                }
+            )
+            .library(library, player: player)
+            .player(player)
+            .frame(minWidth: 360, minHeight: 450)
+        }
+        #endif
     }
 
     private var shareButton: some View {
@@ -133,24 +160,32 @@ struct ContentView: View {
         #endif
     }
 
-    // MARK: - Library Sheet
+    // MARK: - Library Sheet (iOS)
 
+    #if os(iOS)
     private var librarySheet: some View {
-        NavigationStack {
-            StravaRunsView { showLibrary = false }
-                .navigationTitle("Run Library")
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Close") { showLibrary = false }
+        NavigationStack(path: $libraryNavPath) {
+            RunLibraryView(
+                onRunLoaded: { showLibrary = false },
+                onShowStats: { entry in libraryNavPath.append(entry) }
+            )
+            .navigationTitle("Run Library")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(role: .close) {
+                        showLibrary = false
                     }
                 }
+            }
+            .navigationDestination(for: LibraryEntry.self) { entry in
+                RunStatsDestination(entry: entry)
+                    .environment(library)
+            }
         }
-        #if os(macOS)
-        .frame(minWidth: 400, minHeight: 500)
-        #endif
+        .library(library, player: player)
         .player(player)
-        .environment(stravaClient)
     }
+    #endif
 
     // MARK: - Initial Load
 
@@ -161,10 +196,6 @@ struct ContentView: View {
         }.value
         guard let track else { return }
         try? await player.setRun(track)
-    }
-
-    private func autoOpenLibraryIfEmpty() {
-        if !hasRun { showLibrary = true }
     }
 }
 

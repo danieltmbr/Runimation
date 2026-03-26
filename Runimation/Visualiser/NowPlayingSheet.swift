@@ -11,7 +11,7 @@ struct NowPlayingSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            RunInfoView()
+            PlayerRunInfoView()
             PlaybackControls()
                 .playbackControlsStyle(.panel)
         }

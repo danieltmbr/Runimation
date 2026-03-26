@@ -109,28 +109,36 @@ The app is currently a mix of production features, diagnostics, and shader learn
 
 ---
 
-## Phase 3: Run Library
+## ✅ Phase 3: Run Library
 **Goal:** Unified run list with Strava + GPX support, proper empty state, and streamlined run selection.
 
 ### Tasks
-- [ ] Redesign `StravaRunsView` as a unified "Run Library" (or build new)
-- [ ] Run selection = load into player + dismiss library (primary action)
-- [ ] Run detail = secondary action (simple metrics, not the full metrics view)
-- [ ] Empty state: Strava connect CTA + GPX import explanation + file browser button
-- [ ] GPX drag-and-drop support (macOS/iPadOS)
-- [ ] GPX file picker (iOS file browser via `UIDocumentPickerViewController` / `.fileImporter`)
-- [ ] Auto-open on first launch when player has no run
+- [x] Redesign `StravaRunsView` as a unified "Run Library" (`RunLibraryView` + `RunLibrary` model)
+- [x] Run selection = load into player + dismiss library (primary action)
+- [x] Run detail = secondary action (stats screen via three-dots menu)
+- [x] Empty state: Strava connect CTA + file import button
+- [x] File drag-and-drop support (macOS/iPadOS)
+- [x] File picker (iOS) via `.fileImporter`
+- [x] Auto-open only after bundled run fails to load
 
 ### Key files
-- `Runimation/Views/Strava/StravaRunsView.swift` — currently Strava-only, needs to become unified
-- `Packages/StravaKit/` — Strava API client (already works)
-- `Packages/CoreKit/Sources/CoreKit/GPX.swift` — GPX parser (already works)
-- New: `Runimation/Views/Library/RunLibraryView.swift`
+- `Runimation/Models/RunLibrary.swift` — `@Observable` model; `refresh()`, `loadNextPage()`, `importFile(from:)`, `loadTrack(for:)`, `delete(_:)`
+- `Runimation/Models/LibraryEntry.swift` — metadata + `Source` enum (strava/gpx/bundled) + cached track
+- `Runimation/Models/LibraryState.swift` — `@LibraryState` property wrapper
+- `Runimation/Models/Actions/` — `RefreshLibraryAction`, `LoadNextPageAction`, `ImportFileAction`, `DeleteEntryAction`, `LoadLibraryEntryAction`
+- `Runimation/Models/RunLibraryEnvironment.swift` — `@Entry` keys + `.library(_:player:)` modifier
+- `Runimation/Views/Library/RunLibraryView.swift` — unified library UI
+- `Runimation/Views/Library/RunStatsDestination.swift` — async stats loader
+- `Packages/CoreKit/Sources/CoreKit/GPX.swift` — added `parse(contentsOf:)` + made `parse(data:)` public
+- `Packages/RunUI/.../RunInfo/RunInfoView.swift` — decoupled from `@PlayerState`; stored props + `init(run:)`
+- `Packages/RunUI/.../RunInfo/PlayerRunInfoView.swift` — player-coupled wrapper
 
 ### Verification
-- Library shows all available runs (Strava + imported GPX)
+- Library shows all available runs (Strava + imported files)
 - Tapping a run loads it and returns to visualiser
-- GPX files can be imported via drag-and-drop and file picker
+- Files can be imported via drag-and-drop and file picker
+- Three-dots menu: Stats opens metrics, Delete removes entry, Favourite/Share disabled
+- iOS: stats pushes within library sheet; macOS: stats pushes over visualiser
 - Empty state prompts Strava connection
 
 ---
@@ -258,4 +266,5 @@ _Updated after each session. Format: `[date] Phase X.Y — what was done`_
 [2026-03-23] Roadmap created. Decisions: IFS branch parked, workspace approach for demo separation, iOS+macOS v1.
 [2026-03-24] Phase 0 complete — Runimation.xcworkspace + RuniDemos.xcodeproj created. AnimationsDemos package eliminated; demo views live directly in the RuniDemos app target. Animations package renamed to Visualiser (AnimationState → VisualiserState, VisualisationCanvas → VisualiserCanvas). Learnings tab removed from production ContentView. Swift 6 concurrency warnings fixed in all demo views (TimelineView pattern, @State extracted to locals before .visualEffect). Branch: phase/0-workspace.
 [2026-03-24] Phase 1 complete — TabView removed; VisualiserView is now full-screen root. ContentView rewritten as thin coordinator (library sheet, inspector toggle, share placeholder, bundled-run loading). PlaybackControls styles renamed: toolbar→regular, regular→panel. Compact style updated: run name + play toggle + PlayerProgressBar background. Bottom bar uses .safeAreaInset with individual Liquid Glass elements (capsule for controls, circle for customise). PlayToggle icon swap stabilised with ZStack + contentTransition. macOS library sheet gets minimum frame. Branch: phase/1-visualiser-root.
-[2026-03-25] Phase 2 complete — RegularPlaybackControlsStyle rewritten: Apple Music layout, hover blurs run info and reveals elapsed/remaining time labels + scrubbable progress bar (overlay approach, width scoped to info). RunInfoView extracted with RunInfoViewStyle protocol (compact + regular styles). ProgressSlider refactored with ProgressSliderStyle protocol (system + minimal styles). Now Playing sheet added for iOS compact tap. Inspector simplified to Visualisation + Pipeline only. CLAUDE.md updated with concrete SwiftUI component architecture rules. Branch: ifs.
+[2026-03-25] Phase 2 complete
+[2026-03-25] Phase 3 complete — RunLibrary @Observable model with refresh()/loadNextPage()/importFile(from:)/loadTrack(for:). @LibraryState property wrapper + 5 action types following RunPlayer pattern. RunLibraryView replaces StravaRunsView. RunInfoView decoupled from @PlayerState (stored props + init(run:)); PlayerRunInfoView wraps player-coupled usage. iOS: library sheet with stats push. macOS: library popover with stats pushed over visualiser. GPX.parse(contentsOf:) added to CoreKit. — RegularPlaybackControlsStyle rewritten: Apple Music layout, hover blurs run info and reveals elapsed/remaining time labels + scrubbable progress bar (overlay approach, width scoped to info). RunInfoView extracted with RunInfoViewStyle protocol (compact + regular styles). ProgressSlider refactored with ProgressSliderStyle protocol (system + minimal styles). Now Playing sheet added for iOS compact tap. Inspector simplified to Visualisation + Pipeline only. CLAUDE.md updated with concrete SwiftUI component architecture rules. Branch: ifs.

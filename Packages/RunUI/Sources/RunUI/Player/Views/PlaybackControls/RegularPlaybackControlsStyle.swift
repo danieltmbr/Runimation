@@ -38,8 +38,8 @@ private struct RegularPlaybackControls: View {
     /// The overlay fills the RunInfoView's frame so `HoverProgressBar` is naturally
     /// scoped to the info's width — no stretching, no layout change on hover.
     private var infoView: some View {
-        RunInfoView()
-            .runInfoViewStyle(.compact)
+        PlayerRunInfoView()
+            .runInfoStyle(.compact)
             .blur(radius: isHovering ? 8 : 0)
             .padding(6)
             .overlay {

@@ -79,7 +79,16 @@ public enum GPX: Equatable, Sendable {
             parse(fileNamed: name).first
         }
 
-        private func parse(data: Data) -> [Track] {
+        public func parse(contentsOf url: URL) throws -> [Track] {
+            let data = try Data(contentsOf: url)
+            return parse(data: data)
+        }
+
+        public func parse(contentsOf url: URL) throws -> Track? {
+            try parse(contentsOf: url).first
+        }
+
+        public func parse(data: Data) -> [Track] {
             let delegate = Delegate(dateFormatter: dateFormatter)
             let parser = XMLParser(data: data)
             parser.delegate = delegate
