@@ -25,18 +25,10 @@ public struct TransformerListView: View {
 
     public init() {}
 
-    @Environment(\.dismiss)
-    private var dismiss
-
     public var body: some View {
         OptionList(applied: appliedBinding, catalog: Self.catalog)
             .navigationTitle("Transformers")
             .onAppear { items = transformers.map { Item(value: $0) } }
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
     }
 
     // MARK: - Private

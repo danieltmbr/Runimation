@@ -19,6 +19,5 @@ public struct PlayerRunInfoView: View {
 
     public var body: some View {
         RunInfoView(run: run)
-            .runInfoAlignment(.center)
     }
 }

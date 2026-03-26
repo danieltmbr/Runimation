@@ -5,32 +5,13 @@ import Visualiser
 
 struct VisualiserView: View {
 
-    @Environment(RunPlayer.self)
-    private var player
-
-    @Binding
-    var showInspector: Bool
-
-    @State
-    private var selectedPanel: InspectorFocus = .visualisation
-
-    @State
-    private var visualisation: any Visualiser.Visualisation = Warp()
+    @Environment(VisualisationModel.self)
+    private var model
 
     var body: some View {
-        PlayerDrivenView(visualisation: $visualisation)
+        @Bindable var model = model
+        PlayerDrivenView(visualisation: $model.current)
             .ignoresSafeArea()
-            .backgroundExtensionEffect()
-            .inspector(isPresented: $showInspector) {
-#if os(macOS)
-                PlayerInspectorView(selectedPanel: $selectedPanel, visualisation: $visualisation)
-                    .inspectorColumnWidth(min: 200, ideal: 270, max: 400)
-                    .player(player)
-#else
-                PlayerSheetView(selectedPanel: $selectedPanel, visualisation: $visualisation)
-                    .player(player)
-#endif
-            }
     }
 }
 
@@ -39,7 +20,7 @@ struct VisualiserView: View {
 /// Bridges `RunPlayer` state into `VisualiserCanvas` at 60 fps.
 ///
 /// Kept as a separate named struct so only this view's body re-renders at the
-/// animation frame rate — `VisualiserView` and the inspector remain unaffected.
+/// animation frame rate — `VisualiserView` and the panel remain unaffected.
 ///
 private struct PlayerDrivenView: View {
 

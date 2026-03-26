@@ -2,18 +2,35 @@ import SwiftUI
 import CoreUI
 import RunKit
 
-/// A picker that reflects and controls the player's active interpolation strategy.
+/// A row that shows the active interpolation strategy and navigates to
+/// `InterpolationList` for selection.
 ///
-/// Reads the current selection via `@PlayerState` and writes back through
-/// the same binding. Apply `.pickerStyle()` at the call-site to control
-/// how it renders:
-///
-/// ```swift
-/// InterpolationPicker()
-///     .pickerStyle(.segmented)
-/// ```
+/// Place inside a `NavigationStack` (provided by `CustomisationPanel`).
 ///
 public struct InterpolationPicker: View {
+
+    @PlayerState(\.interpolator)
+    private var interpolator
+
+    public init() {}
+
+    public var body: some View {
+        NavigationLink {
+            InterpolationList()
+        } label: {
+            LabeledContent("Interpolation", value: interpolator.label)
+        }
+    }
+}
+
+// MARK: - Selection List
+
+/// Full-screen list of available interpolation strategies.
+///
+/// Displays name and description for each entry. Tapping an item selects it
+/// and dismisses the view back to the panel.
+///
+public struct InterpolationList: View {
 
     @PlayerState(\.interpolator)
     private var interpolator
@@ -24,29 +41,34 @@ public struct InterpolationPicker: View {
         Item(value: CatmullRomRunInterpolator() as any RunInterpolator),
     ]
 
+    @Environment(\.dismiss)
+    private var dismiss
+
     public init() {}
 
     public var body: some View {
-        Picker("Interpolation", selection: idBinding) {
-            ForEach(Self.catalog) { item in
-                Text(item.label).tag(item.id)
-            }
-        }
-    }
-
-    // MARK: - Private
-
-    private var idBinding: Binding<UUID> {
-        Binding(
-            get: {
-                Self.catalog.first { $0.value.label == interpolator.label }?.id
-                    ?? Self.catalog[0].id
-            },
-            set: { id in
-                if let item = Self.catalog.first(where: { $0.id == id }) {
-                    interpolator = item.value
+        List(Self.catalog) { item in
+            let isSelected = item.value.label == interpolator.label
+            Button {
+                interpolator = item.value
+                dismiss()
+            } label: {
+                LabeledContent {
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .foregroundStyle(.tint)
+                    }
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.label)
+                        Text(item.value.description)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
-        )
+            .foregroundStyle(.primary)
+        }
+        .navigationTitle("Interpolation")
     }
 }

@@ -1,35 +1,23 @@
 import SwiftUI
 import RunKit
 
-/// A button row that summarises the active transformer chain
-/// and opens `TransformerListView` as a sheet for editing.
+/// A row that summarises the active transformer chain and navigates to
+/// `TransformerListView` for editing.
 ///
-/// Place inside `DiagnosticsContent` or any form-style container
-/// that has a `RunPlayer` in the environment.
+/// Place inside a `NavigationStack` (provided by `CustomisationPanel`).
 ///
 public struct TransformerListButton: View {
 
     @PlayerState(\.transformers)
     private var transformers
 
-    @State
-    private var showSheet = false
-    
     public init() {}
 
     public var body: some View {
-        Button {
-            showSheet = true
+        NavigationLink {
+            TransformerListView()
         } label: {
             LabeledContent("Transformers", value: summary)
-        }
-        .sheet(isPresented: $showSheet) {
-            NavigationStack {
-                TransformerListView()
-            }
-            #if os(macOS)
-            .frame(minWidth: 360, minHeight: 300)
-            #endif
         }
     }
 

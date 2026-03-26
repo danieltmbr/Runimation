@@ -20,11 +20,10 @@ private struct RegularPlaybackControls: View {
     private var isHovering = false
 
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
             transportControls
 
             infoView
-                .padding(.horizontal)
 
             DurationMenu()
                 .font(.headline)
@@ -40,8 +39,9 @@ private struct RegularPlaybackControls: View {
     private var infoView: some View {
         PlayerRunInfoView()
             .runInfoStyle(.compact)
+            .lineLimit(1)
+            .padding(.vertical, 6)
             .blur(radius: isHovering ? 8 : 0)
-            .padding(6)
             .overlay {
                 HoverProgressBar(isHovering: isHovering)
                     .padding(.bottom, isHovering ? 4 : 1)

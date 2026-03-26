@@ -109,7 +109,7 @@ The app is currently a mix of production features, diagnostics, and shader learn
 
 ---
 
-## ✅ Phase 3: Run Library
+## 🚧 Phase 3: Run Library
 **Goal:** Unified run list with Strava + GPX support, proper empty state, and streamlined run selection.
 
 ### Tasks
@@ -120,6 +120,9 @@ The app is currently a mix of production features, diagnostics, and shader learn
 - [x] File drag-and-drop support (macOS/iPadOS)
 - [x] File picker (iOS) via `.fileImporter`
 - [x] Auto-open only after bundled run fails to load
+- [ ] Disconnect is not avaialble on macOS
+- [ ] Move the Library into its own package or to RunKit & RunUI
+- [ ] Extend the Library "Connect" feature with more integration like HealthKit
 
 ### Key files
 - `Runimation/Models/RunLibrary.swift` — `@Observable` model; `refresh()`, `loadNextPage()`, `importFile(from:)`, `loadTrack(for:)`, `delete(_:)`
@@ -143,32 +146,42 @@ The app is currently a mix of production features, diagnostics, and shader learn
 
 ---
 
-## Phase 4: Customisation Panel
+## ✅ Phase 4: Customisation Panel
 **Goal:** Consolidated panel for tuning the visualisation and data processing pipeline.
 
 ### Tasks
-- [ ] Customisation Panel accessible from root toolbar button
-- [ ] Contains:
-  - Visualisation picker (Warp, IFS, Path, etc.)
-  - Visualisation Adjustment Form (via `FormAdjustable` — already exists)
-  - Data Processing Pipeline settings (transformers + interpolator — already exists in `SignalProcessingContent`)
-- [ ] Platform adaptation:
-  - iOS: sheet
-  - macOS: trailing sidebar (inspector) or sheet
-- [ ] Refactor existing `PlayerInspectorView`/`PlayerSheetView` to fit new structure
+- [x] Customisation Panel accessible from root toolbar button
+- [x] Contains:
+  - Visualisation picker (NavigationLink row → pushes selection list)
+  - Visualisation Adjustment Form (via `FormAdjustable`)
+  - Data Processing Pipeline settings (transformers + interpolator via NavigationLink push)
+- [x] Platform adaptation:
+  - iOS: bottom sheet with medium/large detents
+  - macOS: auxiliary floating `Window` scene (`openWindow(id:)`)
+- [x] Shared `VisualisationModel` (`@Observable`) — cross-window state for macOS
+- [x] `VisualisationPicker` rewritten: NavigationLink row → `VisualisationList` (name + description + checkmark)
+- [x] `TransformerListButton` rewritten: NavigationLink push (was Button + sheet)
+- [x] `InterpolationPicker` rewritten: NavigationLink row → `InterpolationList` (was inline Picker)
+- [x] `CustomisationPanel` unified type replaces `PlayerInspectorView` + `PlayerSheetView` + `InspectorFocus`
+- [x] Segmented Picker (Visualisation / Pipeline) at top of panel on both platforms
+- [x] Deleted `RunStatisticsContent` and its folder
 
 ### Key files
-- `Runimation/Views/Runs/Visualisation/Inspector/` — existing inspector views
-- `Packages/Animations/Sources/Animations/VisualisationPicker.swift`
-- `Packages/Animations/Sources/Animations/Visualisations/*/Form.swift` — per-visualisation forms
-- `Runimation/Views/Runs/Visualisation/Inspector/SignalProcessing/`
+- `Runimation/Customisation/CustomisationPanel.swift` — unified panel + `Section` enum
+- `Runimation/Visualiser/VisualisationModel.swift` — shared `@Observable` model
+- `Runimation/runimationApp.swift` — `Window("Customisation", id:)` scene; `RunPlayer` + `VisualisationModel` at app level
+- `Packages/Visualiser/.../VisualisationPicker.swift` — NavigationLink row + `VisualisationList`
+- `Packages/RunUI/.../TransformerListButton.swift` — NavigationLink push
+- `Packages/RunUI/.../InterpolationPicker.swift` — NavigationLink row + `InterpolationList`
 
 ### Verification
-- Customisation panel opens from root
-- Can switch visualisation type
-- Can adjust visualisation parameters
-- Can modify data processing pipeline
-- Changes reflect immediately in the visualiser
+- macOS: customisation button opens auxiliary floating window ✓
+- iOS: customisation button opens bottom sheet with medium/large detents ✓
+- Segmented Picker switches Visualisation ↔ Pipeline on both platforms ✓
+- Visualisation row shows current name; tapping pushes list; selecting pops back and updates visualiser ✓
+- Adjustment Form and description render below the picker row ✓
+- Pipeline section: transformer list and interpolation picker both push via NavigationLink ✓
+- Changing visualisation in auxiliary window immediately reflects in main visualiser ✓
 
 ---
 
@@ -177,14 +190,14 @@ The app is currently a mix of production features, diagnostics, and shader learn
 
 ### Tasks
 - [ ] Define SwiftData models:
-  - `PersistedRun`: run metadata + segments (from GPX/Strava)
-  - `PersistedVisualisation`: run-specific visualisation config (Codable JSON blob)
-  - `PersistedPipeline`: transformer + interpolator chain config
+  - `RunModel`: run metadata + segments (from GPX/Strava)
+    - Visualisation (and its adjustments) is stored in RunModel as Codable JSON blob
+    - Data Process Pipeline: transformer + interpolator chain config is also stored in RunModel as a Codable JSON blob
 - [ ] Add `Codable` conformance to all `Visualisation` types (`Warp`, `IFS`, `RunPath`)
 - [ ] Add `Codable` conformance to all `RunTransformer` and `RunInterpolator` types
 - [ ] Migrate from in-memory `RunPlayer.setRun(track:)` to SwiftData-backed loading
 - [ ] State restoration: on launch, restore last-played run + visualisation settings
-- [ ] Run Library reads from SwiftData (Strava fetch → persist → display from DB)
+- [ ] Run Library reads from SwiftData (Strava fetch / GPX Import → persist → display from DB)
 - [ ] Consider migration strategy for future schema changes
 
 ### Key files
@@ -268,3 +281,5 @@ _Updated after each session. Format: `[date] Phase X.Y — what was done`_
 [2026-03-24] Phase 1 complete — TabView removed; VisualiserView is now full-screen root. ContentView rewritten as thin coordinator (library sheet, inspector toggle, share placeholder, bundled-run loading). PlaybackControls styles renamed: toolbar→regular, regular→panel. Compact style updated: run name + play toggle + PlayerProgressBar background. Bottom bar uses .safeAreaInset with individual Liquid Glass elements (capsule for controls, circle for customise). PlayToggle icon swap stabilised with ZStack + contentTransition. macOS library sheet gets minimum frame. Branch: phase/1-visualiser-root.
 [2026-03-25] Phase 2 complete
 [2026-03-25] Phase 3 complete — RunLibrary @Observable model with refresh()/loadNextPage()/importFile(from:)/loadTrack(for:). @LibraryState property wrapper + 5 action types following RunPlayer pattern. RunLibraryView replaces StravaRunsView. RunInfoView decoupled from @PlayerState (stored props + init(run:)); PlayerRunInfoView wraps player-coupled usage. iOS: library sheet with stats push. macOS: library popover with stats pushed over visualiser. GPX.parse(contentsOf:) added to CoreKit. — RegularPlaybackControlsStyle rewritten: Apple Music layout, hover blurs run info and reveals elapsed/remaining time labels + scrubbable progress bar (overlay approach, width scoped to info). RunInfoView extracted with RunInfoViewStyle protocol (compact + regular styles). ProgressSlider refactored with ProgressSliderStyle protocol (system + minimal styles). Now Playing sheet added for iOS compact tap. Inspector simplified to Visualisation + Pipeline only. CLAUDE.md updated with concrete SwiftUI component architecture rules. Branch: ifs.
+[2026-03-25] Phase 3 polish — Auth abstracted behind RunLibrary: isConnected, connect(from:), disconnect(). ConnectAction + DisconnectAction callable structs injected via .library modifier. ConnectButton + DisconnectButton + LibraryEmptyView added; RunLibraryView no longer imports StravaKit or AuthenticationServices. LibraryEntry.Source made Hashable/Equatable (hashes on activity.id for .strava). SourceKey enum removed; cache keyed on LibraryEntry.Source directly.
+[2026-03-26] Phase 4 complete — CustomisationPanel unified type (replaces PlayerInspectorView + PlayerSheetView + InspectorFocus). macOS: Window("Customisation") auxiliary scene opened via openWindow(id:). iOS: bottom sheet with medium/large detents. VisualisationModel @Observable shared across windows. RunPlayer moved to app level. VisualisationPicker + TransformerListButton + InterpolationPicker all rewritten as NavigationLink push rows. RunStatisticsContent deleted. backgroundExtensionEffect() moved to NavigationStack level in ContentView to eliminate bottom-edge seam above PlaybackControls. Branch: ifs.

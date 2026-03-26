@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// Segmented picker for selecting the active visualisation.
+/// A row that shows the active visualisation name and navigates to `VisualisationList`
+/// for selection.
 ///
-/// Shown at the top of the Visualisation inspector panel. Switching to a different
-/// visualisation resets it to a fresh default instance — any prior configuration
-/// for that type is not preserved between switches.
+/// Place inside a `NavigationStack` (provided by `CustomisationPanel`).
+/// Switching to a different visualisation resets it to a fresh default instance.
 ///
 public struct VisualisationPicker: View {
 
@@ -13,31 +13,63 @@ public struct VisualisationPicker: View {
     /// so reads and writes work correctly on a `let` stored property.
     private let visualisation: Binding<any Visualisation>
 
+    public init(visualisation: Binding<any Visualisation>) {
+        self.visualisation = visualisation
+    }
+
+    public var body: some View {
+        NavigationLink {
+            VisualisationList(visualisation: visualisation)
+        } label: {
+            LabeledContent("Visualisation", value: visualisation.wrappedValue.label)
+        }
+    }
+}
+
+// MARK: - Selection List
+
+/// Full-screen list of available visualisations.
+///
+/// Displays name and description for each entry. Tapping an item selects it
+/// and dismisses the view back to the panel.
+///
+public struct VisualisationList: View {
+
+    private let visualisation: Binding<any Visualisation>
+
     private static let catalog: [any Visualisation] = [Warp(), RunPath()]
+
+    @Environment(\.dismiss)
+    private var dismiss
 
     public init(visualisation: Binding<any Visualisation>) {
         self.visualisation = visualisation
     }
 
     public var body: some View {
-        Picker("Visualisation", selection: selectionBinding) {
-            ForEach(Self.catalog.indices, id: \.self) { i in
-                Text(Self.catalog[i].label).tag(i)
+        List(Self.catalog.indices, id: \.self) { index in
+            let item = Self.catalog[index]
+            let isSelected = item.label == visualisation.wrappedValue.label
+            Button {
+                visualisation.wrappedValue = item
+                dismiss()
+            } label: {
+                LabeledContent {
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .foregroundStyle(.tint)
+                    }
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.label)
+                        Text(item.description)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
+            .foregroundStyle(.primary)
         }
-        .pickerStyle(.segmented)
-        .padding()
-    }
-
-    // MARK: - Private
-
-    /// Maps the current visualisation to its index in `catalog` by label,
-    /// and writes a fresh catalog instance back on selection change.
-    ///
-    private var selectionBinding: Binding<Int> {
-        Binding(
-            get: { Self.catalog.firstIndex(where: { $0.label == visualisation.wrappedValue.label }) ?? 0 },
-            set: { visualisation.wrappedValue = Self.catalog[$0] }
-        )
+        .navigationTitle("Visualisation")
     }
 }

@@ -5,17 +5,16 @@ import SwiftUI
 
 /// Root view of the Runimation app.
 ///
-/// Owns the `RunPlayer` and coordinates top-level navigation: the Run Library,
-/// the Customisation Panel (inspector), and the Share sheet. The full-screen
-/// `VisualiserView` is always the background experience.
+/// Coordinates top-level navigation: the Run Library, the Customisation Panel,
+/// and the Share sheet. The full-screen `VisualiserView` is always the background.
 ///
 struct ContentView: View {
 
-    @State
-    private var player = RunPlayer(transformers: [GuassianRun()])
+    @Environment(RunPlayer.self)
+    private var player
 
-    @State
-    private var showInspector = false
+    @Environment(RunLibrary.self)
+    private var library
 
     @State
     private var showLibrary = false
@@ -34,8 +33,15 @@ struct ContentView: View {
     @State
     private var statsEntry: LibraryEntry?
 
-    @Environment(RunLibrary.self)
-    private var library
+    #if os(iOS)
+    @State
+    private var showCustomisation = false
+    #endif
+
+    #if os(macOS)
+    @Environment(\.openWindow)
+    private var openWindow
+    #endif
 
     private var hasRun: Bool {
         !player.run.metrics.segments.isEmpty
@@ -43,27 +49,26 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            VisualiserView(showInspector: $showInspector)
+            VisualiserView()
                 .toolbar { topToolbarItems }
+                .ignoresSafeArea()
                 .safeAreaInset(edge: .bottom) { bottomBar }
                 .navigationDestination(item: $statsEntry) { entry in
                     RunStatsDestination(entry: entry)
                         .library(library, player: player)
                 }
         }
-        .player(player)
         #if os(iOS)
         .sheet(isPresented: $showLibrary) { librarySheet }
         .sheet(isPresented: $showNowPlaying) {
             NowPlayingSheet()
                 .player(player)
-                .onGeometryChange(for: CGFloat.self) { proxy in
-                    proxy.size.height
-                } action: { newValue in
-                    sheetHeight = newValue
-                }
                 .presentationDetents([.height(sheetHeight)])
                 .presentationDragIndicator(.automatic)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { sheetHeight = $0 }
+        }
+        .sheet(isPresented: $showCustomisation) {
+            CustomisationPanel()
         }
         #endif
         .task {
@@ -121,7 +126,6 @@ struct ContentView: View {
                 }
             )
             .library(library, player: player)
-            .player(player)
             .frame(minWidth: 360, minHeight: 450)
         }
         #endif
@@ -136,7 +140,11 @@ struct ContentView: View {
 
     private var customisationButton: some View {
         Button {
-            showInspector.toggle()
+            #if os(macOS)
+            openWindow(id: "customisation")
+            #else
+            showCustomisation = true
+            #endif
         } label: {
             Label("Customise", systemImage: "slider.horizontal.3")
                 .padding(10)
@@ -172,9 +180,7 @@ struct ContentView: View {
             .navigationTitle("Run Library")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .close) {
-                        showLibrary = false
-                    }
+                    Button(role: .close) { showLibrary = false }
                 }
             }
             .navigationDestination(for: LibraryEntry.self) { entry in
@@ -183,7 +189,6 @@ struct ContentView: View {
             }
         }
         .library(library, player: player)
-        .player(player)
     }
     #endif
 
