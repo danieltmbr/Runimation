@@ -183,6 +183,12 @@ The app is currently a mix of production features, diagnostics, and shader learn
 - Pipeline section: transformer list and interpolation picker both push via NavigationLink ✓
 - Changing visualisation in auxiliary window immediately reflects in main visualiser ✓
 
+### Known issues (TransformerList polish — future task)
+- `DisclosureGroup` collapses after scroll (state not preserved across redraws)
+- When a row is expanded, inner cells (form controls) are swipeable to delete — should only be the header row
+- Delete (right-click context menu) does not work on macOS
+- Padding inside expanded rows is off on macOS (dashed separators, wrong indentation)
+
 ---
 
 ## Phase 5: Persistence (SwiftData)

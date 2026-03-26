@@ -27,10 +27,11 @@ public struct OptionList<Value: Sendable>: View {
     }
 
     public var body: some View {
-        List {
+        Form {
             appliedSection
             catalogSection
         }
+        .formStyle(.grouped)
         #if os(iOS)
         .environment(\.editMode, .constant(.active))
         #endif

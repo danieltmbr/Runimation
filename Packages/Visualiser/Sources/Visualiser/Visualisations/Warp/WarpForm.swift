@@ -4,7 +4,7 @@ import CoreUI
 // MARK: - FormAdjustable Conformance
 
 extension Warp: FormAdjustable {
-
+    
     @MainActor
     public func form(for binding: Binding<Warp>) -> some View {
         WarpForm(value: binding)
@@ -18,32 +18,23 @@ extension Warp: FormAdjustable {
 /// Sliders for smoothness and detail; palette editing delegated to `ColorPalettePicker`.
 ///
 private struct WarpForm: View {
-
+    
     @Binding
     var value: Warp
-
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            sliders
-            ColorPalettePicker(palette: $value.palette)
+        VStack(alignment: .leading) {
+            Text("Smoothing")
+                .font(.caption)
+            Slider(value: $value.smoothness, in: 0...1)
         }
-        .padding()
-    }
-
-    // MARK: - Subviews
-
-    private var sliders: some View {
-        Group {
-            VStack(alignment: .leading) {
-                Text("Smoothing")
-                    .font(.caption)
-                Slider(value: $value.smoothness, in: 0...1)
-            }
-            VStack(alignment: .leading) {
-                Text("Details")
-                    .font(.caption)
-                Slider(value: $value.details, in: 1...12, step: 1)
-            }
+        
+        VStack(alignment: .leading) {
+            Text("Details")
+                .font(.caption)
+            Slider(value: $value.details, in: 1...12, step: 1)
         }
+        
+        ColorPalettePicker(palette: $value.palette)
     }
 }

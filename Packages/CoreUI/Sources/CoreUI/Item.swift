@@ -27,7 +27,12 @@ public struct Item<Value: Sendable>: Identifiable, Sendable, Option {
     ///
     public let description: String
 
-    public init(id: UUID = UUID(), value: Value, label: String, description: String) {
+    public init(
+        id: UUID = UUID(),
+        value: Value,
+        label: String,
+        description: String
+    ) {
         self.id = id
         self.value = value
         self.label = label

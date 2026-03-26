@@ -41,34 +41,16 @@ public struct InterpolationList: View {
         Item(value: CatmullRomRunInterpolator() as any RunInterpolator),
     ]
 
-    @Environment(\.dismiss)
-    private var dismiss
-
     public init() {}
 
     public var body: some View {
-        List(Self.catalog) { item in
-            let isSelected = item.value.label == interpolator.label
-            Button {
-                interpolator = item.value
-                dismiss()
-            } label: {
-                LabeledContent {
-                    if isSelected {
-                        Image(systemName: "checkmark")
-                            .foregroundStyle(.tint)
-                    }
-                } label: {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(item.label)
-                        Text(item.value.description)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .foregroundStyle(.primary)
-        }
+        SelectionList(
+            items: Self.catalog,
+            selection: Binding(
+                get: { Self.catalog.first { $0.value.label == interpolator.label } ?? Self.catalog[0] },
+                set: { interpolator = $0.value }
+            )
+        )
         .navigationTitle("Interpolation")
     }
 }

@@ -24,9 +24,7 @@ public struct Warp: Option, Equatable, Sendable {
 
     public var description: String {
         """
-        Domain-warped fractional Brownian motion driven by run metrics.
-
-        Check out [Domain Warping – Inigo Quilez](iquilezles.org/articles/warp) for more.
+        Domain-warped fractional Brownian motion driven by run metrics. Check out [Domain Warping – Inigo Quilez](https://iquilezles.org/articles/warp) for more.
         """
     }
 

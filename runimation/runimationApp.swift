@@ -29,16 +29,24 @@ struct RunimationApp: App {
                 .environment(visualisationModel)
                 .player(player)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+                .windowToolbarFullScreenVisibility(.onHover)
                 .onOpenURL { stravaClient.handleCallbackURL($0) }
         }
         .handlesExternalEvents(matching: Set(arrayLiteral: "runimation"))
 
-        Window("Customisation", id: "customisation") {
-            CustomisationPanel()
-                .environment(visualisationModel)
-                .player(player)
+        UtilityWindow("Customisation", id: "customisation") {
+            VStack {
+                CustomisationPanel()
+                    .padding()
+                    .environment(visualisationModel)
+                    .player(player)
+                
+                Spacer()
+            }
+            .background(.thinMaterial)
+            .containerBackground(.clear, for: .window)
         }
-        .defaultSize(width: 320, height: 500)
+        .defaultSize(width: 240, height: 300)
         .defaultPosition(.trailing)
 #else
         WindowGroup {
