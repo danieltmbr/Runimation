@@ -15,13 +15,16 @@ extension EnvironmentValues {
     var importFile: ImportFileAction = ImportFileAction()
 
     @Entry
+    var loadRun: LoadRunAction = LoadRunAction()
+
+    @Entry
+    var loadEntry: LoadEntryAction = LoadEntryAction()
+
+    @Entry
+    var deleteRun: DeleteRunAction = DeleteRunAction()
+
+    @Entry
     var deleteEntry: DeleteEntryAction = DeleteEntryAction()
-
-    @Entry
-    var fetchRun: FetchRunAction = FetchRunAction()
-
-    @Entry
-    var playEntry: PlayEntryAction = PlayEntryAction()
 
     @Entry
     var connectLibrary: ConnectAction = ConnectAction()
@@ -38,24 +41,22 @@ extension View {
     /// SwiftUI environment, making them available to any descendant view
     /// via `@LibraryState` and `@Environment(\.action)`.
     ///
-    /// The `player` parameter is required to create `PlayEntryAction`,
-    /// which coordinates fetching a track from the library and starting playback.
-    ///
     /// Apply once near the root of the library's view hierarchy:
     /// ```swift
-    /// RunLibraryView()
-    ///     .library(library, player: player)
+    /// ContentView()
+    ///     .library(library)
     /// ```
     ///
     @MainActor
-    func library(_ library: RunLibrary, player: RunPlayer) -> some View {
+    func library(_ library: RunLibrary) -> some View {
         environment(library)
             .environment(\.refreshLibrary, RefreshLibraryAction(library: library))
             .environment(\.loadNextPage, LoadNextPageAction(library: library))
             .environment(\.importFile, ImportFileAction(library: library))
+            .environment(\.loadRun, LoadRunAction(library: library))
+            .environment(\.loadEntry, LoadEntryAction(library: library))
+            .environment(\.deleteRun, DeleteRunAction(library: library))
             .environment(\.deleteEntry, DeleteEntryAction(library: library))
-            .environment(\.fetchRun, FetchRunAction(library: library))
-            .environment(\.playEntry, PlayEntryAction(library: library, player: player))
             .environment(\.connectLibrary, ConnectAction(library: library))
             .environment(\.disconnectLibrary, DisconnectAction(library: library))
     }

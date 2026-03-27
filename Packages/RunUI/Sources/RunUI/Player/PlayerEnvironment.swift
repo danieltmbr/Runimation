@@ -15,7 +15,7 @@ extension EnvironmentValues {
     var seek: SeekAction = SeekAction()
     
     @Entry
-    var loadRun: LoadRunAction = LoadRunAction()
+    var playRun: PlayRunAction = PlayRunAction()
     
     @Entry
     var setTransformer: SetTransformerAction = SetTransformerAction()
@@ -44,7 +44,7 @@ extension View {
             .environment(\.togglePlay, TogglePlayAction(player: player))
             .environment(\.stop, StopAction(player: player))
             .environment(\.seek, SeekAction(player: player))
-            .environment(\.loadRun, LoadRunAction(player: player))
+            .environment(\.playRun, PlayRunAction(player: player))
             .environment(\.setTransformer, SetTransformerAction(player: player))
             .environment(\.setInterpolator, SetInterpolatorAction(player: player))
     }

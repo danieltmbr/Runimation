@@ -2,6 +2,7 @@ import CoreKit
 import RunKit
 import RunUI
 import SwiftUI
+import Visualiser
 
 /// Root view of the Runimation app.
 ///
@@ -16,6 +17,15 @@ struct ContentView: View {
     @Environment(RunLibrary.self)
     private var library
 
+    @Environment(VisualisationModel.self)
+    private var visualisationModel
+
+    @Environment(\.loadRun)
+    private var loadRun
+
+    @Environment(\.scenePhase)
+    private var scenePhase
+
     @State
     private var showLibrary = false
 
@@ -24,14 +34,6 @@ struct ContentView: View {
 
     @State
     private var sheetHeight: CGFloat = 0
-
-    /// iOS: navigation path for stats within the library sheet.
-    @State
-    private var libraryNavPath: [LibraryEntry] = []
-
-    /// macOS: entry to show in stats destination on the main NavigationStack.
-    @State
-    private var statsEntry: LibraryEntry?
 
     #if os(iOS)
     @State
@@ -53,13 +55,11 @@ struct ContentView: View {
                 .toolbar { topToolbarItems }
                 .ignoresSafeArea()
                 .safeAreaInset(edge: .bottom) { bottomBar }
-                .navigationDestination(item: $statsEntry) { entry in
-                    RunStatsDestination(entry: entry)
-                        .library(library, player: player)
-                }
         }
         #if os(iOS)
-        .sheet(isPresented: $showLibrary) { librarySheet }
+        .sheet(isPresented: $showLibrary) {
+            RunLibraryView(isPresented: $showLibrary)
+        }
         .sheet(isPresented: $showNowPlaying) {
             NowPlayingSheet()
                 .player(player)
@@ -72,8 +72,20 @@ struct ContentView: View {
         }
         #endif
         .task {
-            await loadBundledRunIfNeeded()
-            if !hasRun { showLibrary = true }
+            await restoreLastPlayedRun()
+            // Show library only if no run is loaded and no async restore is in progress.
+            // (A lastPlayedRecord means restoreLastPlayedRun is loading the run.)
+            if !hasRun && library.lastPlayedRecord() == nil { showLibrary = true }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background || phase == .inactive {
+                library.saveCurrentConfig(
+                    visualisation: visualisationModel.current,
+                    transformers: player.transformers,
+                    interpolator: player.interpolator,
+                    duration: player.duration
+                )
+            }
         }
     }
 
@@ -118,15 +130,8 @@ struct ContentView: View {
         }
         #if os(macOS)
         .popover(isPresented: $showLibrary) {
-            RunLibraryView(
-                onRunLoaded: { showLibrary = false },
-                onShowStats: { entry in
-                    showLibrary = false
-                    statsEntry = entry
-                }
-            )
-            .library(library, player: player)
-            .frame(minWidth: 360, minHeight: 450)
+            RunLibraryView(isPresented: $showLibrary)
+                .frame(minWidth: 360, minHeight: 450)
         }
         #endif
     }
@@ -168,39 +173,39 @@ struct ContentView: View {
         #endif
     }
 
-    // MARK: - Library Sheet (iOS)
-
-    #if os(iOS)
-    private var librarySheet: some View {
-        NavigationStack(path: $libraryNavPath) {
-            RunLibraryView(
-                onRunLoaded: { showLibrary = false },
-                onShowStats: { entry in libraryNavPath.append(entry) }
-            )
-            .navigationTitle("Run Library")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .close) { showLibrary = false }
-                }
-            }
-            .navigationDestination(for: LibraryEntry.self) { entry in
-                RunStatsDestination(entry: entry)
-                    .environment(library)
-            }
-        }
-        .library(library, player: player)
-    }
-    #endif
-
     // MARK: - Initial Load
 
-    private func loadBundledRunIfNeeded() async {
+    private func restoreLastPlayedRun() async {
         guard !hasRun else { return }
+        if let record = library.lastPlayedRecord() {
+            guard let run = try? await loadRun(record) else { return }
+            try? await player.setRun(run)
+            restoreConfig(for: record)
+            library.markAsPlaying(record)
+            return
+        }
+        // First launch — load bundled run and persist it
         let track = await Task.detached {
             GPX.Parser().parse(fileNamed: "run-01").first
         }.value
         guard let track else { return }
+        library.persistBundledRun(track: track, name: "run-01")
         try? await player.setRun(track)
+    }
+
+    private func restoreConfig(for record: RunRecord) {
+        if record.hasConfig {
+            if let vis = record.loadVisualisationConfig() { visualisationModel.current = vis }
+            let transformers = record.loadTransformersConfig()
+            if !transformers.isEmpty { player.transformers = transformers }
+            if let interpolator = record.loadInterpolatorConfig() { player.interpolator = interpolator }
+            if let duration = record.loadDurationConfig() { player.duration = duration }
+        } else if let last = library.lastUsedConfig() {
+            visualisationModel.current = last.visualisation
+            player.transformers = last.transformers
+            player.interpolator = last.interpolator
+            player.duration = last.duration
+        }
     }
 }
 

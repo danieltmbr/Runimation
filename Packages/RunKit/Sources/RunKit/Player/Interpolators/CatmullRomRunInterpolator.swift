@@ -18,7 +18,9 @@ import CoreGraphics
 /// This does not affect animation correctness since the normalised run is
 /// always re-clamped to [0, 1] by the normalisation transformer.
 ///
-public struct CatmullRomRunInterpolator: RunInterpolator {
+public struct CatmullRomRunInterpolator: RunInterpolator, Codable {
+
+    private enum CodingKeys: CodingKey {}
 
     public let label = "Catmull-Rom"
 

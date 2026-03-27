@@ -4,13 +4,18 @@ import UniformTypeIdentifiers
 
 /// Unified run library listing Strava runs and imported GPX files.
 ///
-/// Displays all entries as compact `RunInfoView` rows. Tapping a row loads the
-/// run into the player and calls `onRunLoaded`. A trailing three-dots menu
-/// offers Stats, Favourite (disabled), Share (disabled), and Delete.
+/// Manages its own `NavigationStack` so it can be presented as a sheet or
+/// popover without the parent needing to own any navigation state. The parent
+/// only controls visibility via `isPresented`.
+///
+/// Displays all entries as compact `RunInfoView` rows. Tapping a row loads
+/// the run into the player and dismisses. A trailing three-dots menu offers
+/// Stats (navigates within the library stack), Favourite (disabled),
+/// Share (disabled), and Delete.
 ///
 /// GPX files are imported via the file picker (iOS) and drag-and-drop (macOS).
 ///
-/// Requires `.library(_:player:)` in the view hierarchy.
+/// Requires `.library(_:)` and `.player(_:)` in the view hierarchy.
 ///
 struct RunLibraryView: View {
 
@@ -36,22 +41,17 @@ struct RunLibraryView: View {
     @Environment(\.importFile)
     private var importFile
 
-    @Environment(\.deleteEntry)
-    private var deleteEntry
+    @Environment(\.deleteRun)
+    private var deleteRun
 
-    @Environment(\.playEntry)
-    private var playEntry
+    // MARK: - Bindings
 
-    // MARK: - Callbacks
-
-    /// Called after a run has been successfully loaded into the player.
-    let onRunLoaded: @MainActor () -> Void
-
-    /// Called when the user requests the stats screen for an entry.
-    /// The caller is responsible for platform-appropriate navigation.
-    let onShowStats: @MainActor (LibraryEntry) -> Void
+    @Binding var isPresented: Bool
 
     // MARK: - State
+
+    @State
+    private var path: [RunEntry] = []
 
     @State
     private var isShowingFilePicker = false
@@ -62,21 +62,24 @@ struct RunLibraryView: View {
     // MARK: - Body
 
     var body: some View {
-        libraryList
-            .navigationTitle("Run Library")
-            .toolbar { toolbarContent }
-            .fileImporter(
-                isPresented: $isShowingFilePicker,
-                allowedContentTypes: [gpxUTType],
-                allowsMultipleSelection: true
-            ) { result in
-                handleImportResult(result)
-            }
-            .onDrop(of: [gpxUTType, .fileURL], isTargeted: $isDragTargeted) { providers in
-                handleDrop(providers)
-            }
-            .overlay(dropOverlay)
-            .task { await loadIfNeeded() }
+        NavigationStack(path: $path) {
+            libraryList
+                .navigationTitle("Run Library")
+                .navigationDestination(for: RunEntry.self) { RunStatsDestination(entry: $0) }
+                .toolbar { toolbarContent }
+                .fileImporter(
+                    isPresented: $isShowingFilePicker,
+                    allowedContentTypes: [gpxUTType],
+                    allowsMultipleSelection: true
+                ) { result in
+                    handleImportResult(result)
+                }
+                .onDrop(of: [gpxUTType, .fileURL], isTargeted: $isDragTargeted) { providers in
+                    handleDrop(providers)
+                }
+                .overlay(dropOverlay)
+                .task { await loadIfNeeded() }
+        }
     }
 
     // MARK: - List
@@ -88,10 +91,10 @@ struct RunLibraryView: View {
         } else if entries.isEmpty {
             LibraryEmptyView(onImport: { isShowingFilePicker = true })
         } else {
-            List(entries) { entry in
-                libraryRow(entry)
+            List(entries) { record in
+                libraryRow(record)
                     .onAppear {
-                        if entry.id == entries.last?.id {
+                        if record.entryID == entries.last?.entryID {
                             loadNextPage()
                         }
                     }
@@ -101,14 +104,10 @@ struct RunLibraryView: View {
     }
 
     @ViewBuilder
-    private func libraryRow(_ entry: LibraryEntry) -> some View {
-        Button {
-            playEntry(entry) { onRunLoaded() }
-        } label: {
-            RunEntryRow(entry: entry) { entry in
-                Button {
-                    onShowStats(entry)
-                } label: {
+    private func libraryRow(_ record: RunRecord) -> some View {
+        PlayRunButton(record, onPlayed: { isPresented = false }) { record in
+            RunEntryRow(record: record) { record in
+                NavigationLink(value: RunEntry(id: record.entryID)) {
                     Label("Stats", systemImage: "chart.bar")
                 }
 
@@ -125,7 +124,7 @@ struct RunLibraryView: View {
                 Divider()
 
                 Button(role: .destructive) {
-                    deleteEntry(entry)
+                    deleteRun(record)
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
@@ -139,6 +138,11 @@ struct RunLibraryView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        #if os(iOS)
+        ToolbarItem(placement: .cancellationAction) {
+            Button(role: .close) { isPresented = false }
+        }
+        #endif
         ToolbarItem(placement: .primaryAction) {
             importButton
         }

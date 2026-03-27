@@ -12,7 +12,9 @@ import Foundation
 /// The spectrum is forwarded unchanged: smooth-step interpolation
 /// cannot produce values outside the input range.
 ///
-public struct SmoothStepRunInterpolator: RunInterpolator {
+public struct SmoothStepRunInterpolator: RunInterpolator, Codable {
+
+    private enum CodingKeys: CodingKey {}
 
     public let label = "Smooth Step"
 

@@ -1,8 +1,8 @@
 import Foundation
 
-/// Removes a `LibraryEntry` from the library.
+/// Removes the run identified by a `RunEntry` from the library.
 ///
-/// Inject via `.library(_:player:)` and access in views with:
+/// Inject via `.library(_:)` and access in views with:
 /// ```swift
 /// @Environment(\.deleteEntry) private var deleteEntry
 /// deleteEntry(entry)
@@ -10,17 +10,26 @@ import Foundation
 ///
 struct DeleteEntryAction {
 
-    private let body: @MainActor (LibraryEntry) -> Void
+    private let body: @MainActor (RunEntry) -> Void
 
-    init(_ body: @escaping @MainActor (LibraryEntry) -> Void = { _ in }) {
+    init(_ body: @escaping @MainActor (RunEntry) -> Void) {
         self.body = body
+    }
+
+    init() {
+        self.init { _ in }
     }
 
     @MainActor
     init(library: RunLibrary) {
-        self.init { entry in library.delete(entry) }
+        self.init { entry in
+            guard let record = library.record(for: entry.id) else { return }
+            library.delete(record)
+        }
     }
 
     @MainActor
-    func callAsFunction(_ entry: LibraryEntry) { body(entry) }
+    func callAsFunction(_ entry: RunEntry) {
+        body(entry)
+    }
 }

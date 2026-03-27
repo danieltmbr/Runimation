@@ -16,9 +16,11 @@ import CoreGraphics
 /// sigma is always in seconds, correctly handling
 /// variable-duration segments (e.g. rest periods).
 ///
-public struct GuassianRun: RunTransformer {
+public struct GuassianRun: RunTransformer, Codable {
 
-    public struct Configuration: Sendable {
+    private enum CodingKeys: String, CodingKey { case configuration }
+
+    public struct Configuration: Sendable, Codable {
 
         /// Sigma parameter for coordinate smoothing (seconds per axis).
         ///

@@ -4,9 +4,11 @@ import Foundation
 /// when the runner is moving slowly or stopped, and clips speed outliers
 /// at the 98th percentile to prevent GPS spikes from distorting the signal.
 ///
-public struct SpeedWeightedRun: RunTransformer {
+public struct SpeedWeightedRun: RunTransformer, Codable {
 
-    public struct Configuration: Sendable {
+    private enum CodingKeys: String, CodingKey { case configuration }
+
+    public struct Configuration: Sendable, Codable {
 
         /// Speed in m/s at or above which direction amplitude is fully preserved.
         /// Below this threshold direction fades linearly to zero.

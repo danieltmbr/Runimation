@@ -18,7 +18,9 @@ import CoreGraphics
 /// The segment timestamp is the mean start time of the window, so output points
 /// are not perfectly uniform — they reflect the actual density of the GPS data.
 ///
-public struct WaveSamplingTransformer: RunTransformer {
+public struct WaveSamplingTransformer: RunTransformer, Codable {
+
+    private enum CodingKeys: String, CodingKey { case targetCount, rank }
 
     public let label = "Wave Sampling"
 

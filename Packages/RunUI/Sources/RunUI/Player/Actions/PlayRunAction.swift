@@ -6,23 +6,23 @@ import CoreKit
 ///
 /// Supports both a parsed `Run` and a raw `GPX.Track`:
 /// ```swift
-/// @Environment(\.loadRun) private var loadRun
-/// loadRun(run)
-/// loadRun(gpxTrack)
+/// @Environment(\.playRun) private var playRun
+/// playRun(run)
+/// playRun(gpxTrack)
 /// ```
 ///
-public struct LoadRunAction {
+public struct PlayRunAction {
 
-    private let loadRun: @MainActor (Run) -> Void
+    private let playRun: @MainActor (Run) -> Void
 
-    private let loadTrack: @MainActor (GPX.Track) -> Void
+    private let playTrack: @MainActor (GPX.Track) -> Void
 
     init(
         run: @escaping @MainActor (Run) -> Void = { _ in },
         track: @escaping @MainActor (GPX.Track) -> Void = { _ in }
     ) {
-        loadRun = run
-        loadTrack = track
+        playRun = run
+        playTrack = track
     }
 
     @MainActor
@@ -34,8 +34,8 @@ public struct LoadRunAction {
     }
 
     @MainActor
-    public func callAsFunction(_ run: Run) { loadRun(run) }
+    public func callAsFunction(_ run: Run) { playRun(run) }
 
     @MainActor
-    public func callAsFunction(_ track: GPX.Track) { loadTrack(track) }
+    public func callAsFunction(_ track: GPX.Track) { playTrack(track) }
 }

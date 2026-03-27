@@ -7,10 +7,10 @@ import simd
 /// that the Metal shader samples using warp magnitude as the UV coordinate.
 ///
 /// Color data only — image generation happens at rendering time via `PaletteGradientRenderer`.
-public struct ColorPalette: Sendable, Equatable {
+public struct ColorPalette: Sendable, Equatable, Codable {
 
     /// A single color cluster entry.
-    public struct Entry: Sendable, Equatable {
+    public struct Entry: Sendable, Equatable, Codable {
         /// RGB color in linear 0–1 space.
         public var color: SIMD3<Float>
         /// Proportion of photo pixels represented by this cluster (0–1, all entries sum to 1).

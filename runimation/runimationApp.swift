@@ -1,6 +1,7 @@
 import RunKit
 import RunUI
 import StravaKit
+import SwiftData
 import SwiftUI
 
 @main
@@ -14,10 +15,14 @@ struct RunimationApp: App {
 
     @State private var visualisationModel = VisualisationModel()
 
+    private let modelContainer: ModelContainer
+
     init() {
+        let container = try! ModelContainer(for: RunRecord.self)
+        modelContainer = container
         let client = StravaClient()
         _stravaClient = State(initialValue: client)
-        _library = State(initialValue: RunLibrary(stravaClient: client))
+        _library = State(initialValue: RunLibrary(stravaClient: client, modelContext: container.mainContext))
     }
 
     var body: some Scene {
@@ -28,6 +33,7 @@ struct RunimationApp: App {
                 .environment(library)
                 .environment(visualisationModel)
                 .player(player)
+                .library(library)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                 .windowToolbarFullScreenVisibility(.onHover)
                 .onOpenURL { stravaClient.handleCallbackURL($0) }
@@ -40,7 +46,7 @@ struct RunimationApp: App {
                     .padding()
                     .environment(visualisationModel)
                     .player(player)
-                
+
                 Spacer()
             }
             .background(.thinMaterial)
@@ -55,6 +61,7 @@ struct RunimationApp: App {
                 .environment(library)
                 .environment(visualisationModel)
                 .player(player)
+                .library(library)
         }
 #endif
     }

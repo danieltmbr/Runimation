@@ -11,7 +11,9 @@ import Foundation
 /// The spectrum is forwarded unchanged: linear interpolation
 /// cannot produce values outside the input range.
 ///
-public struct LinearRunInterpolator: RunInterpolator {
+public struct LinearRunInterpolator: RunInterpolator, Codable {
+
+    private enum CodingKeys: CodingKey {}
 
     public let label = "Linear"
 

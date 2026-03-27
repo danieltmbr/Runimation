@@ -8,7 +8,7 @@ import Foundation
 ///
 public enum GPX: Equatable, Sendable {
 
-    public struct Point: Equatable, Sendable {
+    public struct Point: Equatable, Sendable, Codable {
 
         public let cadence: Int
 

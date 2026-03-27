@@ -8,7 +8,7 @@ import CoreKit
 ///
 /// See: [Domain Warping – Inigo Quilez](https://iquilezles.org/articles/warp/)
 ///
-public struct Warp: Option, Equatable, Sendable {
+public struct Warp: Option, Equatable, Sendable, Codable {
 
     /// Shader H parameter offset — controls global smoothness (0–1).
     public var smoothness: Double

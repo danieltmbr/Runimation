@@ -5,7 +5,7 @@ import SwiftUI
 /// Renders the run's GPS coordinates as an SDF line with warp distortion
 /// via `RunPathView`. The form is empty since there is nothing to configure.
 ///
-public struct RunPath: Visualisation, Equatable, Sendable {
+public struct RunPath: Visualisation, Equatable, Sendable, Codable {
 
     public init() {}
 
