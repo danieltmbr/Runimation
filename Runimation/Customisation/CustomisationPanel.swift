@@ -1,7 +1,7 @@
-import SwiftUI
-import Visualiser
 import CoreKit
 import CoreUI
+import SwiftUI
+import Visualiser
 
 /// The Customisation Panel lets users switch between the Visualisation Adjustment
 /// and Data Processing Pipeline settings.
@@ -11,8 +11,8 @@ import CoreUI
 /// Visualisation, transformer, and interpolator selection all use
 /// `NavigationLink` within the panel's own `NavigationStack`.
 ///
-/// Requires `RunPlayer` in the environment via `.player(_:)` and
-/// `VisualisationModel` via `.environment(model)`.
+/// Requires `RunPlayer` and `RunLibrary` in the environment via `.player(_:)`
+/// and `.library(_:)`.
 ///
 struct CustomisationPanel: View {
 
@@ -24,21 +24,23 @@ struct CustomisationPanel: View {
     @State
     private var content: Content = .visualisation
 
-    @Environment(VisualisationModel.self)
-    private var model
+    @NowPlaying
+    private var nowPlaying
 
     var body: some View {
-        @Bindable var model = model
         NavigationStack {
             VStack {
                 sectionPicker
-                
+
                 switch content {
                 case .visualisation:
-                    VisualisationAdjustmentForm(visualisation: $model.current)
+                    VisualisationAdjustmentForm(visualisation: nowPlaying.visualisation)
                         .formStyle(.grouped)
                 case .pipeline:
-                    SignalProcessingContent()
+                    SignalProcessingContent(
+                        transformers: nowPlaying.transformers,
+                        interpolator: nowPlaying.interpolator
+                    )
                 }
             }
             .navigationTitle("Customise")

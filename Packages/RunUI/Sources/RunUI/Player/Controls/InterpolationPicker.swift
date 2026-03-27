@@ -9,14 +9,16 @@ import RunKit
 ///
 public struct InterpolationPicker: View {
 
-    @PlayerState(\.interpolator)
-    private var interpolator
+    @Binding
+    private var interpolator: any RunInterpolator
 
-    public init() {}
+    public init(interpolator: Binding<any RunInterpolator>) {
+        self._interpolator = interpolator
+    }
 
     public var body: some View {
         NavigationLink {
-            InterpolationList()
+            InterpolationList(interpolator: $interpolator)
         } label: {
             LabeledContent("Interpolation", value: interpolator.label)
         }
@@ -32,8 +34,8 @@ public struct InterpolationPicker: View {
 ///
 public struct InterpolationList: View {
 
-    @PlayerState(\.interpolator)
-    private var interpolator
+    @Binding
+    private var interpolator: any RunInterpolator
 
     private static let catalog: [Item<any RunInterpolator>] = [
         Item(value: LinearRunInterpolator() as any RunInterpolator),
@@ -41,7 +43,9 @@ public struct InterpolationList: View {
         Item(value: CatmullRomRunInterpolator() as any RunInterpolator),
     ]
 
-    public init() {}
+    public init(interpolator: Binding<any RunInterpolator>) {
+        self._interpolator = interpolator
+    }
 
     public var body: some View {
         SelectionList(

@@ -13,8 +13,6 @@ struct RunimationApp: App {
 
     @State private var library: RunLibrary
 
-    @State private var visualisationModel = VisualisationModel()
-
     private let modelContainer: ModelContainer
 
     init() {
@@ -31,7 +29,6 @@ struct RunimationApp: App {
             ContentView()
                 .environment(stravaClient)
                 .environment(library)
-                .environment(visualisationModel)
                 .player(player)
                 .library(library)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
@@ -44,8 +41,8 @@ struct RunimationApp: App {
             VStack {
                 CustomisationPanel()
                     .padding()
-                    .environment(visualisationModel)
                     .player(player)
+                    .library(library)
 
                 Spacer()
             }
@@ -59,7 +56,6 @@ struct RunimationApp: App {
             ContentView()
                 .environment(stravaClient)
                 .environment(library)
-                .environment(visualisationModel)
                 .player(player)
                 .library(library)
         }

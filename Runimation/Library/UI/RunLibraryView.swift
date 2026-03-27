@@ -4,14 +4,13 @@ import UniformTypeIdentifiers
 
 /// Unified run library listing Strava runs and imported GPX files.
 ///
-/// Manages its own `NavigationStack` so it can be presented as a sheet or
-/// popover without the parent needing to own any navigation state. The parent
-/// only controls visibility via `isPresented`.
+/// On iOS, presented as a sheet with its own `NavigationStack` so stats can
+/// push within the sheet. On macOS, presented as a popover with no internal
+/// stack — "Stats" appends to the caller's `statsPath` binding so navigation
+/// happens in the main window's `NavigationStack`.
 ///
-/// Displays all entries as compact `RunInfoView` rows. Tapping a row loads
-/// the run into the player and dismisses. A trailing three-dots menu offers
-/// Stats (navigates within the library stack), Favourite (disabled),
-/// Share (disabled), and Delete.
+/// The parent controls visibility via `isPresented`. On macOS, the parent must
+/// also pass `statsPath` and own a `navigationDestination(for: RunEntry.self)`.
 ///
 /// GPX files are imported via the file picker (iOS) and drag-and-drop (macOS).
 ///
@@ -48,10 +47,16 @@ struct RunLibraryView: View {
 
     @Binding var isPresented: Bool
 
+    #if os(macOS)
+    @Binding var statsPath: [RunEntry]
+    #endif
+
     // MARK: - State
 
+    #if !os(macOS)
     @State
     private var path: [RunEntry] = []
+    #endif
 
     @State
     private var isShowingFilePicker = false
@@ -62,24 +67,32 @@ struct RunLibraryView: View {
     // MARK: - Body
 
     var body: some View {
+        #if os(macOS)
+        libraryContent
+        #else
         NavigationStack(path: $path) {
-            libraryList
-                .navigationTitle("Run Library")
+            libraryContent
                 .navigationDestination(for: RunEntry.self) { RunStatsDestination(entry: $0) }
-                .toolbar { toolbarContent }
-                .fileImporter(
-                    isPresented: $isShowingFilePicker,
-                    allowedContentTypes: [gpxUTType],
-                    allowsMultipleSelection: true
-                ) { result in
-                    handleImportResult(result)
-                }
-                .onDrop(of: [gpxUTType, .fileURL], isTargeted: $isDragTargeted) { providers in
-                    handleDrop(providers)
-                }
-                .overlay(dropOverlay)
-                .task { await loadIfNeeded() }
         }
+        #endif
+    }
+
+    private var libraryContent: some View {
+        libraryList
+            .navigationTitle("Run Library")
+            .toolbar { toolbarContent }
+            .fileImporter(
+                isPresented: $isShowingFilePicker,
+                allowedContentTypes: [gpxUTType],
+                allowsMultipleSelection: true
+            ) { result in
+                handleImportResult(result)
+            }
+            .onDrop(of: [gpxUTType, .fileURL], isTargeted: $isDragTargeted) { providers in
+                handleDrop(providers)
+            }
+            .overlay(dropOverlay)
+            .task { await loadIfNeeded() }
     }
 
     // MARK: - List
@@ -107,9 +120,18 @@ struct RunLibraryView: View {
     private func libraryRow(_ record: RunRecord) -> some View {
         PlayRunButton(record, onPlayed: { isPresented = false }) { record in
             RunEntryRow(record: record) { record in
+                #if os(macOS)
+                Button {
+                    statsPath.append(RunEntry(id: record.entryID))
+                    isPresented = false
+                } label: {
+                    Label("Stats", systemImage: "chart.bar")
+                }
+                #else
                 NavigationLink(value: RunEntry(id: record.entryID)) {
                     Label("Stats", systemImage: "chart.bar")
                 }
+                #endif
 
                 Button {} label: {
                     Label("Favourite", systemImage: "heart")

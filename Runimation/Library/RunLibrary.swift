@@ -4,7 +4,6 @@ import Foundation
 import RunKit
 import StravaKit
 import SwiftData
-import Visualiser
 
 /// Manages the unified run library backed by SwiftData.
 ///
@@ -41,9 +40,6 @@ final class RunLibrary {
 
     /// True while a fetch is in flight.
     private(set) var isLoading = false
-
-    /// The entry ID currently loaded into the player.
-    private(set) var currentRecordID: UUID?
 
     // MARK: - Private
 
@@ -86,10 +82,19 @@ final class RunLibrary {
 
     public func disconnect() {
         stravaClient.signOut()
+        let stravaRecords = entries.filter {
+            if case .strava = $0.source { return true }
+            return false
+        }
+        stravaRecords.forEach { record in
+            cache[record.entryID] = nil
+            modelContext.delete(record)
+        }
         entries = entries.filter {
             if case .strava = $0.source { return false }
             return true
         }
+        try? modelContext.save()
     }
 
     // MARK: - Fetching
@@ -98,10 +103,19 @@ final class RunLibrary {
         guard stravaClient.isAuthenticated else { return }
         currentPage = 1
         hasReachedEnd = false
+        let staleRecords = entries.filter {
+            if case .strava = $0.source { return true }
+            return false
+        }
+        staleRecords.forEach { record in
+            cache[record.entryID] = nil
+            modelContext.delete(record)
+        }
         entries = entries.filter {
             if case .strava = $0.source { return false }
             return true
         }
+        try? modelContext.save()
         await fetchPage()
     }
 
@@ -148,7 +162,7 @@ final class RunLibrary {
         if let data = record.trackData {
             let points = try JSONDecoder().decode([GPX.Point].self, from: data)
             let track = GPX.Track(name: record.name, points: points, type: "running", date: record.date)
-            let run = runParser.run(from: track)
+            let run = runParser.run(from: track, id: record.entryID)
             cache[record.entryID] = run
             return run
         }
@@ -169,7 +183,7 @@ final class RunLibrary {
             track = parsed
         }
 
-        let run = runParser.run(from: track)
+        let run = runParser.run(from: track, id: record.entryID)
         cache[record.entryID] = run
         record.trackData = try? JSONEncoder().encode(track.points)
         try? modelContext.save()
@@ -194,49 +208,6 @@ final class RunLibrary {
         entries.first { $0.entryID == id }
     }
 
-    // MARK: - Config
-
-    /// Saves the current visualisation and pipeline config to the active run record.
-    /// 
-    public func saveCurrentConfig(
-        visualisation: any Visualisation,
-        transformers: [any RunTransformer],
-        interpolator: any RunInterpolator,
-        duration: RunPlayer.Duration
-    ) {
-        guard let id = currentRecordID, let record = record(for: id) else { return }
-        record.saveConfig(
-            visualisation: visualisation,
-            transformers: transformers,
-            interpolator: interpolator,
-            duration: duration
-        )
-        try? modelContext.save()
-    }
-
-    /// Returns the config from the most recently played run that has saved settings.
-    ///
-    /// Used as the default when playing a run with no previously saved config.
-    ///
-    public func lastUsedConfig() -> (
-        visualisation: any Visualisation,
-        transformers: [any RunTransformer],
-        interpolator: any RunInterpolator,
-        duration: RunPlayer.Duration
-    )? {
-        let recent = entries
-            .filter { $0.hasConfig }
-            .max { ($0.lastPlayedAt ?? .distantPast) < ($1.lastPlayedAt ?? .distantPast) }
-        guard let record = recent,
-              let vis = record.loadVisualisationConfig() else { return nil }
-        return (
-            visualisation: vis,
-            transformers: record.loadTransformersConfig(),
-            interpolator: record.loadInterpolatorConfig() ?? LinearRunInterpolator(),
-            duration: record.loadDurationConfig() ?? .thirtySeconds
-        )
-    }
-
     /// Returns the most recently played record, for state restoration on launch.
     public func lastPlayedRecord() -> RunRecord? {
         entries
@@ -247,7 +218,6 @@ final class RunLibrary {
     // MARK: - Current Record Tracking
 
     func markAsPlaying(_ record: RunRecord) {
-        currentRecordID = record.entryID
         record.lastPlayedAt = Date()
         try? modelContext.save()
     }
@@ -284,6 +254,18 @@ final class RunLibrary {
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
         entries = (try? modelContext.fetch(descriptor)) ?? []
+        seedBundledRunIfNeeded()
+    }
+
+    private func seedBundledRunIfNeeded() {
+        let name = "run-01"
+        let alreadyExists = entries.contains {
+            if case .bundled(let n) = $0.source { return n == name }
+            return false
+        }
+        guard !alreadyExists else { return }
+        guard let track: GPX.Track = gpxParser.parse(fileNamed: name) else { return }
+        persistBundledRun(track: track, name: name)
     }
 
     private func fetchPage() async {

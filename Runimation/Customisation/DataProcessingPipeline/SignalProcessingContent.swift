@@ -1,5 +1,6 @@
-import SwiftUI
+import RunKit
 import RunUI
+import SwiftUI
 
 /// Signal processing panel: post-transformation signal preview, interpolation controls,
 /// and the transformer chain manager.
@@ -10,16 +11,18 @@ import RunUI
 ///   plus a catalog section to add more (rendered by `TransformersSection`).
 /// - **Previews** — sparkline charts with real-time playhead values + compass rose.
 ///
-/// Requires `RunPlayer` in the environment via `.player(_:)`.
-///
 struct SignalProcessingContent: View {
+
+    var transformers: Binding<[any RunTransformer]>
+    
+    var interpolator: Binding<any RunInterpolator>
 
     var body: some View {
         Form {
             Section("Interpolation") {
-                InterpolationPicker()
+                InterpolationPicker(interpolator: interpolator)
             }
-            TransformersSection()
+            TransformersSection(transformers: transformers)
             previews
         }
         .formStyle(.grouped)

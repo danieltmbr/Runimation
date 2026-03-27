@@ -55,7 +55,7 @@ public struct WaveSamplingTransformer: RunTransformer, Codable {
             return syntheticSegment(from: window, pickHighest: i.isMultiple(of: 2))
         }
 
-        return Run(date: run.date, name: run.name, segments: synthetic, spectrum: .init(from: synthetic, time: run.spectrum.time))
+        return Run(id: run.id, date: run.date, name: run.name, segments: synthetic, spectrum: .init(from: synthetic, time: run.spectrum.time))
     }
 
     // MARK: - Private

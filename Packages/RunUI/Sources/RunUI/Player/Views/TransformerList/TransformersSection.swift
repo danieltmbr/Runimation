@@ -11,12 +11,10 @@ import RunKit
 /// - **Add** — catalog of available transformers, each with a `+` button to append
 ///   to the active chain.
 ///
-/// Requires `RunPlayer` in the environment via `.player(_:)`.
-///
 public struct TransformersSection: View {
 
-    @PlayerState(\.transformers)
-    private var transformers
+    @Binding
+    private var transformers: [any RunTransformer]
 
     @State
     private var items: [Item<any RunTransformer>] = []
@@ -27,7 +25,9 @@ public struct TransformersSection: View {
         Item(value: WaveSamplingTransformer() as any RunTransformer),
     ]
 
-    public init() {}
+    public init(transformers: Binding<[any RunTransformer]>) {
+        self._transformers = transformers
+    }
 
     public var body: some View {
         Group {
@@ -35,6 +35,7 @@ public struct TransformersSection: View {
             catalogSection
         }
         .onAppear { items = transformers.map { Item(value: $0) } }
+        .onChange(of: transformers.map(\.label)) { items = transformers.map { Item(value: $0) } }
     }
 
     // MARK: - Applied Section

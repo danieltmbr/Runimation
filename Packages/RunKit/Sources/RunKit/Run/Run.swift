@@ -1,7 +1,7 @@
 import Foundation
 import CoreGraphics
 
-public struct Run: Equatable, Sendable {
+public struct Run: Equatable, Identifiable, Sendable {
 
     /// Segment of a run
     ///
@@ -117,6 +117,10 @@ public struct Run: Equatable, Sendable {
         )
     }
     
+    /// Unique identifier linking this runtime value back to its `RunRecord`.
+    ///
+    public let id: UUID
+
     /// Flat array of segment coordinates, pre-extracted for efficient rendering.
     ///
     /// Equivalent to `segments.map(\.coordinate)` but computed once at init time
@@ -124,7 +128,7 @@ public struct Run: Equatable, Sendable {
     ///
     public let coordinates: [CGPoint]
 
-    /// Start date of the run. `nil` if unknown (e.g. `Run.zero`).
+    /// Start date of the run.
     ///
     public let date: Date
 
@@ -155,16 +159,18 @@ public struct Run: Equatable, Sendable {
     /// Designated initialiser — allows interpolators to preserve the original
     /// geographic path independently of the densified segments.
     ///
-    /// Prefer `init(date:name:segments:spectrum:)` for transformers and the parser.
+    /// Prefer `init(id:date:name:segments:spectrum:)` for transformers and the parser.
     /// See `RunInterpolator` for the full rationale.
     ///
     init(
+        id: UUID = UUID(),
         coordinates: [CGPoint],
         date: Date = .now,
         name: String = "",
         segments: [Segment],
         spectrum: Spectrum
     ) {
+        self.id = id
         self.coordinates = coordinates
         self.date = date
         self.name = name
@@ -180,12 +186,14 @@ public struct Run: Equatable, Sendable {
     /// > Warning: Do **not** use in interpolators.
     ///
     init(
+        id: UUID = UUID(),
         date: Date = .now,
         name: String = "",
         segments: [Segment],
         spectrum: Spectrum
     ) {
         self.init(
+            id: id,
             coordinates: segments.map(\.coordinate),
             date: date,
             name: name,
@@ -194,9 +202,13 @@ public struct Run: Equatable, Sendable {
         )
     }
 
-    /// A run with no segments and all zero spectrums
+    /// Fixed UUID identifying the sedentary (no-run) state.
     ///
-    public static let zero = Run(segments: [], spectrum: .zero)
+    public static let sedentaryID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+
+    /// A run with no segments representing the idle state before any run is selected.
+    ///
+    public static let sedentary = Run(id: sedentaryID, segments: [], spectrum: .zero)
 }
 
 extension Run.Spectrum {

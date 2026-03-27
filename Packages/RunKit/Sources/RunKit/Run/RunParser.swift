@@ -20,21 +20,31 @@ extension Run {
         public init() {}
 
         public func run(from track: GPX.Track) -> Run {
+            run(from: track, id: UUID())
+        }
+
+        /// Parses a GPX track into a `Run` with a specific identifier.
+        ///
+        /// Use this variant when loading a run for a known `RunRecord` so the resulting
+        /// `Run.id` matches `RunRecord.entryID`, enabling `NowPlaying` to resolve the record.
+        ///
+        public func run(from track: GPX.Track, id: UUID) -> Run {
             let points = track.points
             let name = track.name
             let date = track.date ?? track.points.first?.time ?? .now
             guard points.count >= 2 else {
-                return Run(date: date, name: name, segments: [], spectrum: Spectrum(from: [], time: 0...0))
+                return Run(id: id, date: date, name: name, segments: [], spectrum: Spectrum(from: [], time: 0...0))
             }
 
             let unique = filterDuplicates(points)
             guard unique.count >= 2 else {
-                return Run(date: date, name: name, segments: [], spectrum: Spectrum(from: [], time: 0...0))
+                return Run(id: id, date: date, name: name, segments: [], spectrum: Spectrum(from: [], time: 0...0))
             }
 
             let segments = makeSegments(from: unique)
             let duration = unique.last!.time.timeIntervalSince(unique.first!.time)
             return Run(
+                id: id,
                 date: date,
                 name: name,
                 segments: segments,

@@ -35,6 +35,7 @@ public struct SpeedWeightedRun: RunTransformer, Codable {
         let cap = speedCap(from: run.segments)
         let weighted = weightedSegments(from: run.segments, cap: cap)
         return Run(
+            id: run.id,
             date: run.date,
             name: run.name,
             segments: weighted,

@@ -14,7 +14,7 @@ public struct SetInterpolatorAction {
 
     @MainActor
     init(player: RunPlayer) {
-        self.init { player.interpolator = $0 }
+        self.init { player.setInterpolator($0) }
     }
 
     @MainActor

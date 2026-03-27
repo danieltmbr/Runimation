@@ -19,7 +19,7 @@ public struct SetTransformerAction {
 
     @MainActor
     init(player: RunPlayer) {
-        self.init { player.transformers = [$0] }
+        self.init { player.setTransformers([$0]) }
     }
 
     @MainActor

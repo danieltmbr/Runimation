@@ -53,7 +53,7 @@ public struct SmoothStepRunInterpolator: RunInterpolator, Codable {
             )
         }
 
-        return Run(coordinates: run.coordinates, date: run.date, name: run.name, segments: segments, spectrum: run.spectrum)
+        return Run(id: run.id, coordinates: run.coordinates, date: run.date, name: run.name, segments: segments, spectrum: run.spectrum)
     }
 
     // MARK: - Private

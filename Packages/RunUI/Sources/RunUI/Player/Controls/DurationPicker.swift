@@ -3,14 +3,14 @@ import RunKit
 
 /// A picker for selecting the playback duration preset.
 ///
-/// Requires `RunPlayer` in the environment via `.player(_:)`.
-///
 public struct DurationPicker: View {
 
-    @PlayerState(\.duration)
-    private var duration
+    @Binding
+    private var duration: RunPlayer.Duration
 
-    public init() {}
+    public init(duration: Binding<RunPlayer.Duration>) {
+        self._duration = duration
+    }
 
     public var body: some View {
         Picker("Duration", systemImage: "timer", selection: $duration) {

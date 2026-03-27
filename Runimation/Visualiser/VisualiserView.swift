@@ -1,16 +1,15 @@
-import SwiftUI
 import RunKit
 import RunUI
+import SwiftUI
 import Visualiser
 
 struct VisualiserView: View {
 
-    @Environment(VisualisationModel.self)
-    private var model
+    @NowPlaying
+    private var nowPlaying
 
     var body: some View {
-        @Bindable var model = model
-        PlayerDrivenView(visualisation: $model.current)
+        PlayerDrivenView(visualisation: nowPlaying.visualisation)
             .ignoresSafeArea()
     }
 }

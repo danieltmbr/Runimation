@@ -22,7 +22,11 @@ public final class RunPlayer {
 
         /// Runs with zero segments and all zero spectrums
         ///
-        public static let zero = Runs(original: .zero, transformed: .zero, normalised: .zero)
+        public static let zero = Runs(original: .sedentary, transformed: .sedentary, normalised: .sedentary)
+
+        /// The identifier linking this set of runs back to their `RunRecord`.
+        ///
+        public var id: UUID { original.id }
 
         /// Unmodified run, good for displaying precise metrics.
         ///
@@ -72,21 +76,9 @@ public final class RunPlayer {
 
     // MARK: Dependencies
 
-    public var transformers: [any RunTransformer] = [] {
-        didSet {
-            let original = run.original
-            let process = self.process
-            Task { try? await process { original } }
-        }
-    }
+    public private(set) var transformers: [any RunTransformer] = []
 
-    public var interpolator: any RunInterpolator = LinearRunInterpolator() {
-        didSet {
-            let original = run.original
-            let process = self.process
-            Task { try? await process { original } }
-        }
-    }
+    public private(set) var interpolator: any RunInterpolator = SmoothStepRunInterpolator()
 
     // MARK: Playback States
 
@@ -97,6 +89,7 @@ public final class RunPlayer {
             Task { try? await process { original } }
         }
     }
+
 
     public private(set) var isPlaying: Bool = false
 
@@ -186,6 +179,15 @@ public final class RunPlayer {
     }
 
     // MARK: - Configuration
+    
+    /// Updates the interpolation strategy and reprocesses the current run.
+    ///
+    public func setInterpolator(_ newValue: any RunInterpolator) {
+        interpolator = newValue
+        let original = run.original
+        let process = self.process
+        Task { try? await process { original } }
+    }
 
     /// Loads a new run to the player.
     ///
@@ -212,6 +214,15 @@ public final class RunPlayer {
     ) async throws {
         stop()
         try await process { parser.run(from: track) }
+    }
+    
+    /// Updates the signal processing chain and reprocesses the current run.
+    ///
+    public func setTransformers(_ transformers: [any RunTransformer]) {
+        self.transformers = transformers
+        let original = run.original
+        let process = self.process
+        Task { try? await process { original } }
     }
 
     // MARK: - Private

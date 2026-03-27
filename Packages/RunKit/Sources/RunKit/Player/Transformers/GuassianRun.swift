@@ -78,6 +78,7 @@ public struct GuassianRun: RunTransformer, Codable {
         let times = timeOffsets(from: run.segments)
         let smoothed = smooth(run.segments, times: times)
         return Run(
+            id: run.id,
             date: run.date,
             name: run.name,
             segments: smoothed,

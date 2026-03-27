@@ -1,41 +1,27 @@
 import Foundation
 import RunKit
 
-/// Codable wrapper that encodes/decodes a heterogeneous `[any RunTransformer]` array
-/// using a type discriminator string.
+/// Codable representation of the finite set of `RunTransformer` conformers.
 ///
-/// Each known concrete transformer maps to a `Kind` case. Unknown kinds are silently
-/// dropped on decode, so adding new transformer types in future versions won't crash
-/// when reading older persisted data.
+/// Using an enum with associated values avoids double JSON encoding.
+/// `NormalisedRun` is intentionally excluded — it is always applied internally
+/// by `RunPlayer` and is never user-configurable.
+/// Unknown cases are silently dropped on decode so future transformer types
+/// degrade gracefully when reading older persisted data.
 ///
-/// `NormalisedRun` is intentionally excluded — it is always applied internally by
-/// `RunPlayer` and is never user-configurable.
-///
-struct TransformerConfig: Codable {
+enum TransformerConfig: Codable {
 
-    enum Kind: String, Codable {
-        case gaussian
-        case speedWeighted
-        case waveSampling
-    }
-
-    let kind: Kind
-    let payload: Data
+    case gaussian(GuassianRun)
+    case speedWeighted(SpeedWeightedRun)
+    case waveSampling(WaveSamplingTransformer)
 
     // MARK: - Init
 
     init(_ transformer: any RunTransformer) throws {
-        let encoder = JSONEncoder()
         switch transformer {
-        case let t as GuassianRun:
-            kind = .gaussian
-            payload = try encoder.encode(t)
-        case let t as SpeedWeightedRun:
-            kind = .speedWeighted
-            payload = try encoder.encode(t)
-        case let t as WaveSamplingTransformer:
-            kind = .waveSampling
-            payload = try encoder.encode(t)
+        case let t as GuassianRun:            self = .gaussian(t)
+        case let t as SpeedWeightedRun:       self = .speedWeighted(t)
+        case let t as WaveSamplingTransformer: self = .waveSampling(t)
         default:
             throw EncodingError.invalidValue(
                 transformer,
@@ -46,26 +32,19 @@ struct TransformerConfig: Codable {
 
     // MARK: - Resolve
 
-    func resolve() throws -> any RunTransformer {
-        let decoder = JSONDecoder()
-        switch kind {
-        case .gaussian:     return try decoder.decode(GuassianRun.self, from: payload)
-        case .speedWeighted: return try decoder.decode(SpeedWeightedRun.self, from: payload)
-        case .waveSampling: return try decoder.decode(WaveSamplingTransformer.self, from: payload)
+    func resolve() -> any RunTransformer {
+        switch self {
+        case .gaussian(let t):      return t
+        case .speedWeighted(let t): return t
+        case .waveSampling(let t):  return t
         }
     }
 
     // MARK: - Array Helpers
 
-    /// Encodes an array of transformers to JSON data.
-    static func encode(_ transformers: [any RunTransformer]) throws -> Data {
-        let configs = try transformers.map { try TransformerConfig($0) }
-        return try JSONEncoder().encode(configs)
-    }
-
-    /// Decodes an array of transformers from JSON data. Unknown kinds are silently skipped.
-    static func decode(from data: Data) -> [any RunTransformer] {
-        guard let configs = try? JSONDecoder().decode([TransformerConfig].self, from: data) else { return [] }
-        return configs.compactMap { try? $0.resolve() }
+    /// Encodes an array of transformers to a `[TransformerConfig]`.
+    ///
+    static func from(_ transformers: [any RunTransformer]) throws -> [TransformerConfig] {
+        try transformers.map { try TransformerConfig($0) }
     }
 }
