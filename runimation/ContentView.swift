@@ -58,7 +58,6 @@ struct ContentView: View {
 #endif
             .task {
                 await restoreLastPlayedRun()
-                if nowPlaying.isSedentary { showLibrary = true }
             }
     }
     
@@ -169,7 +168,10 @@ struct ContentView: View {
 
     private func restoreLastPlayedRun() async {
         guard nowPlaying.isSedentary else { return }
-        guard let record = library.lastPlayedRecord() else { return }
+        guard let record = library.lastPlayedRecord() else {
+            showLibrary = true
+            return
+        }
         await nowPlaying.play(record)
     }
 }

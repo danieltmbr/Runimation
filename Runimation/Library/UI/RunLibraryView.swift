@@ -1,4 +1,5 @@
 import RunUI
+import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -20,8 +21,8 @@ struct RunLibraryView: View {
 
     // MARK: - Library State
 
-    @LibraryState(\.entries)
-    private var entries
+    @Query(sort: \RunRecord.date, order: .reverse)
+    private var entries: [RunRecord]
 
     @LibraryState(\.isLoading)
     private var isLoading

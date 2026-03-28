@@ -4,22 +4,25 @@ import CoreKit
 
 /// Loads a run into the player, stopping any current playback.
 ///
+/// Resolves when the player has finished processing and is ready to play.
+/// Throws `CancellationError` if preempted by a subsequent call.
+///
 /// Supports both a parsed `Run` and a raw `GPX.Track`:
 /// ```swift
 /// @Environment(\.playRun) private var playRun
-/// playRun(run)
-/// playRun(gpxTrack)
+/// try? await playRun(run)
+/// try? await playRun(gpxTrack)
 /// ```
 ///
 public struct PlayRunAction {
 
-    private let playRun: @MainActor (Run) -> Void
+    private let playRun: @MainActor (Run) async throws -> Void
 
-    private let playTrack: @MainActor (GPX.Track) -> Void
+    private let playTrack: @MainActor (GPX.Track) async throws -> Void
 
     init(
-        run: @escaping @MainActor (Run) -> Void = { _ in },
-        track: @escaping @MainActor (GPX.Track) -> Void = { _ in }
+        run: @escaping @MainActor (Run) async throws -> Void = { _ in },
+        track: @escaping @MainActor (GPX.Track) async throws -> Void = { _ in }
     ) {
         playRun = run
         playTrack = track
@@ -28,14 +31,20 @@ public struct PlayRunAction {
     @MainActor
     init(player: RunPlayer) {
         self.init(
-            run: { run in Task { try? await player.setRun(run) } },
-            track: { track in Task { try? await player.setRun(track) } }
+            run: {
+                try await player.setRun($0);
+                player.play()
+            },
+            track: {
+                try await player.setRun($0);
+                player.play()
+            }
         )
     }
 
     @MainActor
-    public func callAsFunction(_ run: Run) { playRun(run) }
+    public func callAsFunction(_ run: Run) async throws { try await playRun(run) }
 
     @MainActor
-    public func callAsFunction(_ track: GPX.Track) { playTrack(track) }
+    public func callAsFunction(_ track: GPX.Track) async throws { try await playTrack(track) }
 }

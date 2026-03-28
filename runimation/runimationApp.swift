@@ -31,6 +31,7 @@ struct RunimationApp: App {
                 .environment(library)
                 .player(player)
                 .library(library)
+                .modelContainer(modelContainer)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                 .windowToolbarFullScreenVisibility(.onHover)
                 .onOpenURL { stravaClient.handleCallbackURL($0) }
@@ -43,6 +44,7 @@ struct RunimationApp: App {
                     .padding()
                     .player(player)
                     .library(library)
+                    .modelContainer(modelContainer)
 
                 Spacer()
             }
@@ -58,6 +60,7 @@ struct RunimationApp: App {
                 .environment(library)
                 .player(player)
                 .library(library)
+                .modelContainer(modelContainer)
         }
 #endif
     }

@@ -7,14 +7,13 @@ import SwiftData
 
 /// Manages the unified run library backed by SwiftData.
 ///
-/// Owns the list of `RunRecord` entries, coordinates fetching (Strava, paginated)
-/// and importing (local files), and maintains an in-memory `Run` cache keyed by
-/// entry UUID. Track data is persisted in `RunRecord.trackData` so subsequent
-/// loads are fully offline.
+/// Handles all mutations — fetching (Strava, paginated), importing (local files),
+/// deleting, and run loading — but owns no in-memory list of entries. The list is
+/// driven directly by SwiftData via `@Query` in the views that need it, so inserts
+/// and deletes are reflected automatically without any manual array management.
 ///
 /// Create one instance per app and inject it into the view hierarchy
-/// via `.library(_:player:visualisation:)`. Views read state via `@LibraryState`
-/// and trigger mutations via `@Environment(\.action)`.
+/// via `.library(_:)`. Views trigger mutations via `@Environment(\.action)`.
 ///
 @MainActor
 @Observable
@@ -32,32 +31,29 @@ final class RunLibrary {
 
     // MARK: - Public State
 
-    /// All entries currently in the library, sorted by date descending.
-    private(set) var entries: [RunRecord] = []
-
     /// Whether a remote data source is currently connected.
     var isConnected: Bool { stravaClient.isAuthenticated }
 
-    /// True while a fetch is in flight.
+    /// True while a Strava fetch is in flight.
     private(set) var isLoading = false
 
     // MARK: - Private
 
     private let modelContext: ModelContext
-    
+
     private let gpxParser = GPX.Parser()
-    
+
     private let runParser = Run.Parser()
-    
+
     private let stravaClient: StravaClient
 
     /// In-memory parsed run cache keyed by `RunRecord.entryID`.
     private var cache: [UUID: Run] = [:]
 
     private var currentPage = 1
-    
+
     private var hasReachedEnd = false
-    
+
     private let perPage = 30
 
     // MARK: - Init
@@ -65,7 +61,7 @@ final class RunLibrary {
     public init(stravaClient: StravaClient, modelContext: ModelContext) {
         self.stravaClient = stravaClient
         self.modelContext = modelContext
-        loadFromStore()
+        seedBundledRunIfNeeded()
     }
 
     // MARK: - Connection
@@ -80,21 +76,10 @@ final class RunLibrary {
         await refresh()
     }
 
-    public func disconnect() {
+    public func disconnect(keepRuns: Bool) {
         stravaClient.signOut()
-        let stravaRecords = entries.filter {
-            if case .strava = $0.source { return true }
-            return false
-        }
-        stravaRecords.forEach { record in
-            cache[record.entryID] = nil
-            modelContext.delete(record)
-        }
-        entries = entries.filter {
-            if case .strava = $0.source { return false }
-            return true
-        }
-        try? modelContext.save()
+        guard !keepRuns else { return }
+        removeStravaRecords()
     }
 
     // MARK: - Fetching
@@ -103,19 +88,6 @@ final class RunLibrary {
         guard stravaClient.isAuthenticated else { return }
         currentPage = 1
         hasReachedEnd = false
-        let staleRecords = entries.filter {
-            if case .strava = $0.source { return true }
-            return false
-        }
-        staleRecords.forEach { record in
-            cache[record.entryID] = nil
-            modelContext.delete(record)
-        }
-        entries = entries.filter {
-            if case .strava = $0.source { return false }
-            return true
-        }
-        try? modelContext.save()
         await fetchPage()
     }
 
@@ -144,7 +116,6 @@ final class RunLibrary {
             )
             modelContext.insert(record)
             cache[record.entryID] = run
-            entries.insert(record, at: 0)
         }
         try? modelContext.save()
     }
@@ -195,24 +166,30 @@ final class RunLibrary {
 
     public func delete(_ record: RunRecord) {
         cache[record.entryID] = nil
-        entries.removeAll { $0.entryID == record.entryID }
         modelContext.delete(record)
         try? modelContext.save()
     }
 
     // MARK: - Navigation
 
-    /// Returns the `RunRecord` with the given entry ID.
+    /// Returns the `RunRecord` with the given entry ID via an indexed ModelContext lookup.
     ///
     public func record(for id: UUID) -> RunRecord? {
-        entries.first { $0.entryID == id }
+        let descriptor = FetchDescriptor<RunRecord>(
+            predicate: #Predicate<RunRecord> { $0.entryID == id }
+        )
+        return try? modelContext.fetch(descriptor).first
     }
 
     /// Returns the most recently played record, for state restoration on launch.
+    ///
     public func lastPlayedRecord() -> RunRecord? {
-        entries
-            .filter { $0.lastPlayedAt != nil }
-            .max { $0.lastPlayedAt! < $1.lastPlayedAt! }
+        var descriptor = FetchDescriptor<RunRecord>(
+            predicate: #Predicate<RunRecord> { $0.lastPlayedAt != nil },
+            sortBy: [SortDescriptor(\.lastPlayedAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = 1
+        return try? modelContext.fetch(descriptor).first
     }
 
     // MARK: - Current Record Tracking
@@ -222,50 +199,46 @@ final class RunLibrary {
         try? modelContext.save()
     }
 
-    // MARK: - Bundled Run
-
-    /// Persists the bundled run as a `RunRecord` on first launch if not already present.
-    public func persistBundledRun(track: GPX.Track, name: String) {
-        let alreadyExists = entries.contains {
-            if case .bundled(let n) = $0.source { return n == name }
-            return false
-        }
-        guard !alreadyExists else { return }
-
-        let run = runParser.run(from: track)
-        let record = RunRecord(
-            name: track.name.isEmpty ? name : track.name,
-            date: track.date ?? Date(),
-            distance: run.distance,
-            duration: run.duration,
-            source: .bundled(name: name),
-            trackData: try? JSONEncoder().encode(track.points)
-        )
-        modelContext.insert(record)
-        try? modelContext.save()
-        entries.append(record)
-        cache[record.entryID] = run
-    }
-
     // MARK: - Private
 
-    private func loadFromStore() {
-        let descriptor = FetchDescriptor<RunRecord>(
-            sortBy: [SortDescriptor(\.date, order: .reverse)]
-        )
-        entries = (try? modelContext.fetch(descriptor)) ?? []
-        seedBundledRunIfNeeded()
+    private func removeStravaRecords() {
+        let all = (try? modelContext.fetch(FetchDescriptor<RunRecord>())) ?? []
+        let stravaRecords = all.filter {
+            if case .strava = $0.source { return true }
+            return false
+        }
+        stravaRecords.forEach { record in
+            cache[record.entryID] = nil
+            modelContext.delete(record)
+        }
+        try? modelContext.save()
     }
 
     private func seedBundledRunIfNeeded() {
         let name = "run-01"
-        let alreadyExists = entries.contains {
+        let all = (try? modelContext.fetch(FetchDescriptor<RunRecord>())) ?? []
+        let alreadyExists = all.contains {
             if case .bundled(let n) = $0.source { return n == name }
             return false
         }
         guard !alreadyExists else { return }
         guard let track: GPX.Track = gpxParser.parse(fileNamed: name) else { return }
-        persistBundledRun(track: track, name: name)
+
+        let record = RunRecord(
+            name: track.name.isEmpty ? name : track.name,
+            date: track.date ?? Date(),
+            distance: 0,
+            duration: 0,
+            source: .bundled(name: name),
+            trackData: try? JSONEncoder().encode(track.points)
+        )
+        modelContext.insert(record)
+        // Parse the run after inserting the record so run.id matches record.entryID.
+        let run = runParser.run(from: track, id: record.entryID)
+        record.distance = run.distance
+        record.duration = run.duration
+        try? modelContext.save()
+        cache[record.entryID] = run
     }
 
     private func fetchPage() async {
@@ -275,9 +248,15 @@ final class RunLibrary {
             let activities = try await stravaClient.activities(page: currentPage, perPage: perPage)
             let runActivities = activities.filter(\.isRun)
 
+            // Fetch existing sources once for deduplication.
+            // #Predicate cannot match on Codable enum cases, so we fetch all and filter.
+            let existingSources = Set(
+                (try? modelContext.fetch(FetchDescriptor<RunRecord>()))?.map(\.source) ?? []
+            )
+
             for activity in runActivities {
                 let source = RunSource.strava(id: activity.id)
-                guard !entries.contains(where: { $0.source == source }) else { continue }
+                guard !existingSources.contains(source) else { continue }
                 let record = RunRecord(
                     name: activity.name,
                     date: activity.startDate,
@@ -286,7 +265,6 @@ final class RunLibrary {
                     source: source
                 )
                 modelContext.insert(record)
-                entries.append(record)
             }
             try? modelContext.save()
 

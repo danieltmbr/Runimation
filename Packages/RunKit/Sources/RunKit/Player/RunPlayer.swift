@@ -82,13 +82,7 @@ public final class RunPlayer {
 
     // MARK: Playback States
 
-    public var duration: Duration = .thirtySeconds {
-        didSet {
-            let original = run.original
-            let process = self.process
-            Task { try? await process { original } }
-        }
-    }
+    public var duration: Duration = .thirtySeconds
 
 
     public private(set) var isPlaying: Bool = false
@@ -180,13 +174,26 @@ public final class RunPlayer {
 
     // MARK: - Configuration
     
+    /// Updates the playback duration preset and reprocesses the current run.
+    ///
+    /// Resolves when the player is ready to play with the new duration,
+    /// or throws `CancellationError` if preempted by another processing call.
+    ///
+    public func setDuration(_ newValue: Duration) async throws {
+        duration = newValue
+        let original = run.original
+        try await process { original }
+    }
+
     /// Updates the interpolation strategy and reprocesses the current run.
     ///
-    public func setInterpolator(_ newValue: any RunInterpolator) {
+    /// Resolves when the player is ready to play with the new interpolator,
+    /// or throws `CancellationError` if preempted by another processing call.
+    ///
+    public func setInterpolator(_ newValue: any RunInterpolator) async throws {
         interpolator = newValue
         let original = run.original
-        let process = self.process
-        Task { try? await process { original } }
+        try await process { original }
     }
 
     /// Loads a new run to the player.
@@ -218,11 +225,13 @@ public final class RunPlayer {
     
     /// Updates the signal processing chain and reprocesses the current run.
     ///
-    public func setTransformers(_ transformers: [any RunTransformer]) {
+    /// Resolves when the player is ready to play with the new transformers,
+    /// or throws `CancellationError` if preempted by another processing call.
+    ///
+    public func setTransformers(_ transformers: [any RunTransformer]) async throws {
         self.transformers = transformers
         let original = run.original
-        let process = self.process
-        Task { try? await process { original } }
+        try await process { original }
     }
 
     // MARK: - Private

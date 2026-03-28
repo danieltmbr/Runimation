@@ -219,6 +219,7 @@ The app is currently a mix of production features, diagnostics, and shader learn
 - Strava-fetched runs are saved locally
 - GPX-imported runs are saved locally
 
+
 ---
 
 ## Phase 6: Export & Share
