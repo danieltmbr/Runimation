@@ -30,12 +30,17 @@ struct RunimationApp: App {
                 .environment(stravaClient)
                 .library(library)
                 .player(player)
+                .export(player: player)
                 .modelContainer(modelContainer)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                 .windowToolbarFullScreenVisibility(.onHover)
                 .onOpenURL { stravaClient.handleCallbackURL($0) }
         }
-        .handlesExternalEvents(matching: Set(arrayLiteral: "runimation"))
+        // Only matches the Strava OAuth scheme (runimation://) — .runi files are
+        // routed to the runi-viewer WindowGroup below.
+        .handlesExternalEvents(matching: ["runimation"])
+
+        RuniViewerScene(library: library, modelContainer: modelContainer)
 
         UtilityWindow("Customisation", id: "customisation") {
             VStack {
@@ -58,6 +63,7 @@ struct RunimationApp: App {
                 .environment(stravaClient)
                 .library(library)
                 .player(player)
+                .export(player: player)
                 .modelContainer(modelContainer)
         }
 #endif

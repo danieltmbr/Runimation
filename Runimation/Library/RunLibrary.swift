@@ -162,6 +162,40 @@ final class RunLibrary {
         return run
     }
 
+    // MARK: - Import from .runi
+
+    /// Inserts a run from a decoded `.runi` document into the library.
+    ///
+    /// Returns an existing record if the same track points are already present
+    /// (matched by `entryID` stored in the document's derived UUID). Otherwise
+    /// creates a new record, persists the config, and caches the parsed run.
+    ///
+    public func importRuniDocument(_ document: RuniDocument) -> RunRecord {
+        let trackData = (try? JSONEncoder().encode(document.points)) ?? Data()
+        let record = RunRecord(
+            name: document.name,
+            date: document.date ?? Date(),
+            distance: 0,
+            duration: document.duration,
+            source: .gpx(url: URL(fileURLWithPath: "/dev/null")),
+            trackData: trackData
+        )
+        record.visualisationConfigData = (try? JSONEncoder().encode(document.visualisation))
+        record.transformersConfigData = (try? JSONEncoder().encode(document.transformers))
+        record.interpolatorConfigData = (try? JSONEncoder().encode(document.interpolator))
+        record.playDuration = document.duration
+        modelContext.insert(record)
+        try? modelContext.save()
+
+        // Parse and cache the run so it's immediately available for playback.
+        let track = GPX.Track(name: document.name, points: document.points, type: "running", date: document.date)
+        let run = runParser.run(from: track, id: record.entryID)
+        cache[record.entryID] = run
+        record.distance = run.distance
+
+        return record
+    }
+
     // MARK: - Delete
 
     public func delete(_ record: RunRecord) {

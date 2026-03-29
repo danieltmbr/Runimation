@@ -19,5 +19,41 @@
 	<string>$(STRAVA_CLIENT_ID)</string>
 	<key>STRAVA_CLIENT_SECRET</key>
 	<string>$(STRAVA_CLIENT_SECRET)</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>me.tmbr.runimation.runi</string>
+			<key>UTTypeDescription</key>
+			<string>Runimation File</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.content</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>runi</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Runimation File</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>me.tmbr.runimation.runi</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+		</dict>
+	</array>
 </dict>
 </plist>

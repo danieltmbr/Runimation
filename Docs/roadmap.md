@@ -230,27 +230,85 @@ The app is currently a mix of production features, diagnostics, and shader learn
 ---
 
 ## Phase 6: Export & Share
-**Goal:** Allow users to export their visualisation as a video and share it.
+**Goal:** Two export formats — lightweight `.runi` file and full `.mp4` video — both shared via SwiftUI `ShareLink`.
 
 ### Tasks
-- [ ] Record visualisation playback to video using `AVAssetWriter` + Metal texture capture
-- [ ] Export UI: progress indicator during recording, save/share on completion
-- [ ] iOS: `UIActivityViewController` share sheet
-- [ ] macOS: `NSSavePanel` for file save + share
-- [ ] Consider resolution/duration options
+- [x] `.runi` file format: `RuniDocument` Codable + `Transferable`, custom UTType `me.tmbr.runimation.runi`
+- [x] Info.plist: register exported UTType + document type for "Open In" support
+- [x] `ExportRuniAction` — synchronous model wrapper; `ExportVideoAction` — async with progress callback
+- [x] Export environment: `@Entry` keys + `.export(player:)` view modifier injecting actions
+- [x] `ExportSheet` — two-option sheet: instant `.runi` share + async video render with progress indicator
+- [x] `ExportButton` — toolbar control replacing the share placeholder; disabled when no run loaded
+- [x] `export.metal` — standard (non-`[[stitchable]]`) vertex + fragment shaders for offline Metal pipeline; forward-declares shared math from `warp.metal` / `run.metal`
+- [x] `VideoRenderer` — offline Metal → `AVAssetWriter` pipeline; renders full duration at viewport resolution as fast as GPU allows (not real-time); supports both Warp and RunPath visualisations
+- [x] `.runi` import: `onOpenURL` handler in `ContentView`; `RunLibrary.importRuniDocument` inserts record + caches run for instant playback
+- [x] `PaletteGradientRenderer.render` + `PathSimplifier.rdp` made `public` for use in main target
 
 ### Key files
-- New: video recording infrastructure (Metal texture → pixel buffer → AVAssetWriter)
-- New: export UI view
+- `Runimation/Export/RuniDocument.swift` — Codable container + Transferable conformance
+- `Runimation/Export/RuniUTType.swift` — UTType declaration for `.runi`
+- `Runimation/Export/VideoRenderer.swift` — offline Metal pipeline (WarpUniforms / PathUniforms; palette texture; path MTLBuffer)
+- `Runimation/Export/VideoExportConfig.swift` — resolution, fps, codec
+- `Runimation/Export/ExportSheet.swift` — two-option share sheet
+- `Runimation/Export/ExportButton.swift` — toolbar export button
+- `Runimation/Export/ExportRuniAction.swift` + `ExportVideoAction.swift` — thin action wrappers
+- `Runimation/Export/ExportEnvironment.swift` — environment keys + `.export(player:)` modifier
+- `Packages/Visualiser/Sources/Visualiser/Resources/Shaders/export.metal` — export-specific Metal shaders
+
+### Key decisions
+- `[[stitchable]]` shaders cannot be used in a standard `MTLRenderPipelineState`; export shaders are written separately in `export.metal` and forward-declare the shared math functions compiled into the same `.metallib`
+- Video renders offline (not screen capture): frames indexed by `progress = i / (totalFrames-1)`, GPU produces each frame in milliseconds; full 2-minute run renders in ~30–60 s
+- Path data passed to Metal as `MTLBuffer` (not SwiftUI `.data()` arguments); `PathSimplifier.rdp` applied before buffer creation to cap point count
+- `.runi` source placeholder uses `.gpx(url: URL(fileURLWithPath: "/dev/null"))` — adequate for a received file with no original source
 
 ### Verification
-- Can export a full playback as .mp4
-- Video looks identical to on-screen rendering
-- Share sheet works on iOS, save panel works on macOS
+- [x] Create `.runi` from current record → file contains valid JSON with points + all config
+- [ ] Share `.runi` via AirDrop → receiving device opens it in Runimation → plays correctly
+- [ ] Export video (Warp) → `.mp4` renders all frames → visual output matches live preview
+- [ ] Export video (RunPath) → path overlay renders correctly with MTLBuffer path data
+- [ ] Share video to Photos → saves correctly
+- [ ] Cancel video export mid-render → cleanup, no orphaned temp files
+- [ ] Video resolution matches viewport size at time of export
 
 ---
 
-## Phase 7: Polish & App Store Submission
+## Phase 7: App Structure Cleanup
+**Goal:** Rationalise root-level state ownership, dependency injection, and navigation so the app is maintainable and extensible before the final polish pass.
+
+> **Status: Placeholder — needs exploration.** The problem areas are known but the right design needs a dedicated planning session before implementation begins.
+
+### Problem Areas
+
+- **`RunimationApp.swift`** accumulates every top-level dependency (`RunPlayer`, `RunLibrary`, `StravaClient`, `ModelContainer`). As the app grows this will become a grab-bag with unclear ownership.
+- **`ContentView.swift`** mixes too many concerns: root navigation structure, toolbar construction, sheet/popover wiring, `.runi` import logic, initial-load side effects. It is not really a "view" — it is a coordinator buried inside a view.
+- **Root-level navigation has no model.** `navigationPath`, `showLibrary`, `showNowPlaying`, `showCustomisation` are scattered `@State` vars with no central owner. Adding a new destination means touching multiple files.
+- **Dependency injection is ad-hoc.** Some dependencies arrive via environment modifiers (`.library()`, `.player()`, `.export()`), some via `@Environment`, some wired manually. There is no consistent pattern at the root level.
+- **Multi-window state sharing is implicit.** `RuniViewerScene` receives `library` and `modelContainer` as init params, but the contract between windows is undocumented and brittle.
+
+### Candidate Directions (to be explored)
+
+- An `AppModel` / `AppNavigator` `@Observable` class that owns `showLibrary`, `navigationPath`, deep-link routing, and `.runi` import handling — injected via `@Environment` from the app root.
+- Splitting `ContentView` into a thin `RootView` (pure layout) and a coordinator/router that owns all side-effect logic.
+- Centralising all environment injection into a single root modifier chain rather than scattering `.library()`, `.player()`, `.export()` calls across multiple scene bodies.
+- Revisiting whether `StravaClient` should live at the `RunLibrary` level (it already does internally) and be removed from the top-level app state.
+
+### Tasks
+- [ ] Audit all `@State` and `@Environment` usage in `runimationApp.swift` and `ContentView.swift`
+- [ ] Define ownership boundaries: what belongs to the app, what belongs to a window, what belongs to a feature
+- [ ] Design and implement a navigation/routing model
+- [ ] Refactor `ContentView` into a clean root coordinator + layout view
+- [ ] Consolidate dependency injection at the root level
+- [ ] Verify multi-window (viewer window) contract is explicit and documented
+
+### Verification
+- `RunimationApp.body` is concise and readable — no business logic
+- `ContentView` has a single clear responsibility
+- Adding a new modal destination requires touching only the navigation model
+- No scattered `@State` navigation flags in root views
+
+---
+
+## Phase 8: Polish & App Store Submission
 **Goal:** Final polish pass and submission.
 
 ### Tasks
@@ -282,7 +340,6 @@ These are documented in `Docs/runi.md` but not in scope for the initial release:
 - **Composable visualisations** — swap shader pipeline components (noise type, distortion, etc.)
 - **Collaboration** — CloudKit sharing of runs between users
 - **Favourites & Playlists** — enabled by persistence
-- **`.runi` file sharing** — export visualisation config as data file
 
 ---
 
@@ -298,3 +355,4 @@ _Updated after each session. Format: `[date] Phase X.Y — what was done`_
 [2026-03-25] Phase 3 polish — Auth abstracted behind RunLibrary: isConnected, connect(from:), disconnect(). ConnectAction + DisconnectAction callable structs injected via .library modifier. ConnectButton + DisconnectButton + LibraryEmptyView added; RunLibraryView no longer imports StravaKit or AuthenticationServices. LibraryEntry.Source made Hashable/Equatable (hashes on activity.id for .strava). SourceKey enum removed; cache keyed on LibraryEntry.Source directly.
 [2026-03-26] Phase 4 complete — CustomisationPanel unified type (replaces PlayerInspectorView + PlayerSheetView + InspectorFocus). macOS: Window("Customisation") auxiliary scene opened via openWindow(id:). iOS: bottom sheet with medium/large detents. VisualisationModel @Observable shared across windows. RunPlayer moved to app level. VisualisationPicker + TransformerListButton + InterpolationPicker all rewritten as NavigationLink push rows. RunStatisticsContent deleted. backgroundExtensionEffect() moved to NavigationStack level in ContentView to eliminate bottom-edge seam above PlaybackControls. Branch: ifs.
 [2026-03-29] Phase 5 complete — RunRecord @Model with config stored as JSON Data? blobs (VisualisationConfig, TransformerConfig, InterpolatorConfig Codable enums; nonisolated Codable for Swift 6). playDuration: TimeInterval? column replaces DurationConfig entirely (RunPlayer.Duration struct retired). NowPlayingModel @Observable + NowPlayingModifier bridges RunPlayer observation to RunRecord outside render pass; fixes record.entryID-always-zero bug. NowPlayingModifier intercepts setDuration to persist playDuration. Per-run config carried forward on new run selection. PlaybackDurationMapping + DurationSlider (SliderTickContentForEach with labeled ticks at 15s/30s/1m/Real) + DurationPicker (compact popover trigger) replace DurationMenu/DurationPicker. Several bug fixes: player always empty (duration.didSet racing Task), SwiftData crash (composite attribute decoding), Swift 6 nonisolated Codable conformances. Branch: ifs.
+[2026-03-29] Phase 6 complete — Two export formats: `.runi` (lightweight Codable+Transferable JSON; instant ShareLink) and video (.mp4 via offline Metal pipeline). export.metal adds standard vertex+fragment shaders that forward-declare shared math from warp.metal/run.metal; VideoRenderer renders full duration at viewport resolution as fast as GPU allows using AVAssetWriter. ExportSheet presents both options; ExportButton replaces share placeholder in toolbar. RunLibrary.importRuniDocument handles .runi import; ContentView.onOpenURL handles "Open In" from AirDrop/Messages. PaletteGradientRenderer.render + PathSimplifier.rdp made public. UTType registered in Info.plist. Branch: ifs.

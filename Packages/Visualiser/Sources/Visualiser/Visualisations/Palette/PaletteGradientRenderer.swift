@@ -6,15 +6,15 @@ import SwiftUI
 /// Stop positions in the gradient are proportional to entry weights,
 /// preserving the dominant-color distribution from the original photo.
 /// The resulting `Image` is passed to the Metal shader as a color LUT texture.
-enum PaletteGradientRenderer {
+public enum PaletteGradientRenderer {
 
     /// Returns a SwiftUI `Image` suitable for use as a Metal shader texture argument.
-    static func image(_ palette: ColorPalette) -> Image {
+    public static func image(_ palette: ColorPalette) -> Image {
         platformImage(render(palette))
     }
 
     /// Renders a 256×1 `CGImage` gradient from the palette.
-    static func render(_ palette: ColorPalette) -> CGImage {
+    public static func render(_ palette: ColorPalette) -> CGImage {
         guard !palette.entries.isEmpty else {
             return render(.default)
         }

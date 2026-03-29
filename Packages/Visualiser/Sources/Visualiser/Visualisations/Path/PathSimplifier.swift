@@ -10,7 +10,7 @@ import simd
 /// The first and last indices are always included so the simplified path
 /// spans the full extent of the input.
 ///
-enum PathSimplifier {
+public enum PathSimplifier {
 
     /// Simplifies `points` and returns the retained indices.
     ///
@@ -20,7 +20,7 @@ enum PathSimplifier {
     ///     than this to the simplified segment are discarded.
     /// - Returns: Unordered set of retained indices.
     ///
-    static func rdp(_ points: [SIMD2<Float>], epsilon: Float) -> Set<Int> {
+    public static func rdp(_ points: [SIMD2<Float>], epsilon: Float) -> Set<Int> {
         guard points.count > 2 else { return Set(points.indices) }
         var result = Set<Int>()
         rdp(points, from: 0, to: points.count - 1, epsilon: epsilon, into: &result)
