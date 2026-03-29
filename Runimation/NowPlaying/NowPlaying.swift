@@ -6,12 +6,11 @@ import Visualiser
 /// A property wrapper + `DynamicProperty` that reflects the currently
 /// playing `RunRecord` and provides bindings for its configuration.
 ///
-/// Declare it in any view with `@NowPlaying var nowPlaying`. SwiftUI calls
-/// `update()` before every render after the environment has been refreshed,
-/// so `record` is always in sync with the player's current run. Any code
-/// path that changes `player.run` (whether via `NowPlaying.play(_:)` or
-/// calling `PlayRunAction` directly) automatically marks
-/// the new record as playing.
+/// Declare it in any view with `@NowPlaying var nowPlaying`. The underlying
+/// `NowPlayingModel` (an `@Observable` class injected by `.library(_:)`)
+/// holds `record` as persistent state and updates it whenever the player's
+/// run ID changes via `NowPlayingModifier` — outside the SwiftUI render pass,
+/// so there are no state-mutation warnings.
 ///
 /// Bindings for config properties (`visualisation`, `transformers`,
 /// `interpolator`, `duration`) write back to the `RunRecord` immediately
@@ -34,23 +33,15 @@ import Visualiser
 @dynamicMemberLookup
 struct NowPlaying: DynamicProperty {
 
-    // MARK: - Player State
+    // MARK: - Model
 
-    @PlayerState(\.run)
-    private var run
+    @Environment(NowPlayingModel.self)
+    private var model
 
-    // MARK: - Library Actions
-
-    @Environment(\.findRecord)
-    private var findRecord
+    // MARK: - Player Actions
 
     @Environment(\.loadRun)
     private var loadRun
-
-    @Environment(\.markAsPlaying)
-    private var markAsPlaying
-
-    // MARK: - Player Actions
 
     @Environment(\.playRun)
     private var playRun
@@ -64,41 +55,24 @@ struct NowPlaying: DynamicProperty {
     @Environment(\.setDuration)
     private var setDuration
 
-    // MARK: - Stored Record
-
-    /// The currently playing record. Returns `RunRecord.sedentary` when
-    /// the player holds a sedentary run (nothing selected yet).
-    ///
-    /// Updated in `update()` before every render when the player's run changes.
-    ///
-    @State
-    private(set) var record: RunRecord = .sedentary
+    // MARK: - Public
 
     var wrappedValue: NowPlaying { self }
 
-    // MARK: - DynamicProperty
-
-    mutating func update() {
-        guard run.id != record.entryID else { return }
-        let newRecord = findRecord(run.id) ?? .sedentary
-        record = newRecord
-        if !newRecord.isSedentary {
-            markAsPlaying(newRecord)
-        }
-    }
-
     // MARK: - Computed
 
+    /// The currently playing record. Returns `RunRecord.sedentary` when
+    /// the player holds a sedentary run (nothing selected yet).
+    var record: RunRecord { model.record }
+
     /// True when the player is in the idle, pre-selection state.
-    ///
-    var isSedentary: Bool { record.isSedentary }
+    var isSedentary: Bool { model.record.isSedentary }
 
     // MARK: - Dynamic Member Lookup
 
     /// Forwards read-only keypaths directly to the current record.
-    ///
     subscript<T>(dynamicMember keyPath: KeyPath<RunRecord, T>) -> T {
-        record[keyPath: keyPath]
+        model.record[keyPath: keyPath]
     }
 
     // MARK: - Config Bindings
@@ -109,11 +83,11 @@ struct NowPlaying: DynamicProperty {
     /// The visualiser reads this binding directly, so changes are live.
     ///
     var visualisation: Binding<any Visualisation> {
-        let record = self.record
+        let record = model.record
         return Binding(
             get: { record.loadVisualisationConfig() ?? Warp() },
             set: { newValue in
-                record.visualisationConfig = try? VisualisationConfig(newValue)
+                record.visualisationConfigData = (try? VisualisationConfig(newValue)).flatMap { try? JSONEncoder().encode($0) }
             }
         )
     }
@@ -124,12 +98,12 @@ struct NowPlaying: DynamicProperty {
     /// and push to the player so the pipeline reprocesses.
     ///
     var transformers: Binding<[any RunTransformer]> {
-        let record = self.record
+        let record = model.record
         let setTransformers = self.setTransformers
         return Binding(
             get: { record.loadTransformersConfig() },
             set: { newValue in
-                record.transformersConfig = try? TransformerConfig.from(newValue)
+                record.transformersConfigData = (try? TransformerConfig.from(newValue)).flatMap { try? JSONEncoder().encode($0) }
                 Task { try? await setTransformers(newValue) }
             }
         )
@@ -141,31 +115,28 @@ struct NowPlaying: DynamicProperty {
     /// and push to the player so the pipeline reprocesses.
     ///
     var interpolator: Binding<any RunInterpolator> {
-        let record = self.record
+        let record = model.record
         let setInterpolator = self.setInterpolator
         return Binding(
             get: { record.loadInterpolatorConfig() ?? LinearRunInterpolator() },
             set: { newValue in
-                record.interpolatorConfig = InterpolatorConfig(newValue)
+                record.interpolatorConfigData = try? JSONEncoder().encode(InterpolatorConfig(newValue))
                 Task { try? await setInterpolator(newValue) }
             }
         )
     }
 
-    /// Two-way binding for the playback duration preset.
+    /// Two-way binding for the playback duration in seconds.
     ///
-    /// Writes update `RunRecord.durationConfig` (persisted by SwiftData)
+    /// Writes update `RunRecord.playDuration` (persisted by SwiftData)
     /// and push to the player so the pipeline reprocesses.
     ///
-    var duration: Binding<RunPlayer.Duration> {
-        let record = self.record
+    var duration: Binding<TimeInterval> {
+        let record = model.record
         let setDuration = self.setDuration
         return Binding(
-            get: { record.loadDurationConfig() ?? .thirtySeconds },
-            set: { newValue in
-                record.durationConfig = DurationConfig(newValue)
-                Task { try? await setDuration(newValue) }
-            }
+            get: { record.loadDurationConfig() ?? 30 },
+            set: { newValue in Task { try? await setDuration(newValue) } }
         )
     }
 
@@ -174,18 +145,15 @@ struct NowPlaying: DynamicProperty {
     /// Loads a run record into the player and starts playback.
     ///
     /// - Loads the `Run` from the library (uses cache if available).
-    /// - Sets it on the player and awaits completion; `run.id` matches
-    ///   `record.entryID` so `NowPlaying.update()` resolves the new record.
-    /// - Pushes the record's saved config to the player. If the record
-    ///   has no saved config, the current in-memory config is carried
-    ///   forward and persisted on the new record.
-    /// - `markAsPlaying` fires automatically via `update()` when the
-    ///   player's run ID changes to match the new record's entryID.
+    /// - Applies the record's saved config before `setRun` so a single
+    ///   processing pass uses the correct settings. If the record has no
+    ///   saved config, the outgoing record's config is carried forward.
+    /// - `markAsPlaying` fires automatically via `NowPlayingModifier.onChange`
+    ///   when the player's run ID changes to match the new record's entryID.
     ///
     func play(_ record: RunRecord) async {
-        let previousVisualisation = self.record.loadVisualisationConfig() ?? Warp()
+        let previousVisualisation = model.record.loadVisualisationConfig() ?? Warp()
         guard let run = try? await loadRun(record) else { return }
-        // Apply config before setRun so the single processing pass uses the correct settings.
         await applyConfig(from: record, inheritedVisualisation: previousVisualisation)
         try? await playRun(run)
     }
@@ -202,11 +170,11 @@ struct NowPlaying: DynamicProperty {
             // No saved config: copy the outgoing record's config onto the new record
             // so settings carry forward. The player is already in the outgoing state,
             // so no player push is needed.
-            let outgoing = self.record
-            record.transformersConfig = outgoing.transformersConfig
-            record.interpolatorConfig = outgoing.interpolatorConfig
-            record.durationConfig = outgoing.durationConfig
-            record.visualisationConfig = try? VisualisationConfig(inheritedVisualisation)
+            let outgoing = model.record
+            record.transformersConfigData = outgoing.transformersConfigData
+            record.interpolatorConfigData = outgoing.interpolatorConfigData
+            record.playDuration = outgoing.playDuration
+            record.visualisationConfigData = (try? VisualisationConfig(inheritedVisualisation)).flatMap { try? JSONEncoder().encode($0) }
         }
     }
 }

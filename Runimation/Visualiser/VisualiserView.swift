@@ -46,7 +46,7 @@ private struct PlayerDrivenView: View {
                 heartRate: Float(segment.heartRate),
                 path: run.coordinates.map { SIMD2(Float($0.x), Float($0.y)) },
                 speed: Float(segment.speed),
-                time: Float(progress * duration(for: run.duration))
+                time: Float(progress * duration)
             ),
             visualisation: visualisation
         )

@@ -6,13 +6,13 @@ import RunKit
 extension EnvironmentValues {
     
     @Entry
-    var togglePlay: TogglePlayAction = TogglePlayAction()
+    public var togglePlay: TogglePlayAction = TogglePlayAction()
     
     @Entry
-    var stop: StopAction = StopAction()
+    public var stop: StopAction = StopAction()
     
     @Entry
-    var seek: SeekAction = SeekAction()
+    public var seek: SeekAction = SeekAction()
     
     @Entry
     public var playRun: PlayRunAction = PlayRunAction()

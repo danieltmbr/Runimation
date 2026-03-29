@@ -12,9 +12,6 @@ public struct RemainingTimeLabel: View {
 
     @PlayerState(\.progress.metrics)
     private var progress
-    
-    @PlayerState(\.run.metrics)
-    private var run
 
     public init() {}
 
@@ -24,6 +21,6 @@ public struct RemainingTimeLabel: View {
     }
 
     private var remaining: TimeInterval {
-        (1 - progress) * duration(for: run.duration)
+        (1 - progress) * duration
     }
 }

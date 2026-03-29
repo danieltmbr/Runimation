@@ -25,7 +25,7 @@ private struct RegularPlaybackControls: View {
 
             infoView
 
-            DurationMenu()
+            DurationPicker()
                 .font(.headline)
         }
         .labelStyle(.iconOnly)

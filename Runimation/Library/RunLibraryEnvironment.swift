@@ -31,12 +31,6 @@ extension EnvironmentValues {
 
     @Entry
     var disconnectLibrary: DisconnectAction = DisconnectAction()
-
-    @Entry
-    var findRecord: FindRecordAction = FindRecordAction()
-
-    @Entry
-    var markAsPlaying: MarkAsPlayingAction = MarkAsPlayingAction()
 }
 
 // MARK: - View Extension
@@ -65,7 +59,6 @@ extension View {
             .environment(\.deleteEntry, DeleteEntryAction(library: library))
             .environment(\.connectLibrary, ConnectAction(library: library))
             .environment(\.disconnectLibrary, DisconnectAction(library: library))
-            .environment(\.findRecord, FindRecordAction(library: library))
-            .environment(\.markAsPlaying, MarkAsPlayingAction(library: library))
+            .nowPlaying(library: library)
     }
 }

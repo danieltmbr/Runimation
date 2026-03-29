@@ -191,33 +191,40 @@ The app is currently a mix of production features, diagnostics, and shader learn
 
 ---
 
-## Phase 5: Persistence (SwiftData)
+## ✅ Phase 5: Persistence (SwiftData)
 **Goal:** Persist runs and visualisation settings. Required before App Store release.
 
 ### Tasks
-- [ ] Define SwiftData models:
-  - `RunModel`: run metadata + segments (from GPX/Strava)
-    - Visualisation (and its adjustments) is stored in RunModel as Codable JSON blob
-    - Data Process Pipeline: transformer + interpolator chain config is also stored in RunModel as a Codable JSON blob
-- [ ] Add `Codable` conformance to all `Visualisation` types (`Warp`, `IFS`, `RunPath`)
-- [ ] Add `Codable` conformance to all `RunTransformer` and `RunInterpolator` types
-- [ ] Migrate from in-memory `RunPlayer.setRun(track:)` to SwiftData-backed loading
-- [ ] State restoration: on launch, restore last-played run + visualisation settings
-- [ ] Run Library reads from SwiftData (Strava fetch / GPX Import → persist → display from DB)
-- [ ] Consider migration strategy for future schema changes
+- [x] Define SwiftData model `RunRecord`: run metadata + config stored as JSON `Data?` blobs
+  - Config types: `VisualisationConfig`, `TransformerConfig`, `InterpolatorConfig` (Codable enums)
+  - Playback duration stored as plain `TimeInterval?` column (`playDuration`)
+  - `@Attribute(.unique) entryID: UUID` for O(1) ModelContext lookup
+- [x] `Codable` conformance for all config types; `nonisolated` Codable implementations to satisfy Swift 6
+- [x] `RunRecord+Config.swift` — load helpers decode from `Data?` via `JSONDecoder`, degrade gracefully to `nil`
+- [x] `RunLibrary` backed by `ModelContext`; Strava fetch / GPX import persist to SwiftData
+- [x] `NowPlayingModel` (`@Observable`) tracks current `RunRecord`; `NowPlayingModifier` bridges `RunPlayer` observation to model outside render pass
+- [x] `NowPlaying` property wrapper — config bindings write back to `RunRecord` and push to player
+- [x] Per-run config carried forward to new runs when no saved config exists
+- [x] `NowPlayingModifier` intercepts `setDuration` to persist `playDuration` to current record
 
 ### Key files
-- New: `Runimation/Model/` — SwiftData models
-- `Packages/Animations/Sources/Animations/Visualisations/` — add Codable
-- `Packages/RunKit/Sources/RunKit/` — add Codable to transformers/interpolators
-- `Runimation/Views/Library/RunLibraryView.swift` — switch to SwiftData queries
+- `Runimation/Persistence/RunRecord.swift` — `@Model` with metadata + `Data?` config blobs + `playDuration: TimeInterval?`
+- `Runimation/Persistence/RunRecord+Config.swift` — load helpers for all config types
+- `Runimation/Persistence/VisualisationConfig.swift`, `InterpolatorConfig.swift`, `TransformerConfig.swift` — Codable config enums
+- `Runimation/NowPlaying/NowPlayingModel.swift` — `@Observable` model + `NowPlayingModifier`
+- `Runimation/NowPlaying/NowPlaying.swift` — `@propertyWrapper` + config bindings
 
 ### Verification
-- Runs persist across app launches
-- Visualisation settings restore when reopening a run
-- Pipeline settings restore
-- Strava-fetched runs are saved locally
-- GPX-imported runs are saved locally
+- Config changes persist across app launches ✓
+- Switching runs restores per-run config ✓
+- New runs inherit previous run's config when no saved config exists ✓
+- Strava-fetched and GPX-imported runs persist ✓
+- Schema changes degrade gracefully (unknown config → nil → default) ✓
+
+### Notes
+- Config stored as raw JSON `Data?` rather than composite SwiftData attributes — SwiftData cannot decode Swift enums with associated values as composite attributes
+- `RunPlayer.Duration` struct retired in favour of plain `TimeInterval` — eliminates `DurationConfig` entirely; `TimeInterval` = `Double` is natively stored by SwiftData
+- `PlaybackDurationMapping` + `DurationSlider` + `DurationPicker` implement non-linear playback duration selection with `SliderTick` marks at 15s / 30s / 1m / Real
 
 
 ---
@@ -290,3 +297,4 @@ _Updated after each session. Format: `[date] Phase X.Y — what was done`_
 [2026-03-25] Phase 3 complete — RunLibrary @Observable model with refresh()/loadNextPage()/importFile(from:)/loadTrack(for:). @LibraryState property wrapper + 5 action types following RunPlayer pattern. RunLibraryView replaces StravaRunsView. RunInfoView decoupled from @PlayerState (stored props + init(run:)); PlayerRunInfoView wraps player-coupled usage. iOS: library sheet with stats push. macOS: library popover with stats pushed over visualiser. GPX.parse(contentsOf:) added to CoreKit. — RegularPlaybackControlsStyle rewritten: Apple Music layout, hover blurs run info and reveals elapsed/remaining time labels + scrubbable progress bar (overlay approach, width scoped to info). RunInfoView extracted with RunInfoViewStyle protocol (compact + regular styles). ProgressSlider refactored with ProgressSliderStyle protocol (system + minimal styles). Now Playing sheet added for iOS compact tap. Inspector simplified to Visualisation + Pipeline only. CLAUDE.md updated with concrete SwiftUI component architecture rules. Branch: ifs.
 [2026-03-25] Phase 3 polish — Auth abstracted behind RunLibrary: isConnected, connect(from:), disconnect(). ConnectAction + DisconnectAction callable structs injected via .library modifier. ConnectButton + DisconnectButton + LibraryEmptyView added; RunLibraryView no longer imports StravaKit or AuthenticationServices. LibraryEntry.Source made Hashable/Equatable (hashes on activity.id for .strava). SourceKey enum removed; cache keyed on LibraryEntry.Source directly.
 [2026-03-26] Phase 4 complete — CustomisationPanel unified type (replaces PlayerInspectorView + PlayerSheetView + InspectorFocus). macOS: Window("Customisation") auxiliary scene opened via openWindow(id:). iOS: bottom sheet with medium/large detents. VisualisationModel @Observable shared across windows. RunPlayer moved to app level. VisualisationPicker + TransformerListButton + InterpolationPicker all rewritten as NavigationLink push rows. RunStatisticsContent deleted. backgroundExtensionEffect() moved to NavigationStack level in ContentView to eliminate bottom-edge seam above PlaybackControls. Branch: ifs.
+[2026-03-29] Phase 5 complete — RunRecord @Model with config stored as JSON Data? blobs (VisualisationConfig, TransformerConfig, InterpolatorConfig Codable enums; nonisolated Codable for Swift 6). playDuration: TimeInterval? column replaces DurationConfig entirely (RunPlayer.Duration struct retired). NowPlayingModel @Observable + NowPlayingModifier bridges RunPlayer observation to RunRecord outside render pass; fixes record.entryID-always-zero bug. NowPlayingModifier intercepts setDuration to persist playDuration. Per-run config carried forward on new run selection. PlaybackDurationMapping + DurationSlider (SliderTickContentForEach with labeled ticks at 15s/30s/1m/Real) + DurationPicker (compact popover trigger) replace DurationMenu/DurationPicker. Several bug fixes: player always empty (duration.didSet racing Task), SwiftData crash (composite attribute decoding), Swift 6 nonisolated Codable conformances. Branch: ifs.

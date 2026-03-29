@@ -28,9 +28,8 @@ struct RunimationApp: App {
         WindowGroup {
             ContentView()
                 .environment(stravaClient)
-                .environment(library)
-                .player(player)
                 .library(library)
+                .player(player)
                 .modelContainer(modelContainer)
                 .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
                 .windowToolbarFullScreenVisibility(.onHover)
@@ -42,8 +41,8 @@ struct RunimationApp: App {
             VStack {
                 CustomisationPanel()
                     .padding()
-                    .player(player)
                     .library(library)
+                    .player(player)
                     .modelContainer(modelContainer)
 
                 Spacer()
@@ -57,9 +56,8 @@ struct RunimationApp: App {
         WindowGroup {
             ContentView()
                 .environment(stravaClient)
-                .environment(library)
-                .player(player)
                 .library(library)
+                .player(player)
                 .modelContainer(modelContainer)
         }
 #endif

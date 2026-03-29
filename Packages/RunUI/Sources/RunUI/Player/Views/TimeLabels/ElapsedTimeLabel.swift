@@ -9,12 +9,9 @@ public struct ElapsedTimeLabel: View {
     
     @PlayerState(\.duration)
     private var duration
-    
+
     @PlayerState(\.progress.metrics)
     private var progress
-    
-    @PlayerState(\.run.metrics)
-    private var run
 
     public init() {}
 
@@ -24,6 +21,6 @@ public struct ElapsedTimeLabel: View {
     }
 
     private var elapsed: TimeInterval {
-        progress * duration(for: run.duration)
+        progress * duration
     }
 }

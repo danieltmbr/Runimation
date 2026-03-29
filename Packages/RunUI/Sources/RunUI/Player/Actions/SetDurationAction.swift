@@ -1,7 +1,7 @@
 import Foundation
 import RunKit
 
-/// Sets the playback duration preset, recomputing all run variants
+/// Sets the playback duration in seconds, recomputing all run variants
 /// without stopping the current playback.
 ///
 /// Resolves when the player has finished reprocessing with the new duration.
@@ -9,14 +9,14 @@ import RunKit
 ///
 /// ```swift
 /// @Environment(\.setDuration) private var setDuration
-/// try? await setDuration(.thirtySeconds)
+/// try? await setDuration(30)
 /// ```
 ///
 public struct SetDurationAction {
 
-    private let body: @MainActor (RunPlayer.Duration) async throws -> Void
+    private let body: @MainActor (TimeInterval) async throws -> Void
 
-    init(_ body: @escaping @MainActor (RunPlayer.Duration) async throws -> Void = { _ in }) {
+    init(_ body: @escaping @MainActor (TimeInterval) async throws -> Void = { _ in }) {
         self.body = body
     }
 
@@ -26,5 +26,5 @@ public struct SetDurationAction {
     }
 
     @MainActor
-    public func callAsFunction(_ duration: RunPlayer.Duration) async throws { try await body(duration) }
+    public func callAsFunction(_ duration: TimeInterval) async throws { try await body(duration) }
 }

@@ -36,12 +36,12 @@ private struct PanelPlaybackControls: View {
             VStack(spacing: 8) {
                 ProgressSlider()
                     .sliderThumbVisibility(.automatic)
-                
+
                 HStack(alignment: .top) {
                     ElapsedTimeLabel()
                         .font(.caption)
                     Spacer()
-                    DurationMenu()
+                    DurationPicker()
                         .labelStyle(.iconOnly)
                         .foregroundStyle(.primary)
                         .font(.headline)

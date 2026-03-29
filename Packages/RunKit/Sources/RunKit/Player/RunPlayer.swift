@@ -82,8 +82,7 @@ public final class RunPlayer {
 
     // MARK: Playback States
 
-    public var duration: Duration = .thirtySeconds
-
+    public var duration: TimeInterval = 30
 
     public private(set) var isPlaying: Bool = false
 
@@ -174,12 +173,12 @@ public final class RunPlayer {
 
     // MARK: - Configuration
     
-    /// Updates the playback duration preset and reprocesses the current run.
+    /// Updates the playback duration and reprocesses the current run.
     ///
     /// Resolves when the player is ready to play with the new duration,
     /// or throws `CancellationError` if preempted by another processing call.
     ///
-    public func setDuration(_ newValue: Duration) async throws {
+    public func setDuration(_ newValue: TimeInterval) async throws {
         duration = newValue
         let original = run.original
         try await process { original }
@@ -249,9 +248,8 @@ public final class RunPlayer {
     }
 
     private func advance(by dt: TimeInterval) {
-        let playbackDuration = duration(for: run.original.duration)
-        guard playbackDuration > 0 else { return }
-        let newProgress = _progress + dt / playbackDuration
+        guard duration > 0 else { return }
+        let newProgress = _progress + dt / duration
         if newProgress >= 1 {
             if loop {
                 _progress = newProgress.truncatingRemainder(dividingBy: 1)
@@ -282,8 +280,7 @@ public final class RunPlayer {
 
         let task = Task<Runs, Never>.detached(priority: .userInitiated) {
             let rawRun = makeRun()
-            let playbackDuration = duration(for: rawRun.duration)
-            let timing = Timing(duration: playbackDuration, fps: 60)
+            let timing = Timing(duration: duration, fps: 60)
             let transformed = transformers.reduce(rawRun) { $0.transform(by: $1) }
             return Runs(
                 original: rawRun,

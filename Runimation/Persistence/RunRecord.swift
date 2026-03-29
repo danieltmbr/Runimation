@@ -67,22 +67,16 @@ final class RunRecord {
     var trackData: Data?
 
     // MARK: - Per-Run Configuration
+    //
+    // Stored as raw JSON `Data` rather than composite SwiftData attributes
+    // because the config types are enums with associated values, which
+    // SwiftData cannot decode as composite attributes. Manual JSON coding
+    // also means schema changes degrade gracefully (bad data → nil).
 
-    /// The active visualisation and its settings.
-    ///
-    var visualisationConfig: VisualisationConfig?
-
-    /// The signal processing transformer chain.
-    ///
-    var transformersConfig: [TransformerConfig]?
-
-    /// The interpolation strategy.
-    ///
-    var interpolatorConfig: InterpolatorConfig?
-
-    /// The playback duration preset.
-    ///
-    var durationConfig: DurationConfig?
+    var visualisationConfigData: Data?
+    var transformersConfigData: Data?
+    var interpolatorConfigData: Data?
+    var playDuration: TimeInterval?
 
     // MARK: - Init
 
@@ -135,5 +129,5 @@ final class RunRecord {
 
     /// True when this record has a saved visualisation config.
     ///
-    var hasConfig: Bool { visualisationConfig != nil }
+    var hasConfig: Bool { visualisationConfigData != nil }
 }

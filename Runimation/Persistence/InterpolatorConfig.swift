@@ -6,7 +6,10 @@ import RunKit
 /// All current interpolators are stateless, so only the case discriminator
 /// is needed. Unknown cases fall back to `.linear` on decode.
 ///
-enum InterpolatorConfig: Codable {
+/// `Codable` is implemented explicitly as `nonisolated` to prevent Swift 6
+/// from treating the conformance as `@MainActor`-isolated.
+///
+enum InterpolatorConfig {
 
     case linear
     case smoothStep
@@ -30,6 +33,29 @@ enum InterpolatorConfig: Codable {
         case .linear:      return LinearRunInterpolator()
         case .smoothStep:  return SmoothStepRunInterpolator()
         case .catmullRom:  return CatmullRomRunInterpolator()
+        }
+    }
+}
+
+// MARK: - Codable
+
+extension InterpolatorConfig: Codable {
+
+    nonisolated init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        switch try container.decode(String.self) {
+        case "smoothStep": self = .smoothStep
+        case "catmullRom": self = .catmullRom
+        default:           self = .linear
+        }
+    }
+
+    nonisolated func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .linear:      try container.encode("linear")
+        case .smoothStep:  try container.encode("smoothStep")
+        case .catmullRom:  try container.encode("catmullRom")
         }
     }
 }
