@@ -14,13 +14,15 @@ enum VisualisationConfig {
 
     case warp(Warp)
     case runPath(RunPath)
+    case colors(Colors)
 
     // MARK: - Init
 
     init(_ visualisation: any Visualisation) throws {
         switch visualisation {
-        case let v as Warp: self = .warp(v)
-        case is RunPath:    self = .runPath(RunPath())
+        case let v as Warp:   self = .warp(v)
+        case is RunPath:      self = .runPath(RunPath())
+        case is Colors:       self = .colors(Colors())
         default:
             throw EncodingError.invalidValue(
                 visualisation,
@@ -35,6 +37,7 @@ enum VisualisationConfig {
         switch self {
         case .warp(let v): return v
         case .runPath:     return RunPath()
+        case .colors:      return Colors()
         }
     }
 }
@@ -44,7 +47,7 @@ enum VisualisationConfig {
 extension VisualisationConfig: Codable {
 
     private enum CodingKeys: String, CodingKey {
-        case warp, runPath
+        case warp, runPath, colors
     }
 
     nonisolated init(from decoder: any Decoder) throws {
@@ -53,6 +56,8 @@ extension VisualisationConfig: Codable {
             self = .warp(try container.decode(Warp.self, forKey: .warp))
         } else if container.contains(.runPath) {
             self = .runPath(try container.decode(RunPath.self, forKey: .runPath))
+        } else if container.contains(.colors) {
+            self = .colors(try container.decode(Colors.self, forKey: .colors))
         } else {
             throw DecodingError.dataCorrupted(
                 .init(codingPath: decoder.codingPath, debugDescription: "Unknown VisualisationConfig case")
@@ -65,6 +70,7 @@ extension VisualisationConfig: Codable {
         switch self {
         case .warp(let v):    try container.encode(v, forKey: .warp)
         case .runPath(let v): try container.encode(v, forKey: .runPath)
+        case .colors(let v):  try container.encode(v, forKey: .colors)
         }
     }
 }

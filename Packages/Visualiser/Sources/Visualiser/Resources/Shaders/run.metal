@@ -233,3 +233,18 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
     
     return half4(half3(color), 1.0);
 }
+
+[[ stitchable ]] half4 runColorShader(
+                                      float2 position,
+                                      half4 currentColor,
+                                      float time,
+                                      float2 size,
+                                      float2 coordinates,
+                                      float2 direction,
+                                      float elevation,
+                                      float heartRate,
+                                      float speed
+                                      )
+{
+    return half4(speed, elevation, heartRate, 1);
+}
