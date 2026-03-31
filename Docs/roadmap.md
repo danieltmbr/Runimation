@@ -264,9 +264,9 @@ The app is currently a mix of production features, diagnostics, and shader learn
 ### Verification
 - [x] Create `.runi` from current record → file contains valid JSON with points + all config
 - [ ] Share `.runi` via AirDrop → receiving device opens it in Runimation → plays correctly
-- [ ] Export video (Warp) → `.mp4` renders all frames → visual output matches live preview
-- [ ] Export video (RunPath) → path overlay renders correctly with MTLBuffer path data
-- [ ] Share video to Photos → saves correctly
+- [x] Export video (Warp) → `.mp4` renders all frames → visual output matches live preview
+- [x] Export video (RunPath) → path overlay renders correctly with MTLBuffer path data
+- [x] Share video to Photos → saves correctly
 - [ ] Cancel video export mid-render → cleanup, no orphaned temp files
 - [ ] Video resolution matches viewport size at time of export
 
