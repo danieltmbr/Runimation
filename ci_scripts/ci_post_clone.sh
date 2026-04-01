@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+
+cat > "$CI_PRIMARY_REPOSITORY_PATH/Runimation/Config/Secrets.xcconfig" << EOF
+STRAVA_CLIENT_ID = ${STRAVA_CLIENT_ID}
+STRAVA_CLIENT_SECRET = ${STRAVA_CLIENT_SECRET}
+EOF
