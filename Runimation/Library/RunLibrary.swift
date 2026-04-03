@@ -61,7 +61,9 @@ final class RunLibrary {
     public init(stravaClient: StravaClient, modelContext: ModelContext) {
         self.stravaClient = stravaClient
         self.modelContext = modelContext
+        #if DEBUG
         seedBundledRunIfNeeded()
+        #endif
     }
 
     // MARK: - Connection

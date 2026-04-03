@@ -44,6 +44,7 @@ struct RunLibraryView: View {
     @Environment(\.deleteRun)
     private var deleteRun
 
+
     // MARK: - Bindings
 
     @Binding var isPresented: Bool
@@ -64,6 +65,7 @@ struct RunLibraryView: View {
 
     @State
     private var isDragTargeted = false
+
 
     // MARK: - Body
 
@@ -119,8 +121,20 @@ struct RunLibraryView: View {
 
     @ViewBuilder
     private func libraryRow(_ record: RunRecord) -> some View {
-        PlayRunButton(record, onPlayed: { isPresented = false }) { record in
-            RunEntryRow(record: record) { record in
+        HStack {
+            PlayRunButton(record, onPlayed: { isPresented = false }) { _ in
+                RunInfoView(
+                    name: record.name,
+                    date: record.date,
+                    distance: record.distance,
+                    duration: record.duration
+                )
+                .runInfoStyle(.compact)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+
+            Menu {
                 #if os(macOS)
                 Button {
                     statsPath.append(RunEntry(id: record.entryID))
@@ -151,10 +165,19 @@ struct RunLibraryView: View {
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .padding(.vertical, 12)
+                    .padding(.leading, 12)
             }
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive) {
+                deleteRun(record)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
     }
 
     // MARK: - Toolbar
@@ -167,22 +190,28 @@ struct RunLibraryView: View {
         }
         #endif
         ToolbarItem(placement: .primaryAction) {
-            importButton
-        }
-        if isConnected {
-            ToolbarItem(placement: .automatic) {
-                DisconnectButton()
-            }
+            moreMenu
         }
     }
 
-    private var importButton: some View {
-        Button {
-            isShowingFilePicker = true
+    private var moreMenu: some View {
+        Menu {
+            Button {
+                isShowingFilePicker = true
+            } label: {
+                Label("Import File", systemImage: "square.and.arrow.down")
+            }
+
+            if isConnected {
+                DisconnectButton()
+            } else {
+                ConnectButton()
+            }
         } label: {
-            Label("Import File", systemImage: "square.and.arrow.down")
+            Image(systemName: "ellipsis")
         }
     }
+
 
     // MARK: - Drop Overlay
 

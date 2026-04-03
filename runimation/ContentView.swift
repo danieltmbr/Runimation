@@ -184,6 +184,7 @@ struct ContentView: View {
         .labelStyle(.iconOnly)
         .imageScale(.large)
         .foregroundStyle(.primary)
+        .contentShape(Circle())
     }
 
     @ViewBuilder
