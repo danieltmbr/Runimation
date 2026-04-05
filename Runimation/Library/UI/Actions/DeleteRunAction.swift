@@ -10,9 +10,9 @@ import Foundation
 ///
 struct DeleteRunAction {
 
-    private let body: @MainActor (RunRecord) -> Void
+    private let body: @MainActor (RunEntry) -> Void
 
-    init(_ body: @escaping @MainActor (RunRecord) -> Void) {
+    init(_ body: @escaping @MainActor (RunEntry) -> Void) {
         self.body = body
     }
 
@@ -22,11 +22,16 @@ struct DeleteRunAction {
 
     @MainActor
     init(library: RunLibrary) {
-        self.init { record in library.delete(record) }
+        self.init { entry in library.delete(entry) }
     }
-
+    
     @MainActor
     func callAsFunction(_ record: RunRecord) {
-        body(record)
+        body(record.entry)
+    }
+    
+    @MainActor
+    func callAsFunction(_ entry: RunEntry) {
+        body(entry)
     }
 }

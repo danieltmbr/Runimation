@@ -25,7 +25,7 @@ struct LoadEntryAction {
     @MainActor
     init(library: RunLibrary) {
         self.init { entry in
-            guard let record = library.record(for: entry.id) else { throw ResolutionError() }
+            guard let record = library.record(for: entry) else { throw ResolutionError() }
             return try await library.loadRun(for: record)
         }
     }

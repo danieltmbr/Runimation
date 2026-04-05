@@ -45,7 +45,7 @@ public struct RunInfoView: View {
             duration: run.duration
         )
     }
-
+    
     public var body: some View {
         style.makeBody(configuration: configuration)
     }

@@ -17,24 +17,23 @@ import SwiftUI
 /// ```
 ///
 struct PlayRunButton<Content: View>: View {
+    
+    @Environment(\.dismiss)
+    private var dismiss
 
     @NowPlaying
     private var nowPlaying
 
     let record: RunRecord
 
-    let onPlayed: @MainActor () -> Void
-
     @ViewBuilder
     let content: (RunRecord) -> Content
 
     init(
         _ record: RunRecord,
-        onPlayed: @escaping @MainActor () -> Void = {},
         @ViewBuilder content: @escaping (RunRecord) -> Content
     ) {
         self.record = record
-        self.onPlayed = onPlayed
         self.content = content
     }
 
@@ -49,7 +48,7 @@ struct PlayRunButton<Content: View>: View {
     private func play() {
         Task { @MainActor in
             await nowPlaying.play(record)
-            onPlayed()
+            dismiss()
         }
     }
 }

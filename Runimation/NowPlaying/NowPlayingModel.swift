@@ -6,7 +6,7 @@ import SwiftUI
 ///
 /// Holds only library-facing responsibilities: resolving a `RunRecord` from
 /// a run ID and marking it as played. Player observation is handled externally
-/// by `NowPlayingModifier`, which calls `resolve(runID:)` whenever the player's
+/// by `.nowPlaying(_:)`, which calls `resolve(runID:)` whenever the player's
 /// run changes. Views access this model through the `@NowPlaying` property
 /// wrapper rather than directly.
 ///
@@ -21,14 +21,14 @@ final class NowPlayingModel {
 
     // MARK: - Dependencies
 
-    private let findRecord: @MainActor (UUID) -> RunRecord?
+    private let findRecord: @MainActor (RunEntry) -> RunRecord?
     
     private let markAsPlaying: @MainActor (RunRecord) -> Void
 
     // MARK: - Init
 
     init(
-        findRecord: @escaping @MainActor (UUID) -> RunRecord?,
+        findRecord: @escaping @MainActor (RunEntry) -> RunRecord?,
         markAsPlaying: @escaping @MainActor (RunRecord) -> Void
     ) {
         self.findRecord = findRecord
@@ -42,9 +42,9 @@ final class NowPlayingModel {
     /// Resolves the new record from the library and marks it as playing.
     /// Guards against redundant updates when the ID hasn't actually changed.
     ///
-    func resolve(runID: UUID) {
-        let newRecord = findRecord(runID) ?? .sedentary
-        guard newRecord.entryID != record.entryID else { return }
+    func resolve(run: RunEntry) {
+        let newRecord = findRecord(run) ?? .sedentary
+        guard newRecord.entry != record.entry else { return }
         record = newRecord
         if !newRecord.isSedentary {
             markAsPlaying(newRecord)
@@ -54,11 +54,10 @@ final class NowPlayingModel {
 
 // MARK: - ViewModifier
 
-/// Bridges `RunPlayer` observation to `NowPlayingModel`.
+/// Bridges `RunPlayer` observation to a `NowPlayingModel`.
 ///
-/// Applied once as part of `.library(_:)`. Reads the player from the
-/// environment (requires `.player(_:)` to have been applied upstream)
-/// and calls `model.sync(runID:)` via `.onChange` whenever the player's
+/// Reads the player from the environment (requires `.player(_:)` upstream)
+/// and calls `model.resolve(runID:)` via `.onChange` whenever the player's
 /// run ID changes. Also injects the model into the environment so
 /// `@NowPlaying` wrappers can read it.
 ///
@@ -67,24 +66,15 @@ private struct NowPlayingModifier: ViewModifier {
     @Environment(RunPlayer.self)
     private var player
 
-    @State
-    private var model: NowPlayingModel
-
-    init(library: RunLibrary) {
-        _model = State(initialValue: NowPlayingModel(
-            findRecord: library.record(for:),
-            markAsPlaying: library.markAsPlaying
-        ))
-    }
+    let model: NowPlayingModel
 
     func body(content: Content) -> some View {
-        let model = model
         content
             .environment(model)
             .onChange(of: player.run.id, initial: true) { _, id in
-                model.resolve(runID: id)
+                model.resolve(run: RunEntry(id: id))
             }
-            .onChange(of: player.duration) { oldValue, newValue in
+            .onChange(of: player.duration) { _, newValue in
                 model.record.playDuration = newValue
             }
     }
@@ -93,7 +83,10 @@ private struct NowPlayingModifier: ViewModifier {
 // MARK: - View Extension
 
 extension View {
-    func nowPlaying(library: RunLibrary) -> some View {
-        modifier(NowPlayingModifier(library: library))
+
+    /// Injects a `NowPlayingModel` into the environment and bridges it to the
+    /// player in the environment. Requires `.player(_:)` applied upstream.
+    func nowPlaying(_ model: NowPlayingModel) -> some View {
+        modifier(NowPlayingModifier(model: model))
     }
 }

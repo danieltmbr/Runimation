@@ -13,7 +13,7 @@ import UniformTypeIdentifiers
 /// The parent controls visibility via `isPresented`. On macOS, the parent must
 /// also pass `statsPath` and own a `navigationDestination(for: RunEntry.self)`.
 ///
-/// GPX files are imported via the file picker (iOS) and drag-and-drop (macOS).
+/// GPX and `.runi` files are imported via the file picker (iOS) and drag-and-drop (macOS).
 ///
 /// Requires `.library(_:)` and `.player(_:)` in the view hierarchy.
 ///
@@ -41,9 +41,8 @@ struct RunLibraryView: View {
     @Environment(\.importFile)
     private var importFile
 
-    @Environment(\.deleteRun)
-    private var deleteRun
-
+    @Environment(\.importDocument)
+    private var importDocument
 
     // MARK: - Bindings
 
@@ -51,6 +50,12 @@ struct RunLibraryView: View {
 
     #if os(macOS)
     @Binding var statsPath: [RunEntry]
+
+    /// Use in `NavigationSplitView` sidebar where the view is persistent — no dismiss needed.
+    init(statsPath: Binding<[RunEntry]>) {
+        _isPresented = .constant(false)
+        _statsPath = statsPath
+    }
     #endif
 
     // MARK: - State
@@ -86,12 +91,12 @@ struct RunLibraryView: View {
             .toolbar { toolbarContent }
             .fileImporter(
                 isPresented: $isShowingFilePicker,
-                allowedContentTypes: [gpxUTType],
+                allowedContentTypes: [gpxUTType, .runi],
                 allowsMultipleSelection: true
             ) { result in
                 handleImportResult(result)
             }
-            .onDrop(of: [gpxUTType, .fileURL], isTargeted: $isDragTargeted) { providers in
+            .onDrop(of: [gpxUTType, .runi, .fileURL], isTargeted: $isDragTargeted) { providers in
                 handleDrop(providers)
             }
             .overlay(dropOverlay)
@@ -110,9 +115,8 @@ struct RunLibraryView: View {
             List(entries) { record in
                 libraryRow(record)
                     .onAppear {
-                        if record.entryID == entries.last?.entryID {
-                            loadNextPage()
-                        }
+                        guard record.entry == entries.last?.entry else { return }
+                        loadNextPage()
                     }
             }
             .listStyle(.plain)
@@ -121,62 +125,11 @@ struct RunLibraryView: View {
 
     @ViewBuilder
     private func libraryRow(_ record: RunRecord) -> some View {
-        HStack {
-            PlayRunButton(record, onPlayed: { isPresented = false }) { _ in
-                RunInfoView(
-                    name: record.name,
-                    date: record.date,
-                    distance: record.distance,
-                    duration: record.duration
-                )
-                .runInfoStyle(.compact)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .buttonStyle(.plain)
-
-            Menu {
-                #if os(macOS)
-                Button {
-                    statsPath.append(RunEntry(id: record.entryID))
-                    isPresented = false
-                } label: {
-                    Label("Stats", systemImage: "chart.bar")
-                }
-                #else
-                NavigationLink(value: RunEntry(id: record.entryID)) {
-                    Label("Stats", systemImage: "chart.bar")
-                }
-                #endif
-
-                Button {} label: {
-                    Label("Favourite", systemImage: "heart")
-                }
-                .disabled(true)
-
-                Button {} label: {
-                    Label("Share", systemImage: "square.and.arrow.up")
-                }
-                .disabled(true)
-
-                Divider()
-
-                Button(role: .destructive) {
-                    deleteRun(record)
-                } label: {
-                    Label("Delete", systemImage: "trash")
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .padding(.vertical, 12)
-                    .padding(.leading, 12)
-            }
+        RunEntryRow(record: record) { record in
+            RunMenuActions(run: record.entry)
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button(role: .destructive) {
-                deleteRun(record)
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
+            DeleteRunButton(run: record.entry)
         }
     }
 
@@ -239,13 +192,19 @@ struct RunLibraryView: View {
 
     private func handleImportResult(_ result: Result<[URL], Error>) {
         guard case .success(let urls) = result else { return }
-        for url in urls { importFile(url) }
+        for url in urls { importURL(url) }
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
         var handled = false
         for provider in providers {
-            if provider.hasItemConformingToTypeIdentifier(gpxUTType.identifier) {
+            if provider.hasItemConformingToTypeIdentifier(UTType.runi.identifier) {
+                provider.loadItem(forTypeIdentifier: UTType.runi.identifier) { item, _ in
+                    guard let url = item as? URL else { return }
+                    Task { @MainActor in try? self.importDocument(url) }
+                }
+                handled = true
+            } else if provider.hasItemConformingToTypeIdentifier(gpxUTType.identifier) {
                 provider.loadItem(forTypeIdentifier: gpxUTType.identifier) { item, _ in
                     guard let url = item as? URL else { return }
                     Task { @MainActor in self.importFile(url) }
@@ -254,14 +213,22 @@ struct RunLibraryView: View {
             } else if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
                 provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier) { item, _ in
                     guard let data = item as? Data,
-                          let url = URL(dataRepresentation: data, relativeTo: nil),
-                          url.pathExtension.lowercased() == "gpx" else { return }
-                    Task { @MainActor in self.importFile(url) }
+                          let url = URL(dataRepresentation: data, relativeTo: nil)
+                    else { return }
+                    Task { @MainActor in self.importURL(url) }
                 }
                 handled = true
             }
         }
         return handled
+    }
+
+    private func importURL(_ url: URL) {
+        if url.pathExtension.lowercased() == "runi" {
+            Task { try? importDocument(url) }
+        } else {
+            importFile(url)
+        }
     }
 
     // MARK: - Helpers

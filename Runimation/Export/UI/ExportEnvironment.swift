@@ -19,15 +19,20 @@ extension View {
     /// Injects export actions into the environment, making them available to
     /// any descendant view via `@Environment(\.exportRuni)` and `@Environment(\.exportVideo)`.
     ///
-    /// Apply once near the root, after `.player(_:)`:
+    /// Both actions are fully independent of the player — they resolve the run,
+    /// load track data if missing, and reconstruct the processing pipeline from
+    /// the record's stored config.
+    ///
+    /// Apply once near the root, after `.library(_:)`:
     /// ```swift
-    /// ContentView()
-    ///     .player(player)
-    ///     .export(player: player)
+    /// RuniWindow(...)
+    ///     .library(library)
+    ///     .export(library: library)
     /// ```
     ///
     @MainActor
-    func export(player: RunPlayer) -> some View {
-        environment(\.exportVideo, ExportVideoAction(player: player))
+    func export(library: RunLibrary) -> some View {
+        environment(\.exportRuni, ExportRuniAction(library: library))
+            .environment(\.exportVideo, ExportVideoAction(library: library))
     }
 }

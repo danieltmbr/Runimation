@@ -39,16 +39,18 @@ final class RunLibrary {
 
     // MARK: - Private
 
+    private let gpxParser: GPX.Parser
+    
     private let modelContext: ModelContext
+    
+    private let runiParser: JSONDecoder
 
-    private let gpxParser = GPX.Parser()
-
-    private let runParser = Run.Parser()
+    private let runParser: Run.Parser
 
     private let stravaClient: StravaClient
 
     /// In-memory parsed run cache keyed by `RunRecord.entryID`.
-    private var cache: [UUID: Run] = [:]
+    private var cache: [RunEntry: Run] = [:]
 
     private var currentPage = 1
 
@@ -58,13 +60,34 @@ final class RunLibrary {
 
     // MARK: - Init
 
-    public init(stravaClient: StravaClient, modelContext: ModelContext) {
-        self.stravaClient = stravaClient
+    public init(
+        gpxParser: GPX.Parser = GPX.Parser(),
+        modelContext: ModelContext,
+        runiParser: JSONDecoder = JSONDecoder(),
+        runParser: Run.Parser = Run.Parser(),
+        stravaClient: StravaClient
+    ) {
+        self.gpxParser = gpxParser
         self.modelContext = modelContext
+        self.runiParser = runiParser
+        self.runParser = runParser
+        self.stravaClient = stravaClient
         #if DEBUG
         seedBundledRunIfNeeded()
         #endif
     }
+
+    // MARK: - OAuth
+
+    /// Forwards a Strava OAuth callback URL to the underlying `StravaClient`.
+    ///
+    /// Wire up via `.onOpenURL` in the scene that handles the `runimation://` scheme.
+    ///
+    #if os(macOS)
+    public func handleCallbackURL(_ url: URL) {
+        stravaClient.handleCallbackURL(url)
+    }
+    #endif
 
     // MARK: - Connection
 
@@ -117,7 +140,7 @@ final class RunLibrary {
                 trackData: try? JSONEncoder().encode(track.points)
             )
             modelContext.insert(record)
-            cache[record.entryID] = run
+            cache[record.entry] = run
         }
         try? modelContext.save()
     }
@@ -130,13 +153,13 @@ final class RunLibrary {
     /// Otherwise the track is fetched from the original source and persisted.
     ///
     public func loadRun(for record: RunRecord) async throws -> Run {
-        if let cached = cache[record.entryID] { return cached }
+        if let cached = cache[record.entry] { return cached }
 
         if let data = record.trackData {
             let points = try JSONDecoder().decode([GPX.Point].self, from: data)
             let track = GPX.Track(name: record.name, points: points, type: "running", date: record.date)
-            let run = runParser.run(from: track, id: record.entryID)
-            cache[record.entryID] = run
+            let run = runParser.run(from: track, id: record.entry.id)
+            cache[record.entry] = run
             return run
         }
 
@@ -156,8 +179,8 @@ final class RunLibrary {
             track = parsed
         }
 
-        let run = runParser.run(from: track, id: record.entryID)
-        cache[record.entryID] = run
+        let run = runParser.run(from: track, id: record.entry.id)
+        cache[record.entry] = run
         record.trackData = try? JSONEncoder().encode(track.points)
         try? modelContext.save()
 
@@ -172,8 +195,8 @@ final class RunLibrary {
     /// (matched by `entryID` stored in the document's derived UUID). Otherwise
     /// creates a new record, persists the config, and caches the parsed run.
     ///
-    public func importRuniDocument(_ document: RuniDocument) -> RunRecord {
-        let trackData = (try? JSONEncoder().encode(document.points)) ?? Data()
+    public func importRuniDocument(_ document: RuniDocument) throws -> RunRecord {
+        let trackData = try JSONEncoder().encode(document.points)
         let record = RunRecord(
             name: document.name,
             date: document.date ?? Date(),
@@ -191,8 +214,8 @@ final class RunLibrary {
 
         // Parse and cache the run so it's immediately available for playback.
         let track = GPX.Track(name: document.name, points: document.points, type: "running", date: document.date)
-        let run = runParser.run(from: track, id: record.entryID)
-        cache[record.entryID] = run
+        let run = runParser.run(from: track, id: record.entry.id)
+        cache[record.entry] = run
         record.distance = run.distance
 
         return record
@@ -200,32 +223,34 @@ final class RunLibrary {
 
     // MARK: - Delete
 
-    public func delete(_ record: RunRecord) {
-        cache[record.entryID] = nil
-        modelContext.delete(record)
-        try? modelContext.save()
+    public func delete(_ entry: RunEntry) {
+        cache.removeValue(forKey: entry)
+        if let record = record(for: entry) {
+            modelContext.delete(record)
+            try? modelContext.save()
+        }
     }
 
     // MARK: - Navigation
 
     /// Returns the `RunRecord` with the given entry ID via an indexed ModelContext lookup.
     ///
-    public func record(for id: UUID) -> RunRecord? {
-        let descriptor = FetchDescriptor<RunRecord>(
-            predicate: #Predicate<RunRecord> { $0.entryID == id }
-        )
+    public func record(for entry: RunEntry) -> RunRecord? {
+        let descriptor = FetchDescriptor.record(for: entry)
         return try? modelContext.fetch(descriptor).first
     }
 
     /// Returns the most recently played record, for state restoration on launch.
     ///
-    public func lastPlayedRecord() -> RunRecord? {
-        var descriptor = FetchDescriptor<RunRecord>(
-            predicate: #Predicate<RunRecord> { $0.lastPlayedAt != nil },
-            sortBy: [SortDescriptor(\.lastPlayedAt, order: .reverse)]
-        )
-        descriptor.fetchLimit = 1
-        return try? modelContext.fetch(descriptor).first
+    public var lastPlayedRecord: RunRecord? {
+        get async {
+            var descriptor = FetchDescriptor<RunRecord>(
+                predicate: #Predicate<RunRecord> { $0.lastPlayedAt != nil },
+                sortBy: [SortDescriptor(\.lastPlayedAt, order: .reverse)]
+            )
+            descriptor.fetchLimit = 1
+            return try? modelContext.fetch(descriptor).first
+        }
     }
 
     // MARK: - Current Record Tracking
@@ -244,7 +269,7 @@ final class RunLibrary {
             return false
         }
         stravaRecords.forEach { record in
-            cache[record.entryID] = nil
+            cache[record.entry] = nil
             modelContext.delete(record)
         }
         try? modelContext.save()
@@ -270,11 +295,11 @@ final class RunLibrary {
         )
         modelContext.insert(record)
         // Parse the run after inserting the record so run.id matches record.entryID.
-        let run = runParser.run(from: track, id: record.entryID)
+        let run = runParser.run(from: track, id: record.entry.id)
         record.distance = run.distance
         record.duration = run.duration
         try? modelContext.save()
-        cache[record.entryID] = run
+        cache[record.entry] = run
     }
 
     private func fetchPage() async {

@@ -1,29 +1,27 @@
 import SwiftUI
 
-/// Toolbar button that opens the `ExportSheet` for the currently playing run.
+/// Toolbar button that triggers the export sheet for the currently playing run.
 ///
-/// Disabled when no run is loaded (sedentary state). Requires `@NowPlaying` in the
-/// environment via `.library(_:)`.
+/// Sets `exportingRun` in `NavigationModel` — the sheet is presented by the
+/// window root view, which owns both the record and the viewport size.
+///
+/// Disabled when no run is loaded. Requires `@NowPlaying` and `@NavigationState`
+/// in the environment.
 ///
 struct ExportButton: View {
 
     @NowPlaying
     private var nowPlaying
 
-    let viewportSize: CGSize
-
-    @State
-    private var isPresented = false
+    @NavigationState(\.exportingRun)
+    private var exportingRun
 
     var body: some View {
         Button {
-            isPresented = true
+            exportingRun = nowPlaying.record.entry
         } label: {
             Label("Share", systemImage: "square.and.arrow.up")
         }
         .disabled(nowPlaying.isSedentary)
-        .sheet(isPresented: $isPresented) {
-            ExportSheet(viewportSize: viewportSize)
-        }
     }
 }

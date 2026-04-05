@@ -14,7 +14,7 @@ public protocol RunTransformer: Option, Sendable {
 }
 
 extension Run {
-    func transform(by transformer: RunTransformer) -> Run {
+    public func transform(by transformer: RunTransformer) -> Run {
         transformer.transform(self)
     }
 }

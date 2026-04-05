@@ -14,5 +14,10 @@ extension RunPlayer {
         /// Target frames per second.
         ///
         let fps: Double
+        
+        public init(duration: TimeInterval, fps: Double) {
+            self.duration = duration
+            self.fps = fps
+        }
     }
 }

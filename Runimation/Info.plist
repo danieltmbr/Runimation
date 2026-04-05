@@ -25,7 +25,7 @@
 			<key>UTTypeIdentifier</key>
 			<string>me.tmbr.runimation.runi</string>
 			<key>UTTypeDescription</key>
-			<string>Runimation File</string>
+			<string>Runi File</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.data</string>
@@ -40,13 +40,11 @@
 			</dict>
 		</dict>
 	</array>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<false/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>Runimation File</string>
+			<string>Runi File</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>me.tmbr.runimation.runi</string>

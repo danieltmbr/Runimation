@@ -2,43 +2,59 @@ import CoreTransferable
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Sheet presenting two export options for the currently playing run.
+/// Sheet presenting two export options for any run entry.
 ///
-/// - **Runimation file (.runi)** — instant: encodes the run + config as a few-kB JSON file
-///   and opens the system share sheet immediately. Works for AirDrop, Messages, etc.
-/// - **Video (.mp4)** — renders the animation offline via `VideoRenderer`, shows a progress
-///   bar while rendering, then opens the share sheet automatically when done.
+/// - **Runi file (.runi)** — loads track data if needed, encodes the run + config as
+///   a few-kB JSON file, then opens the system share sheet. Works for any run,
+///   including Strava runs that haven't been played yet.
+/// - **Video (.mp4)** — loads + processes the run through its stored transformer /
+///   interpolator pipeline, renders via `VideoRenderer`, shows a progress bar while
+///   rendering, then opens the share sheet automatically when done.
 ///
-/// Requires `@NowPlaying`, `@Environment(\.exportRuni)`, and `@Environment(\.exportVideo)`
-/// in the environment (injected by `.export(player:)` and `.library(_:)`).
+/// Requires `@Environment(\.exportRuni)` and `@Environment(\.exportVideo)`
+/// in the environment (injected by `.export(library:)`).
 ///
 struct ExportSheet: View {
 
     // MARK: - Environment
 
-    @NowPlaying
-    private var nowPlaying
-
     @Environment(\.exportRuni)
     private var exportRuni
-    
+
     @Environment(\.exportVideo)
     private var exportVideo
-    
+
     @Environment(\.displayScale)
     private var displayScale
-    
+
+    // MARK: - Runi Export State
+
+    @State
+    private var isLoadingRuni = false
+
+    @State
+    private var runiDocument: RuniDocument?
+
+    @State
+    private var runiError: Error?
+
+    // MARK: - Video Export State
+
     @State
     private var isRenderingVideo = false
-    
+
     @State
     private var videoProgress: Double = 0
-    
+
     @State
     private var renderedVideoURL: URL?
-    
+
     @State
     private var renderError: Error?
+
+    // MARK: - Input
+
+    let run: RunEntry
 
     let viewportSize: CGSize
 
@@ -56,7 +72,7 @@ struct ExportSheet: View {
             title
 
             VStack(spacing: 12) {
-                runiShareButton
+                runiSection
                 videoSection
             }
         }
@@ -72,39 +88,44 @@ struct ExportSheet: View {
             .font(.title2.bold())
     }
 
-    private var runiShareButton: some View {
-        Group {
-            if let doc = exportRuni(nowPlaying.record) {
-                ShareLink(
-                    item: doc,
-                    preview: SharePreview(nowPlaying.name, image: Image(systemName: "figure.run"))
-                ) {
-                    ExportOptionRow(
-                        icon: "doc.badge.arrow.up",
-                        title: "Runimation File",
-                        subtitle: "A few kB · plays back in Runimation"
-                    )
-                }
-                .buttonStyle(.plain)
-            } else {
+    @ViewBuilder
+    private var runiSection: some View {
+        if isLoadingRuni {
+            loadingProgress(label: "Preparing Runi file…", icon: "doc.badge.arrow.up")
+        } else if let doc = runiDocument {
+            ShareLink(
+                item: doc,
+                preview: SharePreview(doc.name, image: Image(systemName: "figure.run"))
+            ) {
+                ExportOptionRow(
+                    icon: "doc.badge.checkmark",
+                    title: "Runi File",
+                    subtitle: "Tap to share"
+                )
+            }
+            .buttonStyle(.plain)
+        } else {
+            Button { startRuniExport() } label: {
                 ExportOptionRow(
                     icon: "doc.badge.arrow.up",
-                    title: "Runimation File",
-                    subtitle: "Run data not loaded yet"
+                    title: "Runi File",
+                    subtitle: runiError == nil
+                        ? "A few kB · plays back in Runimation"
+                        : "Export failed — tap to retry"
                 )
-                .foregroundStyle(.secondary)
             }
+            .buttonStyle(.plain)
         }
     }
 
     @ViewBuilder
     private var videoSection: some View {
         if isRenderingVideo {
-            renderingProgress
+            loadingProgress(label: "Rendering video…", icon: "video", progress: videoProgress)
         } else if let url = renderedVideoURL {
             ShareLink(
-                item: RenderedVideo(url: url, name: nowPlaying.name),
-                preview: SharePreview(nowPlaying.name, image: Image(systemName: "video"))
+                item: RenderedVideo(url: url),
+                preview: SharePreview(run.id.uuidString, image: Image(systemName: "video"))
             ) {
                 ExportOptionRow(
                     icon: "video.badge.checkmark",
@@ -118,25 +139,51 @@ struct ExportSheet: View {
                 ExportOptionRow(
                     icon: "video",
                     title: "Video (.mp4)",
-                    subtitle: "Renders offline — takes a few seconds"
+                    subtitle: renderError == nil
+                        ? "Renders offline — takes a few seconds"
+                        : "Export failed — tap to retry"
                 )
             }
             .buttonStyle(.plain)
         }
     }
 
-    private var renderingProgress: some View {
+    private func loadingProgress(label: String, icon: String, progress: Double? = nil) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("Rendering video…", systemImage: "video")
+            Label(label, systemImage: icon)
                 .font(.headline)
-            ProgressView(value: videoProgress)
-                .progressViewStyle(.linear)
-            Text("\(Int(videoProgress * 100))%")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            if let progress {
+                ProgressView(value: progress)
+                    .progressViewStyle(.linear)
+                Text("\(Int(progress * 100))%")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                ProgressView()
+                    .progressViewStyle(.linear)
+            }
         }
         .padding(12)
         .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    // MARK: - Runi Export
+
+    private func startRuniExport() {
+        isLoadingRuni = true
+        runiDocument = nil
+        runiError = nil
+
+        Task {
+            do {
+                let doc = try await exportRuni(run)
+                isLoadingRuni = false
+                runiDocument = doc
+            } catch {
+                isLoadingRuni = false
+                runiError = error
+            }
+        }
     }
 
     // MARK: - Video Export
@@ -148,11 +195,10 @@ struct ExportSheet: View {
         renderError = nil
 
         let config = VideoExportConfig(resolution: resolution, logicalSize: viewportSize)
-        let record = nowPlaying.record
 
         Task {
             do {
-                let url = try await exportVideo(record, config: config) { @Sendable progress in
+                let url = try await exportVideo(run, config: config) { @Sendable progress in
                     Task { @MainActor in
                         videoProgress = progress
                     }
@@ -179,7 +225,6 @@ struct ExportSheet: View {
 private struct RenderedVideo: Transferable {
 
     let url: URL
-    let name: String
 
     static var transferRepresentation: some TransferRepresentation {
         FileRepresentation(exportedContentType: .mpeg4Movie) { video in

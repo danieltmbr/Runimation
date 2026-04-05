@@ -2,24 +2,26 @@ import Foundation
 import RunKit
 import Visualiser
 
-/// Renders the current run's visualisation to an `.mp4` file and returns its URL.
+/// Renders a run's animation to an `.mp4` file, fully independent of the player.
 ///
-/// Snapshots the player's processed run data on the main actor, then dispatches the
-/// render loop to a background task so the UI stays responsive.
+/// Resolves the entry to its `RunRecord`, loads track data if not yet present,
+/// reconstructs the transformer + interpolator pipeline from stored config, and
+/// renders via `VideoRenderer`. Safe to call for any run, including Strava runs
+/// that have never been played.
 ///
-/// Inject via `.export(player:)` and access in views with:
+/// Inject via `.export(library:)` and access in views with:
 /// ```swift
 /// @Environment(\.exportVideo) private var exportVideo
-/// let url = try await exportVideo(record, config) { progress in ... }
+/// let url = try await exportVideo(entry, config: config) { progress in ... }
 /// ```
 ///
 struct ExportVideoAction {
 
     typealias ProgressHandler = @Sendable (Double) -> Void
 
-    private let body: @MainActor (RunRecord, VideoExportConfig, @escaping ProgressHandler) async throws -> URL
+    private let body: @MainActor (RunEntry, VideoExportConfig, @escaping ProgressHandler) async throws -> URL
 
-    init(_ body: @escaping @MainActor (RunRecord, VideoExportConfig, @escaping ProgressHandler) async throws -> URL) {
+    init(_ body: @escaping @MainActor (RunEntry, VideoExportConfig, @escaping ProgressHandler) async throws -> URL) {
         self.body = body
     }
 
@@ -28,18 +30,26 @@ struct ExportVideoAction {
     }
 
     @MainActor
-    init(player: RunPlayer) {
-        self.init { record, config, onProgress in
-            // Snapshot player data on the main actor before dispatching to background.
-            let segments = player.run.animation.segments
-            let path = player.run.animation.coordinates
-            let duration = player.duration
+    init(library: RunLibrary) {
+        self.init { entry, config, onProgress in
+            guard let record = library.record(for: entry) else { throw ResolutionError() }
+            let rawRun = try await library.loadRun(for: record)
+
+            let transformers = record.loadTransformersConfig()
+            let interpolator = record.loadInterpolatorConfig() ?? LinearRunInterpolator()
+            let duration = record.loadDurationConfig() ?? 30
             let visualisation = record.loadVisualisationConfig() ?? Warp()
+            let timing = RunPlayer.Timing(duration: duration, fps: 30)
+
+            let processed = transformers.reduce(rawRun) { $0.transform(by: $1) }
+            let normalised = processed
+                .transform(by: .normalised)
+                .interpolate(by: interpolator, with: timing)
 
             return try await Task.detached(priority: .userInitiated) {
                 try await VideoRenderer().render(
-                    segments: segments,
-                    path: path,
+                    segments: normalised.segments,
+                    path: normalised.coordinates,
                     duration: duration,
                     config: config,
                     visualisation: visualisation,
@@ -51,16 +61,20 @@ struct ExportVideoAction {
 
     @MainActor
     func callAsFunction(
-        _ record: RunRecord,
+        _ entry: RunEntry,
         config: VideoExportConfig,
         onProgress: @escaping ProgressHandler
     ) async throws -> URL {
-        try await body(record, config, onProgress)
+        try await body(entry, config, onProgress)
     }
 
     // MARK: - Errors
 
     private struct UnboundError: LocalizedError {
         var errorDescription: String? { "No export action is available in the current environment." }
+    }
+
+    private struct ResolutionError: LocalizedError {
+        var errorDescription: String? { "The run could not be found in the library." }
     }
 }

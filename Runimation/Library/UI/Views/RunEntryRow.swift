@@ -18,21 +18,31 @@ struct RunEntryRow<Actions: View>: View {
 
     var body: some View {
         HStack {
-            RunInfoView(
-                name: record.name,
-                date: record.date,
-                distance: record.distance,
-                duration: record.duration
-            )
-            .runInfoStyle(.compact)
-
-            Spacer()
+            PlayRunButton(record) { record in
+                RunInfoView(record: record)
+                    .runInfoStyle(.compact)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .buttonStyle(.plain)
 
             Menu {
                 actions(record)
             } label: {
                 Image(systemName: "ellipsis")
             }
+            .menuStyle(.button)
+            .buttonStyle(.plain)
         }
+    }
+}
+
+extension RunInfoView {
+    init(record: RunRecord) {
+        self.init(
+            name: record.name,
+            date: record.date,
+            distance: record.distance,
+            duration: record.duration
+        )
     }
 }

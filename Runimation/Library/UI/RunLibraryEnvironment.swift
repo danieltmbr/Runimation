@@ -24,13 +24,13 @@ extension EnvironmentValues {
     var deleteRun: DeleteRunAction = DeleteRunAction()
 
     @Entry
-    var deleteEntry: DeleteEntryAction = DeleteEntryAction()
-
-    @Entry
     var connectLibrary: ConnectAction = ConnectAction()
 
     @Entry
     var disconnectLibrary: DisconnectAction = DisconnectAction()
+
+    @Entry
+    var importDocument: ImportDocumentAction = ImportDocumentAction()
 }
 
 // MARK: - View Extension
@@ -43,7 +43,7 @@ extension View {
     ///
     /// Apply once near the root of the library's view hierarchy:
     /// ```swift
-    /// ContentView()
+    /// PlayerWindow(...)
     ///     .library(library)
     /// ```
     ///
@@ -56,9 +56,8 @@ extension View {
             .environment(\.loadRun, LoadRunAction(library: library))
             .environment(\.loadEntry, LoadEntryAction(library: library))
             .environment(\.deleteRun, DeleteRunAction(library: library))
-            .environment(\.deleteEntry, DeleteEntryAction(library: library))
             .environment(\.connectLibrary, ConnectAction(library: library))
             .environment(\.disconnectLibrary, DisconnectAction(library: library))
-            .nowPlaying(library: library)
+            .environment(\.importDocument, ImportDocumentAction(library: library))
     }
 }

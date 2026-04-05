@@ -34,7 +34,11 @@ final class RunRecord {
     /// Matches `Run.id` when the run is loaded into the player.
     ///
     @Attribute(.unique)
-    var entryID: UUID
+    fileprivate var entryID: UUID
+    
+    var entry: RunEntry {
+        RunEntry(id: entryID)
+    }
 
     // MARK: - Display Metadata
 
@@ -130,4 +134,14 @@ final class RunRecord {
     /// True when this record has a saved visualisation config.
     ///
     var hasConfig: Bool { visualisationConfigData != nil }
+}
+
+extension FetchDescriptor<RunRecord> {
+    
+    static func record(for run: RunEntry) -> FetchDescriptor<RunRecord> {
+        let id = run.id
+        return FetchDescriptor<RunRecord>(
+            predicate: #Predicate<RunRecord> { $0.entryID == id }
+        )
+    }
 }

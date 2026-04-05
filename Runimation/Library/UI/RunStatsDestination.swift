@@ -21,7 +21,7 @@ struct RunStatsDestination: View {
     @State
     private var result: Result<Run, Error>?
 
-    private var record: RunRecord? { library.record(for: entry.id) }
+    private var record: RunRecord? { library.record(for: entry) }
 
     var body: some View {
         Group {
