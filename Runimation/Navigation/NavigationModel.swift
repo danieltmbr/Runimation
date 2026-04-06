@@ -48,12 +48,16 @@ final class NavigationModel: Equatable {
 
     // MARK: - Init
 
-    init(library: RunLibrary, autoRestore: Bool) {
+    init(
+        findRecord: @escaping @MainActor (RunEntry) -> RunRecord?,
+        markAsPlaying: @escaping @MainActor (RunRecord) -> Void,
+        autoRestore: Bool
+    ) {
         self.player = RunPlayer(transformers: [GuassianRun()])
         self.autoRestore = autoRestore
         self.nowPlaying = NowPlayingModel(
-            findRecord: { entry in library.record(for: entry) },
-            markAsPlaying: library.markAsPlaying
+            findRecord: findRecord,
+            markAsPlaying: markAsPlaying
         )
     }
 }

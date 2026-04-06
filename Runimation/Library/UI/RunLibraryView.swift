@@ -1,3 +1,4 @@
+import RunKit
 import RunUI
 import SwiftData
 import SwiftUI
@@ -23,6 +24,9 @@ struct RunLibraryView: View {
 
     @Query(sort: \RunRecord.date, order: .reverse)
     private var entries: [RunRecord]
+
+    @LibraryState(\.trackers)
+    private var trackers
 
     @LibraryState(\.isLoading)
     private var isLoading
@@ -155,10 +159,8 @@ struct RunLibraryView: View {
                 Label("Import File", systemImage: "square.and.arrow.down")
             }
 
-            if isConnected {
-                DisconnectButton()
-            } else {
-                ConnectButton()
+            ForEach(trackers, id: \.id) { tracker in
+                ConnectToggle(tracker: tracker)
             }
         } label: {
             Image(systemName: "ellipsis")

@@ -40,8 +40,8 @@ struct NowPlaying: DynamicProperty {
 
     // MARK: - Player Actions
 
-    @Environment(\.loadRun)
-    private var loadRun
+    @Environment(\.loadEntry)
+    private var loadEntry
 
     @Environment(\.playRun)
     private var playRun
@@ -153,7 +153,7 @@ struct NowPlaying: DynamicProperty {
     ///
     func play(_ record: RunRecord) async {
         let previousVisualisation = model.record.loadVisualisationConfig() ?? Warp()
-        guard let run = try? await loadRun(record) else { return }
+        guard let run = try? await loadEntry(record.entry) else { return }
         await applyConfig(from: record, inheritedVisualisation: previousVisualisation)
         try? await playRun(run)
     }

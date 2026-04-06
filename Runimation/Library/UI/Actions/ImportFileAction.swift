@@ -1,8 +1,13 @@
+import CoreKit
 import Foundation
+import RunKit
 
-/// Parses a file at the given URL and prepends the resulting entries to the library.
+/// Parses a local file and imports the resulting track(s) into the library.
 ///
-/// Inject via `.library(_:player:)` and access in views with:
+/// Handles GPX files. Fires-and-forgets; errors are silently discarded
+/// because import failures are surfaced by the empty state of the library.
+///
+/// Inject via `.library(_:)` and access in views with:
 /// ```swift
 /// @Environment(\.importFile) private var importFile
 /// importFile(url)
@@ -18,7 +23,23 @@ struct ImportFileAction {
 
     @MainActor
     init(library: RunLibrary) {
-        self.init { url in Task { try? await library.importFile(from: url) } }
+        let gpxParser = GPX.Parser()
+        self.init { url in
+            Task {
+                let didStart = url.startAccessingSecurityScopedResource()
+                defer { if didStart { url.stopAccessingSecurityScopedResource() } }
+                guard let tracks = try? gpxParser.parse(contentsOf: url) as [GPX.Track],
+                      !tracks.isEmpty else { return }
+                for track in tracks {
+                    library.importTrack(
+                        name: track.name,
+                        date: track.date ?? Date(),
+                        points: track.points,
+                        source: .file(url: url)
+                    )
+                }
+            }
+        }
     }
 
     @MainActor

@@ -1,12 +1,17 @@
+import RunKit
+import RunUI
 import SwiftUI
 
 /// Empty state for the Run Library.
 ///
 /// Differentiates between two empty states:
-/// - **Not connected**: prompts the user to connect to Strava or import a GPX file.
+/// - **Not connected**: prompts the user to connect a tracker or import a GPX file.
 /// - **Connected but empty**: prompts the user to record a run or import a GPX file.
 ///
 struct LibraryEmptyView: View {
+
+    @Environment(RunLibrary.self)
+    private var library
 
     @LibraryState(\.isConnected)
     private var isConnected
@@ -42,9 +47,11 @@ struct LibraryEmptyView: View {
                     .font(.callout)
             }
 
-            ConnectButton()
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+            ForEach(library.trackers, id: \.id) { tracker in
+                ConnectToggle(tracker: tracker)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+            }
 
             importButton
         }

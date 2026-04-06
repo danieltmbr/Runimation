@@ -1,15 +1,16 @@
 import Foundation
 import RunKit
+import SwiftData
 import Visualiser
 
 /// Renders a run's animation to an `.mp4` file, fully independent of the player.
 ///
 /// Resolves the entry to its `RunRecord`, loads track data if not yet present,
 /// reconstructs the transformer + interpolator pipeline from stored config, and
-/// renders via `VideoRenderer`. Safe to call for any run, including Strava runs
+/// renders via `VideoRenderer`. Safe to call for any run, including tracker runs
 /// that have never been played.
 ///
-/// Inject via `.export(library:)` and access in views with:
+/// Inject via `.export(library:modelContext:)` and access in views with:
 /// ```swift
 /// @Environment(\.exportVideo) private var exportVideo
 /// let url = try await exportVideo(entry, config: config) { progress in ... }
@@ -30,10 +31,11 @@ struct ExportVideoAction {
     }
 
     @MainActor
-    init(library: RunLibrary) {
+    init(library: RunLibrary, modelContext: ModelContext) {
         self.init { entry, config, onProgress in
-            guard let record = library.record(for: entry) else { throw ResolutionError() }
-            let rawRun = try await library.loadRun(for: record)
+            let rawRun = try await library.loadRun(for: entry)
+            guard let record = try? modelContext.fetch(FetchDescriptor.record(for: entry)).first
+            else { throw ResolutionError() }
 
             let transformers = record.loadTransformersConfig()
             let interpolator = record.loadInterpolatorConfig() ?? LinearRunInterpolator()

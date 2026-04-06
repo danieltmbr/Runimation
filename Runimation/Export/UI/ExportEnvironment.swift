@@ -1,4 +1,5 @@
 import RunKit
+import SwiftData
 import SwiftUI
 
 // MARK: - Environment Keys
@@ -23,16 +24,16 @@ extension View {
     /// load track data if missing, and reconstruct the processing pipeline from
     /// the record's stored config.
     ///
-    /// Apply once near the root, after `.library(_:)`:
+    /// Apply once near the root, after `.library(_:modelContext:)`:
     /// ```swift
     /// RuniWindow(...)
-    ///     .library(library)
-    ///     .export(library: library)
+    ///     .library(library, modelContext: modelContainer.mainContext)
+    ///     .export(library: library, modelContext: modelContainer.mainContext)
     /// ```
     ///
     @MainActor
-    func export(library: RunLibrary) -> some View {
-        environment(\.exportRuni, ExportRuniAction(library: library))
-            .environment(\.exportVideo, ExportVideoAction(library: library))
+    func export(library: RunLibrary, modelContext: ModelContext) -> some View {
+        environment(\.exportRuni, ExportRuniAction(library: library, modelContext: modelContext))
+            .environment(\.exportVideo, ExportVideoAction(library: library, modelContext: modelContext))
     }
 }

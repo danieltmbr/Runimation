@@ -275,8 +275,6 @@ The app is currently a mix of production features, diagnostics, and shader learn
 ## Phase 7: App Structure Cleanup
 **Goal:** Rationalise root-level state ownership, dependency injection, and navigation so the app is maintainable and extensible before the final polish pass.
 
-> **Status: Placeholder — needs exploration.** The problem areas are known but the right design needs a dedicated planning session before implementation begins.
-
 ### Problem Areas
 
 - **`RunimationApp.swift`** accumulates every top-level dependency (`RunPlayer`, `RunLibrary`, `StravaClient`, `ModelContainer`). As the app grows this will become a grab-bag with unclear ownership.
@@ -293,10 +291,16 @@ The app is currently a mix of production features, diagnostics, and shader learn
 - Revisiting whether `StravaClient` should live at the `RunLibrary` level (it already does internally) and be removed from the top-level app state.
 
 ### Tasks
-- [ ] Audit all `@State` and `@Environment` usage in `runimationApp.swift` and `ContentView.swift`
+- [x] Extract `RunLibrary` into RunKit; introduce `ActivityTracker` + `RunStorage` protocols
+- [x] Move library actions (`Refresh`, `LoadNextPage`, `LoadEntry`, `Delete`) to RunUI package
+- [x] Introduce `ConnectToggle` in RunUI — per-tracker, shows name + connection status
+- [x] Move `LibraryState` property wrapper to RunUI
+- [x] Split `RunLibraryEnvironment` — base `.library(_:)` in RunUI, app-specific additions in app
+- [x] `StravaTracker: ActivityTracker` + `SwiftDataRunStorage: RunStorage` as app-layer concrete implementations
+- [ ] Audit all `@State` and `@Environment` usage in `RuniApp.swift` and `RuniView.swift`
 - [ ] Define ownership boundaries: what belongs to the app, what belongs to a window, what belongs to a feature
 - [ ] Design and implement a navigation/routing model
-- [ ] Refactor `ContentView` into a clean root coordinator + layout view
+- [ ] Refactor `RuniView` into a clean root coordinator + layout view
 - [ ] Consolidate dependency injection at the root level
 - [ ] Verify multi-window (viewer window) contract is explicit and documented
 
@@ -335,6 +339,8 @@ The app is currently a mix of production features, diagnostics, and shader learn
 
 These are documented in `Docs/runi.md` but not in scope for the initial release:
 
+- **Generic `RunLibraryView`** — parameterise the library view over a `LibraryRecord` protocol so it can move from the app target into RunUI. Currently blocked: `@Query` requires a concrete SwiftData `@Model` type, so the view must stay in the app until either SwiftData adds protocol-constrained `@Query` support, or we introduce an app-level adapter that bridges `RunRecord` → a protocol type for the view layer.
+- **More tracker integrations** — e.g. HealthKit, Garmin, Wahoo. `ActivityTracker` protocol is already tracker-agnostic; adding a new source is a new concrete type in the app layer.
 - **Run-to-Visualisation wiring UI** — let users customise which metric drives which shader parameter
 - **Concatenate/Merge runs** — multi-run visualisations, playlists
 - **Composable visualisations** — swap shader pipeline components (noise type, distortion, etc.)
@@ -355,4 +361,5 @@ _Updated after each session. Format: `[date] Phase X.Y — what was done`_
 [2026-03-25] Phase 3 polish — Auth abstracted behind RunLibrary: isConnected, connect(from:), disconnect(). ConnectAction + DisconnectAction callable structs injected via .library modifier. ConnectButton + DisconnectButton + LibraryEmptyView added; RunLibraryView no longer imports StravaKit or AuthenticationServices. LibraryEntry.Source made Hashable/Equatable (hashes on activity.id for .strava). SourceKey enum removed; cache keyed on LibraryEntry.Source directly.
 [2026-03-26] Phase 4 complete — CustomisationPanel unified type (replaces PlayerInspectorView + PlayerSheetView + InspectorFocus). macOS: Window("Customisation") auxiliary scene opened via openWindow(id:). iOS: bottom sheet with medium/large detents. VisualisationModel @Observable shared across windows. RunPlayer moved to app level. VisualisationPicker + TransformerListButton + InterpolationPicker all rewritten as NavigationLink push rows. RunStatisticsContent deleted. backgroundExtensionEffect() moved to NavigationStack level in ContentView to eliminate bottom-edge seam above PlaybackControls. Branch: ifs.
 [2026-03-29] Phase 5 complete — RunRecord @Model with config stored as JSON Data? blobs (VisualisationConfig, TransformerConfig, InterpolatorConfig Codable enums; nonisolated Codable for Swift 6). playDuration: TimeInterval? column replaces DurationConfig entirely (RunPlayer.Duration struct retired). NowPlayingModel @Observable + NowPlayingModifier bridges RunPlayer observation to RunRecord outside render pass; fixes record.entryID-always-zero bug. NowPlayingModifier intercepts setDuration to persist playDuration. Per-run config carried forward on new run selection. PlaybackDurationMapping + DurationSlider (SliderTickContentForEach with labeled ticks at 15s/30s/1m/Real) + DurationPicker (compact popover trigger) replace DurationMenu/DurationPicker. Several bug fixes: player always empty (duration.didSet racing Task), SwiftData crash (composite attribute decoding), Swift 6 nonisolated Codable conformances. Branch: ifs.
+[2026-04-06] Phase 7 in progress — RunLibrary extracted to RunKit with ActivityTracker + RunStorage protocols. Library actions (Refresh, LoadNextPage, LoadEntry, Delete), LibraryState, ConnectToggle, DeleteRunButton, and base LibraryEnvironment moved to RunUI. StravaTracker + SwiftDataRunStorage added as app-layer concrete implementations. ConnectToggle replaces hardcoded ConnectButton/DisconnectButton — takes a specific tracker, shows displayName + connection status, handles keepRuns confirmation. App's RunLibraryEnvironment.swift now only adds import-specific actions on top of RunUI's .library().
 [2026-03-29] Phase 6 complete — Two export formats: `.runi` (lightweight Codable+Transferable JSON; instant ShareLink) and video (.mp4 via offline Metal pipeline). export.metal adds standard vertex+fragment shaders that forward-declare shared math from warp.metal/run.metal; VideoRenderer renders full duration at viewport resolution as fast as GPU allows using AVAssetWriter. ExportSheet presents both options; ExportButton replaces share placeholder in toolbar. RunLibrary.importRuniDocument handles .runi import; ContentView.onOpenURL handles "Open In" from AirDrop/Messages. PaletteGradientRenderer.render + PathSimplifier.rdp made public. UTType registered in Info.plist. Branch: ifs.

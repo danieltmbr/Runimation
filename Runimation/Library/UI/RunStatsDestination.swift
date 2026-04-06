@@ -1,17 +1,19 @@
 import RunKit
+import RunUI
+import SwiftData
 import SwiftUI
 
 /// Stats destination for a `RunEntry`.
 ///
-/// Resolves the entry's display name via `RunLibrary` and fetches the run
-/// via `\.loadRun`. The three possible states — loading, loaded, failed —
-/// are represented by a single `Result<Run, Error>?`:
+/// Resolves the entry's display name via a SwiftData fetch and loads
+/// the run via `\.loadEntry`. The three possible states — loading, loaded,
+/// failed — are represented by a single `Result<Run, Error>?`:
 /// `nil` = loading, `.success` = loaded, `.failure` = error.
 ///
 struct RunStatsDestination: View {
 
-    @Environment(RunLibrary.self)
-    private var library
+    @Environment(\.modelContext)
+    private var modelContext
 
     @Environment(\.loadEntry)
     private var loadEntry
@@ -21,7 +23,9 @@ struct RunStatsDestination: View {
     @State
     private var result: Result<Run, Error>?
 
-    private var record: RunRecord? { library.record(for: entry) }
+    private var record: RunRecord? {
+        try? modelContext.fetch(FetchDescriptor.record(for: entry)).first
+    }
 
     var body: some View {
         Group {

@@ -1,12 +1,14 @@
 import Foundation
+import RunKit
+import SwiftData
 
 /// Builds and returns a `RuniDocument` for a given `RunEntry`.
 ///
 /// Resolves the entry to its persisted `RunRecord` and loads track data
 /// from the original source if it hasn't been fetched yet. Safe to call
-/// for Strava runs that have never been played.
+/// for tracker runs that have never been played.
 ///
-/// Inject via `.export(library:)` and access in views with:
+/// Inject via `.export(library:modelContext:)` and access in views with:
 /// ```swift
 /// @Environment(\.exportRuni) private var exportRuni
 /// let doc = try await exportRuni(entry)
@@ -25,10 +27,11 @@ struct ExportRuniAction {
     }
 
     @MainActor
-    init(library: RunLibrary) {
+    init(library: RunLibrary, modelContext: ModelContext) {
         self.init { entry in
-            guard let record = library.record(for: entry) else { throw ResolutionError() }
-            _ = try await library.loadRun(for: record)
+            _ = try await library.loadRun(for: entry)
+            guard let record = try? modelContext.fetch(FetchDescriptor.record(for: entry)).first
+            else { throw ResolutionError() }
             guard let doc = RuniDocument.from(record) else { throw ExportError() }
             return doc
         }

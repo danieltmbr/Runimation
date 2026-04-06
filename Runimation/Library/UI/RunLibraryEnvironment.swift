@@ -1,33 +1,14 @@
 import RunKit
+import RunUI
+import SwiftData
 import SwiftUI
 
-// MARK: - Environment Keys
+// MARK: - App-Specific Environment Keys
 
 extension EnvironmentValues {
 
     @Entry
-    var refreshLibrary: RefreshLibraryAction = RefreshLibraryAction()
-
-    @Entry
-    var loadNextPage: LoadNextPageAction = LoadNextPageAction()
-
-    @Entry
     var importFile: ImportFileAction = ImportFileAction()
-
-    @Entry
-    var loadRun: LoadRunAction = LoadRunAction()
-
-    @Entry
-    var loadEntry: LoadEntryAction = LoadEntryAction()
-
-    @Entry
-    var deleteRun: DeleteRunAction = DeleteRunAction()
-
-    @Entry
-    var connectLibrary: ConnectAction = ConnectAction()
-
-    @Entry
-    var disconnectLibrary: DisconnectAction = DisconnectAction()
 
     @Entry
     var importDocument: ImportDocumentAction = ImportDocumentAction()
@@ -37,27 +18,22 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// Injects a `RunLibrary` and all its associated actions into the
-    /// SwiftUI environment, making them available to any descendant view
-    /// via `@LibraryState` and `@Environment(\.action)`.
+    /// Injects a `RunLibrary`, all core library actions (via RunUI's `.library(_:)`),
+    /// and app-specific import actions into the SwiftUI environment.
+    ///
+    /// Also injects the `ModelContext` so import actions can write per-run
+    /// configuration to the SwiftData store.
     ///
     /// Apply once near the root of the library's view hierarchy:
     /// ```swift
-    /// PlayerWindow(...)
-    ///     .library(library)
+    /// RuniWindow(...)
+    ///     .library(library, modelContext: modelContainer.mainContext)
     /// ```
     ///
     @MainActor
-    func library(_ library: RunLibrary) -> some View {
-        environment(library)
-            .environment(\.refreshLibrary, RefreshLibraryAction(library: library))
-            .environment(\.loadNextPage, LoadNextPageAction(library: library))
+    func library(_ library: RunLibrary, modelContext: ModelContext) -> some View {
+        self.library(library)
             .environment(\.importFile, ImportFileAction(library: library))
-            .environment(\.loadRun, LoadRunAction(library: library))
-            .environment(\.loadEntry, LoadEntryAction(library: library))
-            .environment(\.deleteRun, DeleteRunAction(library: library))
-            .environment(\.connectLibrary, ConnectAction(library: library))
-            .environment(\.disconnectLibrary, DisconnectAction(library: library))
-            .environment(\.importDocument, ImportDocumentAction(library: library))
+            .environment(\.importDocument, ImportDocumentAction(library: library, modelContext: modelContext))
     }
 }

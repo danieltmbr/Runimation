@@ -21,6 +21,9 @@ struct RuniView: View {
     @Environment(RunLibrary.self)
     private var library
 
+    @Environment(\.modelContext)
+    private var modelContext
+
     @Environment(\.importDocument)
     private var importDocument
 
@@ -156,7 +159,9 @@ struct RuniView: View {
     private func restoreLastPlayedRun() async {
         guard autoRestore else { return }
         guard nowPlaying.isSedentary else { return }
-        guard let record = await library.lastPlayedRecord else {
+        guard let entry = library.lastPlayedEntry,
+              let record = try? modelContext.fetch(FetchDescriptor.record(for: entry)).first
+        else {
 #if os(iOS)
             showLibrary = true
 #endif

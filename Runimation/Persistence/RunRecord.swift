@@ -2,28 +2,11 @@ import Foundation
 import RunKit
 import SwiftData
 
-/// Identifies the origin of a run's track data.
-///
-/// Stored as a Codable property on `RunRecord` so `RunLibrary` knows
-/// how to re-fetch the track if `trackData` is not yet populated.
-///
-enum RunSource: Hashable, Codable, Sendable {
-    /// A run fetched from the Strava API, identified by its activity ID.
-    case strava(id: Int)
-    /// A run imported from a local GPX file.
-    case gpx(url: URL)
-    /// The bundled sample run, identified by its resource name.
-    case bundled(name: String)
-}
-
 /// A persistent record of a run in the library.
 ///
 /// Stores display metadata (always populated), raw GPS track data
 /// (serialized on first load), and per-run configuration for the
 /// visualisation and signal processing pipeline.
-///
-/// `RunLibrary` is the sole owner of `RunRecord` instances — views
-/// consume them read-only via `@LibraryState(\.entries)`.
 ///
 @Model
 final class RunRecord {
@@ -35,7 +18,7 @@ final class RunRecord {
     ///
     @Attribute(.unique)
     fileprivate var entryID: UUID
-    
+
     var entry: RunEntry {
         RunEntry(id: entryID)
     }
@@ -54,7 +37,7 @@ final class RunRecord {
 
     /// Origin of the track data — used to re-fetch if `trackData` is absent.
     ///
-    var source: RunSource
+    var source: RunOrigin
 
     // MARK: - Timestamps
 
@@ -90,7 +73,7 @@ final class RunRecord {
         date: Date,
         distance: Double,
         duration: TimeInterval,
-        source: RunSource,
+        source: RunOrigin,
         createdAt: Date = Date(),
         lastPlayedAt: Date? = nil,
         trackData: Data? = nil
@@ -137,7 +120,7 @@ final class RunRecord {
 }
 
 extension FetchDescriptor<RunRecord> {
-    
+
     static func record(for run: RunEntry) -> FetchDescriptor<RunRecord> {
         let id = run.id
         return FetchDescriptor<RunRecord>(

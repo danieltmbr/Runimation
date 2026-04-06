@@ -1,3 +1,4 @@
+import CoreKit
 import RunKit
 import RunUI
 import StravaKit
@@ -6,21 +7,27 @@ import SwiftUI
 
 @main
 struct RuniApp: App {
-    
+
     private let modelContainer: ModelContainer
-    
+
     private let library: RunLibrary
-    
+
+    private let stravaTracker: StravaTracker
+
     init() {
         let container = try! ModelContainer(for: RunRecord.self)
         modelContainer = container
+
         let client = StravaClient()
-        library = RunLibrary(
-            modelContext: container.mainContext,
-            stravaClient: client
-        )
+        let tracker = StravaTracker(client: client)
+        stravaTracker = tracker
+
+        let storage = SwiftDataRunStorage(context: container.mainContext)
+        library = RunLibrary(trackers: [tracker], storage: storage)
+
+        seedBundledRunIfNeeded(context: container.mainContext, library: library)
     }
-    
+
     var body: some Scene {
 #if os(macOS)
         // Main persistent player window. Handles the Strava OAuth callback scheme
@@ -35,11 +42,11 @@ struct RuniApp: App {
             .windowToolbarFullScreenVisibility(.onHover)
             .onOpenURL { url in
                 guard url.scheme == "runimation" else { return }
-                library.handleCallbackURL(url)
+                stravaTracker.handleCallbackURL(url)
             }
         }
         .handlesExternalEvents(matching: ["runimation"])
-        
+
         // Viewer window opened for .runi files — each file gets its own independent
         // player with no auto-restore from the library.
         WindowGroup(id: "runi-viewer") {
@@ -50,11 +57,11 @@ struct RuniApp: App {
             )
         }
         .handlesExternalEvents(matching: ["runi"])
-        
+
         // Floating customisation panel that tracks whichever player window is focused.
         Window("Customisation", id: "customisation") {
             CustomisationWindow()
-                .library(library)
+                .library(library, modelContext: modelContainer.mainContext)
                 .modelContainer(modelContainer)
         }
         .windowLevel(.floating)
@@ -70,4 +77,28 @@ struct RuniApp: App {
         }
 #endif
     }
+}
+
+// MARK: - Seed
+
+/// Seeds the bundled sample run on first launch in DEBUG builds.
+///
+private func seedBundledRunIfNeeded(context: ModelContext, library: RunLibrary) {
+    #if DEBUG
+    let name = "run-01"
+    let all = (try? context.fetch(FetchDescriptor<RunRecord>())) ?? []
+    let alreadyExists = all.contains {
+        if case .bundled(let n) = $0.source { return n == name }
+        return false
+    }
+    guard !alreadyExists else { return }
+    let gpxParser = GPX.Parser()
+    guard let track: GPX.Track = gpxParser.parse(fileNamed: name) else { return }
+    library.importTrack(
+        name: track.name.isEmpty ? name : track.name,
+        date: track.date ?? Date(),
+        points: track.points,
+        source: .bundled(name: name)
+    )
+    #endif
 }

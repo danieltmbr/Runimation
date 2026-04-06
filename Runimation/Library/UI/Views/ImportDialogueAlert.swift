@@ -1,3 +1,4 @@
+import RunUI
 import SwiftUI
 
 /// Presents a "Save to Library?" confirmation alert when a `.runi` file has been
@@ -31,7 +32,7 @@ private struct ImportDialogueAlert: ViewModifier {
                     importedRecord = nil
                 }
                 Button("Remove", role: .destructive) {
-                    if let record = importedRecord { deleteRun(record) }
+                    if let record = importedRecord { deleteRun(record.entry) }
                     importedRecord = nil
                 }
             } message: {
