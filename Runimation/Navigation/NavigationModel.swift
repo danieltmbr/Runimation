@@ -46,6 +46,8 @@ final class NavigationModel: Equatable {
 
     var showCustomisation = false
 
+    var showFilePicker = false
+
     // MARK: - Init
 
     init(

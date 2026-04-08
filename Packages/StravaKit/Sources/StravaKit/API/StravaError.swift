@@ -12,6 +12,9 @@ public enum StravaError: LocalizedError, Sendable {
     /// The Strava API returned a non-200 HTTP status.
     case apiError(Int)
 
+    /// The activity ID in the source could not be converted to an integer.
+    case invalidActivityID
+
     /// The API response could not be decoded as expected.
     case decodingError(String)
 
@@ -23,6 +26,8 @@ public enum StravaError: LocalizedError, Sendable {
             return "Authorization failed: no code was returned by Strava."
         case .apiError(let code):
             return "Strava API error (HTTP \(code))."
+        case .invalidActivityID:
+            return "Invalid Strava activity ID."
         case .decodingError(let detail):
             return "Could not read Strava data: \(detail)"
         }

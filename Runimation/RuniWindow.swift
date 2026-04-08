@@ -1,8 +1,12 @@
+import AuthenticationServices
 import RunKit
 import RunUI
 import SwiftData
 import SwiftUI
 import Visualiser
+#if os(iOS)
+import UIKit
+#endif
 
 /// Per-window root view.
 ///
@@ -22,6 +26,11 @@ struct RuniWindow: View {
 
     @State
     private var navigationModel: NavigationModel
+
+    #if os(iOS)
+    @State
+    private var presentationAnchor: ASPresentationAnchor? = nil
+    #endif
 
     init(
         library: RunLibrary,
@@ -52,5 +61,30 @@ struct RuniWindow: View {
             .environment(navigationModel)
             .modelContainer(modelContainer)
             .focusedValue(\.navigationModel, navigationModel)
+            #if os(iOS)
+            .background(WindowAnchorReader { anchor in presentationAnchor = anchor })
+            .environment(\.presentationAnchor, presentationAnchor)
+            #endif
     }
 }
+
+// MARK: - iOS Window Reader
+
+#if os(iOS)
+/// Captures the `UIWindow` containing this view and reports it via `onCapture`.
+///
+/// Used to inject the presentation anchor for `ASWebAuthenticationSession`
+/// into the SwiftUI environment without UIKit dependencies in leaf views.
+///
+private struct WindowAnchorReader: UIViewRepresentable {
+
+    let onCapture: @MainActor (UIWindow) -> Void
+
+    func makeUIView(context: Context) -> UIView { UIView() }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        guard let window = uiView.window else { return }
+        Task { @MainActor in onCapture(window) }
+    }
+}
+#endif

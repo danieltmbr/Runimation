@@ -33,7 +33,6 @@ struct ImportDocumentAction {
 
             let data = try Data(contentsOf: url)
             let document = try JSONDecoder().decode(RuniDocument.self, from: data)
-            let trackData = try JSONEncoder().encode(document.points)
 
             let entry = library.importTrack(
                 name: document.name,

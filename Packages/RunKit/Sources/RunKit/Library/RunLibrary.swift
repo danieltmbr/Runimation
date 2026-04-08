@@ -1,3 +1,4 @@
+import AuthenticationServices
 import CoreKit
 import Foundation
 
@@ -19,23 +20,38 @@ public final class RunLibrary {
     // MARK: - Public State
 
     /// Whether any tracker is currently connected.
-    public var isConnected: Bool { trackers.contains { $0.isConnected } }
+    ///
+    public var isConnected: Bool {
+        trackers.contains { $0.isConnected }
+    }
 
-    /// True while a remote fetch is in flight.
-    public private(set) var isLoading = false
+    /// Whether any tracker is currently fetching activities.
+    ///
+    public var isLoading: Bool {
+        trackers.contains { $0.isLoading }
+    }
 
     // MARK: - Dependencies
 
     public let trackers: [any ActivityTracker]
 
-    public let storage: any RunStorage
+    private let storage: any RunStorage
 
     private let gpxParser: GPX.Parser
 
     private let runParser: Run.Parser
 
     /// In-memory parsed run cache keyed by run UUID.
+    ///
     private var cache: [UUID: Run] = [:]
+
+    /// Oldest activity date fetched per tracker, used as the `before` cursor.
+    ///
+    private var cursors: [String: Date] = [:]
+
+    /// Tracker IDs for which all pages have been fetched.
+    ///
+    private var endReached: Set<String> = []
 
     // MARK: - Init
 
@@ -54,8 +70,8 @@ public final class RunLibrary {
     // MARK: - Connection
 
     /// Connects a tracker and immediately refreshes its activities.
-    public func connect(_ tracker: any ActivityTracker) async throws {
-        try await tracker.connect()
+    public func connect(_ tracker: any ActivityTracker, from anchor: ASPresentationAnchor?) async throws {
+        try await tracker.connect(from: anchor)
         await refresh()
     }
 
@@ -68,20 +84,30 @@ public final class RunLibrary {
 
     // MARK: - Fetching
 
-    /// Resets pagination on all connected trackers and fetches fresh data.
+    /// Resets pagination cursors and fetches fresh data from all connected trackers.
     public func refresh() async {
-        for tracker in trackers where tracker.isConnected {
-            tracker.resetPagination()
-        }
+        cursors.removeAll()
+        endReached.removeAll()
         await fetchNextPage()
     }
 
     /// Fetches the next page of activities from all connected trackers.
+    ///
+    /// Uses timestamp-based cursors: each tracker receives the oldest date
+    /// seen so far as `before`, so pages are stable even when new activities
+    /// are added between fetches.
+    ///
     public func fetchNextPage() async {
-        isLoading = true
-        defer { isLoading = false }
-        for tracker in trackers where tracker.isConnected {
-            let activities = (try? await tracker.fetchNext()) ?? []
+        for tracker in trackers where tracker.isConnected && !endReached.contains(tracker.id) {
+            let before = cursors[tracker.id]
+            let activities = (try? await tracker.activities(before: before)) ?? []
+
+            if activities.isEmpty {
+                endReached.insert(tracker.id)
+            } else if let oldest = activities.map(\.date).min() {
+                cursors[tracker.id] = oldest
+            }
+
             for activity in activities {
                 guard !storage.exists(source: activity.source) else { continue }
                 storage.insert(
@@ -188,7 +214,8 @@ public final class RunLibrary {
         case .tracker(let source):
             guard let tracker = trackers.first(where: { $0.id == source.tracker })
             else { throw LoadError.trackerNotFound }
-            return try await tracker.track(for: source)
+            let points = try await tracker.trackPoints(for: source)
+            return GPX.Track(name: "", points: points, type: "running", date: nil)
         case .file(let url):
             let tracks: [GPX.Track] = (try? gpxParser.parse(contentsOf: url)) ?? []
             guard let track = tracks.first else { throw LoadError.noTracksInFile }

@@ -16,7 +16,8 @@ struct LibraryEmptyView: View {
     @LibraryState(\.isConnected)
     private var isConnected
 
-    let onImport: @MainActor () -> Void
+    @NavigationState(\.showFilePicker)
+    private var showFilePicker
 
     var body: some View {
         if isConnected {
@@ -71,7 +72,9 @@ struct LibraryEmptyView: View {
     // MARK: - Shared
 
     private var importButton: some View {
-        Button(action: onImport) {
+        Button {
+            showFilePicker = true
+        } label: {
             Label("Import File", systemImage: "square.and.arrow.down")
         }
     }

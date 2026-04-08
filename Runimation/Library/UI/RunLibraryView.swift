@@ -69,8 +69,8 @@ struct RunLibraryView: View {
     private var path: [RunEntry] = []
     #endif
 
-    @State
-    private var isShowingFilePicker = false
+    @NavigationState(\.showFilePicker)
+    private var showFilePicker
 
     @State
     private var isDragTargeted = false
@@ -94,7 +94,7 @@ struct RunLibraryView: View {
             .navigationTitle("Run Library")
             .toolbar { toolbarContent }
             .fileImporter(
-                isPresented: $isShowingFilePicker,
+                isPresented: $showFilePicker,
                 allowedContentTypes: [gpxUTType, .runi],
                 allowsMultipleSelection: true
             ) { result in
@@ -114,7 +114,7 @@ struct RunLibraryView: View {
         if isLoading && entries.isEmpty {
             ProgressView("Loading runs…")
         } else if entries.isEmpty {
-            LibraryEmptyView(onImport: { isShowingFilePicker = true })
+            LibraryEmptyView()
         } else {
             List(entries) { record in
                 libraryRow(record)
@@ -123,7 +123,7 @@ struct RunLibraryView: View {
                         loadNextPage()
                     }
             }
-            .listStyle(.plain)
+//            .listStyle(.plain)
         }
     }
 
@@ -154,7 +154,7 @@ struct RunLibraryView: View {
     private var moreMenu: some View {
         Menu {
             Button {
-                isShowingFilePicker = true
+                showFilePicker = true
             } label: {
                 Label("Import File", systemImage: "square.and.arrow.down")
             }

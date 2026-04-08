@@ -1,7 +1,7 @@
 import CoreKit
 import Foundation
 
-/// Converts Strava stream data into a `GPX.Track` for processing by `RunPlayer`.
+/// Converts Strava stream data into `GPX.Point` arrays for storage and run parsing.
 ///
 /// Uses the streams' `time` offsets as relative timestamps anchored to the Unix
 /// epoch — `RunParser` only cares about differences between consecutive points,
@@ -9,22 +9,12 @@ import Foundation
 ///
 enum StravaTrackMaker {
 
-    /// Creates a `GPX.Track` from Strava stream data.
+    /// Converts Strava stream data into an array of `GPX.Point` values.
     ///
     /// - Parameter streams: Raw streams from the Strava API (lat/lng + time required).
-    /// - Parameter name: Optional display name; defaults to `"Strava Run"`.
-    /// - Parameter date: Activity start date from `StravaActivity.startDate`. Required
-    ///   because stream time offsets are epoch-relative, not absolute timestamps.
-    /// - Returns: A `GPX.Track` ready for `RunPlayer.setRun(_:)`.
+    /// - Returns: Track points ready for storage and run parsing.
     ///
-    static func make(from streams: StravaStreams, name: String = "Strava Run", date: Date? = nil) -> GPX.Track {
-        let points = makePoints(from: streams)
-        return GPX.Track(name: name, points: points, type: "running", date: date)
-    }
-
-    // MARK: - Private
-
-    private static func makePoints(from streams: StravaStreams) -> [GPX.Point] {
+    static func points(from streams: StravaStreams) -> [GPX.Point] {
         let coordinates = streams.latlng.data
         let timeOffsets = streams.time.data
         guard !coordinates.isEmpty else { return [] }

@@ -12,18 +12,17 @@ struct RuniApp: App {
 
     private let library: RunLibrary
 
-    private let stravaTracker: StravaTracker
+    private let stravaClient: StravaClient
 
     init() {
         let container = try! ModelContainer(for: RunRecord.self)
         modelContainer = container
 
         let client = StravaClient()
-        let tracker = StravaTracker(client: client)
-        stravaTracker = tracker
+        stravaClient = client
 
         let storage = SwiftDataRunStorage(context: container.mainContext)
-        library = RunLibrary(trackers: [tracker], storage: storage)
+        library = RunLibrary(trackers: [client], storage: storage)
 
         seedBundledRunIfNeeded(context: container.mainContext, library: library)
     }
@@ -42,7 +41,7 @@ struct RuniApp: App {
             .windowToolbarFullScreenVisibility(.onHover)
             .onOpenURL { url in
                 guard url.scheme == "runimation" else { return }
-                stravaTracker.handleCallbackURL(url)
+                stravaClient.handleCallbackURL(url)
             }
         }
         .handlesExternalEvents(matching: ["runimation"])

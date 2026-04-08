@@ -7,16 +7,16 @@ import AppKit
 
 /// Manages Strava authentication and data fetching.
 ///
-/// Create one instance and inject it into the SwiftUI environment via `.environment(stravaClient)`.
-/// All state changes happen on the main actor to support `@Observable` and SwiftUI bindings.
+/// `StravaClient` is a pure StravaKit type — it has no dependency on RunKit.
+/// Conformance to `ActivityTracker` is declared in the app layer so the
+/// package dependency graph stays acyclic (App → RunKit, App → StravaKit;
+/// StravaKit → CoreKit only).
 ///
 /// ## Usage
 /// ```swift
 /// let client = StravaClient()
-/// try await client.authenticate(presentingFrom: anchor)
-/// let activities = try await client.activities()
-/// let track = try await client.track(for: activities[0].id)
-/// try await player.setRun(track)
+/// let activities = try await client.stravaActivities(before: nil)
+/// let points = try await client.trackPoints(for: activities[0].id)
 /// ```
 ///
 @MainActor @Observable
@@ -27,6 +27,9 @@ public final class StravaClient {
     /// True when a valid token is stored in the Keychain.
     public private(set) var isAuthenticated: Bool = false
 
+    /// True while a network request is in flight.
+    public private(set) var isLoading: Bool = false
+
     // MARK: - Private
 
     #if os(macOS)
@@ -35,13 +38,13 @@ public final class StravaClient {
     #endif
 
     private let clientID: String
-    
+
     private let clientSecret: String
 
     private var token: StravaToken?
 
     private let urlSession = URLSession.shared
-    
+
     private let activityDecoder: JSONDecoder = {
         let d = JSONDecoder()
         d.dateDecodingStrategy = .iso8601
@@ -62,30 +65,31 @@ public final class StravaClient {
 
     // MARK: - Authentication
 
-    #if os(macOS)
-    /// Opens the system browser for Strava authorization.
+    /// Opens the Strava authorization flow.
     ///
-    /// The flow completes when the app receives the OAuth callback URL.
-    /// Wire up `handleCallbackURL(_:)` via `.onOpenURL` in the root view.
+    /// On iOS, `anchor` is the presenting `UIWindow` for `ASWebAuthenticationSession`.
+    /// On macOS, `anchor` is unused — auth opens in the system browser via `.onOpenURL`.
     ///
-    public func authenticate() async throws {
-        let auth = StravaAuth(clientID: clientID, clientSecret: clientSecret)
-        // Cancel any previously abandoned auth attempt.
-        pendingAuthContinuation?.resume(throwing: CancellationError())
-        let code = try await withCheckedThrowingContinuation { continuation in
-            pendingAuthContinuation = continuation
-            NSWorkspace.shared.open(auth.authURL)
-        }
-        pendingAuthContinuation = nil
-        let newToken = try await auth.exchangeCode(code)
-        newToken.save()
-        token = newToken
-        isAuthenticated = true
+    public func connect(from anchor: ASPresentationAnchor?) async throws {
+        #if os(macOS)
+        try await authenticateViaBrowser()
+        #else
+        guard let anchor else { return }
+        try await authenticateViaSession(presentingFrom: anchor)
+        #endif
     }
 
+    /// Removes the stored token and marks the client as unauthenticated.
+    public func disconnect() {
+        StravaToken.delete()
+        token = nil
+        isAuthenticated = false
+    }
+
+    #if os(macOS)
     /// Resolves a pending Strava OAuth flow with the callback URL the system delivered.
     ///
-    /// Call this from `.onOpenURL` in the root view so the `authenticate()` continuation
+    /// Call this from `.onOpenURL` in the root view so the `connect(from:)` continuation
     /// can resume once the browser redirects back to the app.
     ///
     public func handleCallbackURL(_ url: URL) {
@@ -97,51 +101,29 @@ public final class StravaClient {
         pendingAuthContinuation?.resume(returning: code)
         pendingAuthContinuation = nil
     }
-    #else
-    /// Opens the Strava authorization page and exchanges the result for a token.
-    ///
-    /// The token is stored in the Keychain and persists across launches.
-    ///
-    public func authenticate(presentingFrom anchor: ASPresentationAnchor) async throws {
-        let auth = StravaAuth(clientID: clientID, clientSecret: clientSecret)
-        let newToken = try await auth.authenticate(presentingFrom: anchor)
-        newToken.save()
-        token = newToken
-        isAuthenticated = true
-    }
     #endif
-
-    /// Removes the stored token and marks the client as unauthenticated.
-    public func signOut() {
-        StravaToken.delete()
-        token = nil
-        isAuthenticated = false
-    }
 
     // MARK: - Data
 
-    /// Fetches the authenticated athlete's activities, newest first.
+    /// Fetches the authenticated athlete's run activities, newest first.
     ///
-    /// - Parameters:
-    ///   - page: 1-based page index (default 1).
-    ///   - perPage: Results per page, max 200 (default 30).
+    /// Pass `nil` for the first page. Pass the oldest date from the previous
+    /// result as `before` for subsequent pages (cursor-based pagination).
+    /// An empty array means all pages have been fetched.
     ///
-    public func activities(page: Int = 1, perPage: Int = 30) async throws -> [StravaActivity] {
-        let data = try await fetch(
-            path: "/api/v3/athlete/activities",
-            params: ["page": "\(page)", "per_page": "\(perPage)"]
-        )
+    public func stravaActivities(before: Date?) async throws -> [StravaActivity] {
+        var params: [String: String] = ["per_page": "30"]
+        if let before {
+            params["before"] = "\(Int(before.timeIntervalSince1970))"
+        }
+        isLoading = true
+        defer { isLoading = false }
+        let data = try await fetch(path: "/api/v3/athlete/activities", params: params)
         return try activityDecoder.decode([StravaActivity].self, from: data)
     }
 
-    /// Fetches stream data for `activity` and converts it to a `GPX.Track`
-    /// ready for loading into `RunPlayer.setRun(_:)`.
-    ///
-    public func track(for activity: StravaActivity) async throws -> GPX.Track {
-        try await track(for: activity.id, name: activity.name, date: activity.startDate)
-    }
-
-    public func track(for activityID: Int, name: String, date: Date) async throws -> GPX.Track {
+    /// Fetches GPS track points for the given Strava activity ID.
+    public func trackPoints(for activityID: Int) async throws -> [GPX.Point] {
         let data = try await fetch(
             path: "/api/v3/activities/\(activityID)/streams",
             params: [
@@ -150,7 +132,7 @@ public final class StravaClient {
             ]
         )
         let streams = try streamDecoder.decode(StravaStreams.self, from: data)
-        return StravaTrackMaker.make(from: streams, name: name, date: date)
+        return StravaTrackMaker.points(from: streams)
     }
 
     // MARK: - Private Networking
@@ -168,7 +150,6 @@ public final class StravaClient {
         return data
     }
 
-    /// Returns the current token, refreshing it first if it is about to expire.
     private func freshToken() async throws -> StravaToken {
         guard let current = token else { throw StravaError.notAuthenticated }
         if !current.isExpired { return current }
@@ -192,4 +173,30 @@ public final class StravaClient {
         let (data, _) = try await urlSession.data(for: request)
         return try JSONDecoder().decode(StravaToken.self, from: data)
     }
+
+    // MARK: - Private Auth
+
+    #if os(macOS)
+    private func authenticateViaBrowser() async throws {
+        let auth = StravaAuth(clientID: clientID, clientSecret: clientSecret)
+        pendingAuthContinuation?.resume(throwing: CancellationError())
+        let code = try await withCheckedThrowingContinuation { continuation in
+            pendingAuthContinuation = continuation
+            NSWorkspace.shared.open(auth.authURL)
+        }
+        pendingAuthContinuation = nil
+        let newToken = try await auth.exchangeCode(code)
+        newToken.save()
+        token = newToken
+        isAuthenticated = true
+    }
+    #else
+    private func authenticateViaSession(presentingFrom anchor: ASPresentationAnchor) async throws {
+        let auth = StravaAuth(clientID: clientID, clientSecret: clientSecret)
+        let newToken = try await auth.authenticate(presentingFrom: anchor)
+        newToken.save()
+        token = newToken
+        isAuthenticated = true
+    }
+    #endif
 }
