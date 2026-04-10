@@ -183,6 +183,9 @@ The app is currently a mix of production features, diagnostics, and shader learn
 - Pipeline section: transformer list and interpolation picker both push via NavigationLink ✓
 - Changing visualisation in auxiliary window immediately reflects in main visualiser ✓
 
+### Known limitations
+- **Single shared Customisation window**: `WindowCoordinator` tracks only the last focused run window. Multiple player windows (main + runi-viewer) share the same Customisation panel — it always customises whichever window was focused last. A per-window Customisation window would require SwiftUI to support scene-scoped floating panels or a custom NSPanel-based solution.
+
 ### Known issues (TransformerList polish — future task)
 - `DisclosureGroup` collapses after scroll (state not preserved across redraws)
 - When a row is expanded, inner cells (form controls) are swipeable to delete — should only be the header row
@@ -272,7 +275,7 @@ The app is currently a mix of production features, diagnostics, and shader learn
 
 ---
 
-## Phase 7: App Structure Cleanup
+## ✅ Phase 7: App Structure Cleanup
 **Goal:** Rationalise root-level state ownership, dependency injection, and navigation so the app is maintainable and extensible before the final polish pass.
 
 ### Problem Areas
@@ -297,18 +300,24 @@ The app is currently a mix of production features, diagnostics, and shader learn
 - [x] Move `LibraryState` property wrapper to RunUI
 - [x] Split `RunLibraryEnvironment` — base `.library(_:)` in RunUI, app-specific additions in app
 - [x] `StravaTracker: ActivityTracker` + `SwiftDataRunStorage: RunStorage` as app-layer concrete implementations
-- [ ] Audit all `@State` and `@Environment` usage in `RuniApp.swift` and `RuniView.swift`
-- [ ] Define ownership boundaries: what belongs to the app, what belongs to a window, what belongs to a feature
-- [ ] Design and implement a navigation/routing model
-- [ ] Refactor `RuniView` into a clean root coordinator + layout view
-- [ ] Consolidate dependency injection at the root level
-- [ ] Verify multi-window (viewer window) contract is explicit and documented
+- [x] Audit all `@State` and `@Environment` usage in `RuniApp.swift` and `RuniView.swift`
+- [x] Define ownership boundaries: what belongs to the app, what belongs to a window, what belongs to a feature
+- [x] Design and implement a navigation/routing model
+- [x] Refactor `RuniView` into a clean root coordinator + layout view
+- [x] Consolidate dependency injection at the root level
+- [x] Verify multi-window (viewer window) contract is explicit and documented
+
+### Ownership boundaries
+- **App level** (`RuniApp`): `RunLibrary`, `ModelContainer`, `StravaClient`, `WindowCoordinator` — shared across all windows
+- **Window level** (`RuniWindow` → `NavigationModel`): `RunPlayer`, `NowPlayingModel`, all navigation state — one instance per player window
+- **Feature level**: actions injected via environment modifiers (`.library()`, `.player()`, `.export()`, `.importActions()`) — no direct model access in leaf views
 
 ### Verification
-- `RunimationApp.body` is concise and readable — no business logic
-- `ContentView` has a single clear responsibility
-- Adding a new modal destination requires touching only the navigation model
-- No scattered `@State` navigation flags in root views
+- `RuniApp.body` is concise and readable — no business logic ✓
+- `RuniView` has a single clear responsibility (layout + routing) ✓
+- Adding a new modal destination requires touching only `NavigationModel` ✓
+- No scattered `@State` navigation flags in root views — all owned by `NavigationModel` ✓
+- No direct `@Environment(RunLibrary.self)` in leaf views — `@LibraryState` and actions only ✓
 
 ---
 
@@ -362,4 +371,5 @@ _Updated after each session. Format: `[date] Phase X.Y — what was done`_
 [2026-03-26] Phase 4 complete — CustomisationPanel unified type (replaces PlayerInspectorView + PlayerSheetView + InspectorFocus). macOS: Window("Customisation") auxiliary scene opened via openWindow(id:). iOS: bottom sheet with medium/large detents. VisualisationModel @Observable shared across windows. RunPlayer moved to app level. VisualisationPicker + TransformerListButton + InterpolationPicker all rewritten as NavigationLink push rows. RunStatisticsContent deleted. backgroundExtensionEffect() moved to NavigationStack level in ContentView to eliminate bottom-edge seam above PlaybackControls. Branch: ifs.
 [2026-03-29] Phase 5 complete — RunRecord @Model with config stored as JSON Data? blobs (VisualisationConfig, TransformerConfig, InterpolatorConfig Codable enums; nonisolated Codable for Swift 6). playDuration: TimeInterval? column replaces DurationConfig entirely (RunPlayer.Duration struct retired). NowPlayingModel @Observable + NowPlayingModifier bridges RunPlayer observation to RunRecord outside render pass; fixes record.entryID-always-zero bug. NowPlayingModifier intercepts setDuration to persist playDuration. Per-run config carried forward on new run selection. PlaybackDurationMapping + DurationSlider (SliderTickContentForEach with labeled ticks at 15s/30s/1m/Real) + DurationPicker (compact popover trigger) replace DurationMenu/DurationPicker. Several bug fixes: player always empty (duration.didSet racing Task), SwiftData crash (composite attribute decoding), Swift 6 nonisolated Codable conformances. Branch: ifs.
 [2026-04-06] Phase 7 in progress — RunLibrary extracted to RunKit with ActivityTracker + RunStorage protocols. Library actions (Refresh, LoadNextPage, LoadEntry, Delete), LibraryState, ConnectToggle, DeleteRunButton, and base LibraryEnvironment moved to RunUI. StravaTracker + SwiftDataRunStorage added as app-layer concrete implementations. ConnectToggle replaces hardcoded ConnectButton/DisconnectButton — takes a specific tracker, shows displayName + connection status, handles keepRuns confirmation. App's RunLibraryEnvironment.swift now only adds import-specific actions on top of RunUI's .library().
+[2026-04-10] Phase 7 complete — NavigationModel owns all per-window state (player, nowPlaying, navigation flags); NavigationState property wrapper gives clean @-syntax access. RuniView is a thin layout coordinator. WindowCoordinator solves cross-scene Customisation window tracking. FocusedNavigationModel.swift deleted (superseded). RuniView migrated from @Environment(RunLibrary.self) to @LibraryState(\.lastPlayedItem). Ownership boundaries documented in roadmap. Branch: phase7-navigation.
 [2026-03-29] Phase 6 complete — Two export formats: `.runi` (lightweight Codable+Transferable JSON; instant ShareLink) and video (.mp4 via offline Metal pipeline). export.metal adds standard vertex+fragment shaders that forward-declare shared math from warp.metal/run.metal; VideoRenderer renders full duration at viewport resolution as fast as GPU allows using AVAssetWriter. ExportSheet presents both options; ExportButton replaces share placeholder in toolbar. RunLibrary.importRuniDocument handles .runi import; ContentView.onOpenURL handles "Open In" from AirDrop/Messages. PaletteGradientRenderer.render + PathSimplifier.rdp made public. UTType registered in Info.plist. Branch: ifs.

@@ -27,6 +27,14 @@ struct RuniWindow: View {
     @State
     private var navigationModel: NavigationModel
 
+    #if os(macOS)
+    @Environment(WindowCoordinator.self)
+    private var windowCoordinator
+
+    @Environment(\.controlActiveState)
+    private var controlActiveState
+    #endif
+
     #if os(iOS)
     @State
     private var presentationAnchor: ASPresentationAnchor? = nil
@@ -58,7 +66,9 @@ struct RuniWindow: View {
             .export(library: library)
             .environment(navigationModel)
             .modelContainer(modelContainer)
-            .focusedValue(\.navigationModel, navigationModel)
+            .onChange(of: controlActiveState, initial: true) { _, state in
+                if state == .key { windowCoordinator.activeNavigationModel = navigationModel }
+            }
             #if os(iOS)
             .background(WindowAnchorReader { anchor in presentationAnchor = anchor })
             .environment(\.presentationAnchor, presentationAnchor)

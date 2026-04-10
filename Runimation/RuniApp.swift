@@ -14,6 +14,11 @@ struct RuniApp: App {
 
     private let stravaClient: StravaClient
 
+    #if os(macOS)
+    @State
+    private var windowCoordinator = WindowCoordinator()
+    #endif
+
     init() {
         let container = try! ModelContainer(for: RunRecord.self)
         modelContainer = container
@@ -37,6 +42,7 @@ struct RuniApp: App {
                 modelContainer: modelContainer,
                 autoRestore: true
             )
+            .environment(windowCoordinator)
             .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
             .windowToolbarFullScreenVisibility(.onHover)
             .onOpenURL { url in
@@ -54,6 +60,7 @@ struct RuniApp: App {
                 modelContainer: modelContainer,
                 autoRestore: false
             )
+            .environment(windowCoordinator)
         }
         .handlesExternalEvents(matching: ["runi"])
 
@@ -62,6 +69,7 @@ struct RuniApp: App {
             CustomisationWindow()
                 .library(library)
                 .modelContainer(modelContainer)
+                .environment(windowCoordinator)
         }
         .windowLevel(.floating)
         .defaultSize(width: 280, height: 500)

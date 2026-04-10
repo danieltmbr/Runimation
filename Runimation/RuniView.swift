@@ -17,8 +17,8 @@ struct RuniView: View {
     @NavigationState(\.statsPath)
     private var stats
 
-    @Environment(RunLibrary.self)
-    private var library
+    @LibraryState(\.lastPlayedItem)
+    private var lastPlayedItem
 
     @Environment(\.importDocument)
     private var importDocument
@@ -155,7 +155,7 @@ struct RuniView: View {
     private func restoreLastPlayedRun() async {
         guard autoRestore else { return }
         guard nowPlaying.isSedentary else { return }
-        guard let item = library.lastPlayedItem else {
+        guard let item = lastPlayedItem else {
 #if os(iOS)
             showLibrary = true
 #endif
