@@ -1,20 +1,21 @@
+import RunKit
 import RunUI
 import SwiftUI
 
 /// Presents a "Save to Library?" confirmation alert when a `.runi` file has been
 /// imported into a viewer window.
 ///
-/// Reads `importedRecord` from `NavigationModel` and `deleteRun` from the
+/// Reads `importedItem` from `NavigationModel` and `deleteRun` from the
 /// environment — no parameters needed. Apply once at the window root:
 /// ```swift
 /// RuniView()
-///     .importSaveAlert()
+///     .importDialogue()
 /// ```
 ///
 private struct ImportDialogueAlert: ViewModifier {
 
-    @NavigationState(\.importedRecord)
-    private var importedRecord
+    @NavigationState(\.importedItem)
+    private var importedItem
 
     @Environment(\.deleteRun)
     private var deleteRun
@@ -24,20 +25,20 @@ private struct ImportDialogueAlert: ViewModifier {
             .alert(
                 "Save to Library?",
                 isPresented: Binding(
-                    get: { importedRecord != nil },
-                    set: { if !$0 { importedRecord = nil } }
+                    get: { importedItem != nil },
+                    set: { if !$0 { importedItem = nil } }
                 )
             ) {
                 Button("Save") {
-                    importedRecord = nil
+                    importedItem = nil
                 }
                 Button("Remove", role: .destructive) {
-                    if let record = importedRecord { deleteRun(record.entry) }
-                    importedRecord = nil
+                    if let item = importedItem { deleteRun(item) }
+                    importedItem = nil
                 }
             } message: {
-                if let record = importedRecord {
-                    Text("Keep \(record.name) in your library?")
+                if let item = importedItem {
+                    Text("Keep \(item.name) in your library?")
                 }
             }
     }

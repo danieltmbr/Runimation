@@ -60,7 +60,7 @@ struct RuniApp: App {
         // Floating customisation panel that tracks whichever player window is focused.
         Window("Customisation", id: "customisation") {
             CustomisationWindow()
-                .library(library, modelContext: modelContainer.mainContext)
+                .library(library)
                 .modelContainer(modelContainer)
         }
         .windowLevel(.floating)

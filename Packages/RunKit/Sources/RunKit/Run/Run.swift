@@ -119,12 +119,12 @@ public struct Run: Equatable, Identifiable, Sendable {
     
     /// Unique identifier linking this runtime value back to its `RunRecord`.
     ///
-    public let id: UUID
+    public let id: RunID
 
     /// Flat array of segment coordinates, pre-extracted for efficient rendering.
     ///
     /// Equivalent to `segments.map(\.coordinate)` but computed once at init time
-    /// so 60fps views can read it without remapping on every frame.
+    /// so 30fps views can read it without remapping on every frame.
     ///
     public let coordinates: [CGPoint]
 
@@ -163,7 +163,7 @@ public struct Run: Equatable, Identifiable, Sendable {
     /// See `RunInterpolator` for the full rationale.
     ///
     init(
-        id: UUID = UUID(),
+        id: RunID = RunID(),
         coordinates: [CGPoint],
         date: Date = .now,
         name: String = "",
@@ -186,7 +186,7 @@ public struct Run: Equatable, Identifiable, Sendable {
     /// > Warning: Do **not** use in interpolators.
     ///
     init(
-        id: UUID = UUID(),
+        id: RunID = RunID(),
         date: Date = .now,
         name: String = "",
         segments: [Segment],
@@ -202,9 +202,9 @@ public struct Run: Equatable, Identifiable, Sendable {
         )
     }
 
-    /// Fixed UUID identifying the sedentary (no-run) state.
+    /// Fixed identifier for the sedentary (no-run) state.
     ///
-    public static let sedentaryID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+    public static let sedentaryID = RunID(UUID(uuidString: "00000000-0000-0000-0000-000000000000")!)
 
     /// A run with no segments representing the idle state before any run is selected.
     ///

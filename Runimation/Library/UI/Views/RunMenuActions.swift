@@ -4,7 +4,7 @@ import SwiftUI
 
 struct RunMenuActions: View {
     
-    let run: RunEntry
+    let run: RunItem
     
     var body: some View {
         FavouriteRunToggle(isFavourite: .constant(false))
@@ -16,5 +16,5 @@ struct RunMenuActions: View {
 }
 
 #Preview {
-    RunMenuActions(run: RunRecord.sedentary.entry)
+    RunMenuActions(run: RunRecord.sedentary.item)
 }

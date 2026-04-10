@@ -1,21 +1,21 @@
 import RunKit
 
-/// Fetches the `Run` for a given `RunEntry` from the library.
+/// Loads the `Run` for a given `RunItem` from the library.
 ///
 /// Resolves track data from the cache, local storage, or the original
 /// source (remote tracker, bundled file, or local file).
 ///
 /// Inject via `.library(_:)` and access in views with:
 /// ```swift
-/// @Environment(\.loadEntry) private var loadEntry
-/// let run = try await loadEntry(entry)
+/// @Environment(\.loadRun) private var loadRun
+/// let run = try await loadRun(item)
 /// ```
 ///
-public struct LoadEntryAction {
+public struct LoadRunAction {
 
-    private let body: @MainActor (RunEntry) async throws -> Run
+    private let body: @MainActor (RunItem) async throws -> Run
 
-    public init(_ body: @escaping @MainActor (RunEntry) async throws -> Run) {
+    public init(_ body: @escaping @MainActor (RunItem) async throws -> Run) {
         self.body = body
     }
 
@@ -25,12 +25,14 @@ public struct LoadEntryAction {
 
     @MainActor
     public init(library: RunLibrary) {
-        self.init { entry in try await library.loadRun(for: entry) }
+        self.init { item in
+            try await library.load(item, with: [.run]).run!
+        }
     }
 
     @MainActor
-    public func callAsFunction(_ entry: RunEntry) async throws -> Run {
-        try await body(entry)
+    public func callAsFunction(_ item: RunItem) async throws -> Run {
+        try await body(item)
     }
 
     // MARK: - Errors

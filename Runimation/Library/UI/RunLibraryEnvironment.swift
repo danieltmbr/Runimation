@@ -1,6 +1,5 @@
 import RunKit
 import RunUI
-import SwiftData
 import SwiftUI
 
 // MARK: - App-Specific Environment Keys
@@ -18,22 +17,19 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// Injects a `RunLibrary`, all core library actions (via RunUI's `.library(_:)`),
-    /// and app-specific import actions into the SwiftUI environment.
+    /// Injects app-specific import actions alongside the core library environment.
     ///
-    /// Also injects the `ModelContext` so import actions can write per-run
-    /// configuration to the SwiftData store.
-    ///
-    /// Apply once near the root of the library's view hierarchy:
+    /// Call this after RunUI's `.library(_:)` to add GPX file import and
+    /// `.runi` document import support:
     /// ```swift
-    /// RuniWindow(...)
-    ///     .library(library, modelContext: modelContainer.mainContext)
+    /// view
+    ///     .library(library)
+    ///     .importActions(library: library)
     /// ```
     ///
     @MainActor
-    func library(_ library: RunLibrary, modelContext: ModelContext) -> some View {
-        self.library(library)
-            .environment(\.importFile, ImportFileAction(library: library))
-            .environment(\.importDocument, ImportDocumentAction(library: library, modelContext: modelContext))
+    func importActions(library: RunLibrary) -> some View {
+        environment(\.importFile, ImportFileAction(library: library))
+            .environment(\.importDocument, ImportDocumentAction(library: library))
     }
 }

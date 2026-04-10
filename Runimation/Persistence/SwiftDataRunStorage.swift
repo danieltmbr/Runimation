@@ -25,25 +25,29 @@ final class SwiftDataRunStorage: RunStorage {
         return all.contains { $0.source == origin }
     }
 
-    func name(for id: UUID) -> String? {
+    func name(for id: RunID) -> String? {
         record(for: id)?.name
     }
 
-    func trackData(for id: UUID) -> Data? {
+    func trackData(for id: RunID) -> Data? {
         record(for: id)?.trackData
     }
 
-    func origin(for id: UUID) -> RunOrigin? {
+    func origin(for id: RunID) -> RunOrigin? {
         record(for: id)?.source
     }
 
-    func lastPlayedID() -> UUID? {
+    func config(for id: RunID) -> RunConfig? {
+        record(for: id)?.config
+    }
+
+    func lastPlayedID() -> RunID? {
         var descriptor = FetchDescriptor<RunRecord>(
             predicate: #Predicate<RunRecord> { $0.lastPlayedAt != nil },
             sortBy: [SortDescriptor(\.lastPlayedAt, order: .reverse)]
         )
         descriptor.fetchLimit = 1
-        return try? context.fetch(descriptor).first?.entry.id
+        return try? context.fetch(descriptor).first?.itemID
     }
 
     // MARK: - Mutations
@@ -56,7 +60,7 @@ final class SwiftDataRunStorage: RunStorage {
         duration: TimeInterval,
         source: RunOrigin,
         trackData: Data?
-    ) -> UUID {
+    ) -> RunID {
         let record = RunRecord(
             name: name,
             date: date,
@@ -67,47 +71,55 @@ final class SwiftDataRunStorage: RunStorage {
         )
         context.insert(record)
         try? context.save()
-        return record.entry.id
+        return record.item.id
     }
 
-    func storeTrackData(_ data: Data, for id: UUID) {
+    func storeTrackData(_ data: Data, for id: RunID) {
         guard let record = record(for: id) else { return }
         record.trackData = data
         try? context.save()
     }
 
-    func updateDistance(_ distance: Double, for id: UUID) {
+    func updateDistance(_ distance: Double, for id: RunID) {
         guard let record = record(for: id) else { return }
         record.distance = distance
         try? context.save()
     }
 
-    func markAsPlayed(id: UUID) {
+    func storeConfig(_ config: RunConfig, for id: RunID) {
+        guard let record = record(for: id) else { return }
+        record.visualisationConfigData = config.visualisationConfigData
+        record.transformersConfigData = config.transformersConfigData
+        record.interpolatorConfigData = config.interpolatorConfigData
+        record.playDuration = config.playDuration
+        try? context.save()
+    }
+
+    func markAsPlayed(id: RunID) {
         guard let record = record(for: id) else { return }
         record.lastPlayedAt = Date()
         try? context.save()
     }
 
-    func delete(id: UUID) {
+    func delete(id: RunID) {
         guard let record = record(for: id) else { return }
         context.delete(record)
         try? context.save()
     }
 
-    func ids(fromTracker trackerID: String) -> [UUID] {
+    func ids(fromTracker trackerID: String) -> [RunID] {
         let all = (try? context.fetch(FetchDescriptor<RunRecord>())) ?? []
         return all.compactMap { record in
             guard case .tracker(let source) = record.source,
                   source.tracker == trackerID
             else { return nil }
-            return record.entry.id
+            return record.item.id
         }
     }
 
     // MARK: - Private
 
-    private func record(for id: UUID) -> RunRecord? {
-        let entry = RunEntry(id: id)
-        return try? context.fetch(FetchDescriptor.record(for: entry)).first
+    private func record(for id: RunID) -> RunRecord? {
+        try? context.fetch(FetchDescriptor.record(forID: id)).first
     }
 }

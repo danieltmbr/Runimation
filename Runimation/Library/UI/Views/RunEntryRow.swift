@@ -1,32 +1,33 @@
 import SwiftUI
+import RunKit
 import RunUI
 
 struct RunEntryRow<Actions: View>: View {
 
     @ViewBuilder
-    let actions: (RunRecord) -> Actions
+    let actions: (RunItem) -> Actions
 
-    let record: RunRecord
+    let item: RunItem
 
     init(
-        record: RunRecord,
-        @ViewBuilder actions: @escaping (RunRecord) -> Actions
+        item: RunItem,
+        @ViewBuilder actions: @escaping (RunItem) -> Actions
     ) {
-        self.record = record
+        self.item = item
         self.actions = actions
     }
 
     var body: some View {
         HStack {
-            PlayRunButton(record) { record in
-                RunInfoView(record: record)
+            PlayRunButton(item) { item in
+                RunInfoView(item: item)
                     .runInfoStyle(.compact)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .buttonStyle(.plain)
 
             Menu {
-                actions(record)
+                actions(item)
             } label: {
                 Image(systemName: "ellipsis")
             }
@@ -37,12 +38,12 @@ struct RunEntryRow<Actions: View>: View {
 }
 
 extension RunInfoView {
-    init(record: RunRecord) {
+    init(item: RunItem) {
         self.init(
-            name: record.name,
-            date: record.date,
-            distance: record.distance,
-            duration: record.duration
+            name: item.name,
+            date: item.date,
+            distance: item.distance,
+            duration: item.duration
         )
     }
 }

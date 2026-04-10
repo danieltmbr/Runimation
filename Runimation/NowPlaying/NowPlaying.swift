@@ -7,10 +7,10 @@ import Visualiser
 /// playing `RunRecord` and provides bindings for its configuration.
 ///
 /// Declare it in any view with `@NowPlaying var nowPlaying`. The underlying
-/// `NowPlayingModel` (an `@Observable` class injected by `.library(_:)`)
+/// `NowPlayingModel` (an `@Observable` class injected by `.nowPlaying(_:)`)
 /// holds `record` as persistent state and updates it whenever the player's
-/// run ID changes via `NowPlayingModifier` — outside the SwiftUI render pass,
-/// so there are no state-mutation warnings.
+/// `currentItem` changes — outside the SwiftUI render pass, so there are no
+/// state-mutation warnings.
 ///
 /// Bindings for config properties (`visualisation`, `transformers`,
 /// `interpolator`, `duration`) write back to the `RunRecord` immediately
@@ -40,11 +40,14 @@ struct NowPlaying: DynamicProperty {
 
     // MARK: - Player Actions
 
-    @Environment(\.loadEntry)
-    private var loadEntry
-
     @Environment(\.playRun)
     private var playRun
+
+    @Environment(\.loadRun)
+    private var loadRun
+
+    @Environment(\.hasLocalTrack)
+    private var hasLocalTrack
 
     @Environment(\.setTransformers)
     private var setTransformers
@@ -142,24 +145,37 @@ struct NowPlaying: DynamicProperty {
 
     // MARK: - Playback
 
-    /// Loads a run record into the player and starts playback.
+    /// Loads a run item into the player and starts playback.
     ///
-    /// - Loads the `Run` from the library (uses cache if available).
+    /// - Resolves the `RunRecord` synchronously first so config bindings
+    ///   are available during the async load.
     /// - Applies the record's saved config before `setRun` so a single
     ///   processing pass uses the correct settings. If the record has no
     ///   saved config, the outgoing record's config is carried forward.
     /// - `markAsPlaying` fires automatically via `NowPlayingModifier.onChange`
-    ///   when the player's run ID changes to match the new record's entryID.
+    ///   when the player's `currentItem` updates.
     ///
-    func play(_ record: RunRecord) async {
+    @MainActor
+    func play(_ item: RunItem) async {
         let previousVisualisation = model.record.loadVisualisationConfig() ?? Warp()
-        guard let run = try? await loadEntry(record.entry) else { return }
-        await applyConfig(from: record, inheritedVisualisation: previousVisualisation)
-        try? await playRun(run)
+        model.resolve(run: item.id)
+
+        let needsNetwork = !hasLocalTrack(item.id)
+        if needsNetwork { model.beginLoading() }
+
+        do {
+            let run = try await loadRun(item)
+            if needsNetwork { model.finishLoading() }
+            await applyConfig(from: model.record, inheritedVisualisation: previousVisualisation)
+            try await playRun(run)
+        } catch {
+            model.failLoading(error)
+        }
     }
 
     // MARK: - Private
 
+    @MainActor
     private func applyConfig(from record: RunRecord, inheritedVisualisation: any Visualisation) async {
         if record.hasConfig {
             // Push saved config to the player so it reprocesses with the correct settings.

@@ -1,32 +1,31 @@
 import Foundation
 import RunKit
-import SwiftData
 
 /// Reads a `.runi` file from disk, decodes it, and inserts it into the run library.
 ///
 /// Handles security-scoped resource access internally, so callers only need to
 /// pass the URL as received from `onOpenURL` or a file picker.
 ///
-/// Inject via `.library(_:modelContext:)` and access in views with:
+/// Inject via `.library(_:)` and access in views with:
 /// ```swift
 /// @Environment(\.importDocument) private var importDocument
-/// let record = try importDocument(url)
+/// let item = try importDocument(url)
 /// ```
 ///
 struct ImportDocumentAction {
 
-    private let body: @MainActor (URL) throws -> RunRecord
+    private let body: @MainActor (URL) throws -> RunItem
 
-    init(_ body: @escaping @MainActor (URL) throws -> RunRecord) {
+    init(_ body: @escaping @MainActor (URL) throws -> RunItem) {
         self.body = body
     }
 
     init() {
-        self.init { _ in .sedentary }
+        self.init { _ in throw UnboundError() }
     }
 
     @MainActor
-    init(library: RunLibrary, modelContext: ModelContext) {
+    init(library: RunLibrary) {
         self.init { url in
             let didStart = url.startAccessingSecurityScopedResource()
             defer { if didStart { url.stopAccessingSecurityScopedResource() } }
@@ -34,29 +33,34 @@ struct ImportDocumentAction {
             let data = try Data(contentsOf: url)
             let document = try JSONDecoder().decode(RuniDocument.self, from: data)
 
-            let entry = library.importTrack(
+            let item = library.importTrack(
                 name: document.name,
                 date: document.date ?? Date(),
                 points: document.points,
                 source: .document
             )
 
-            // Look up the freshly inserted RunRecord to persist per-run config.
-            guard let record = try? modelContext.fetch(FetchDescriptor.record(for: entry)).first
-            else { return .sedentary }
+            // Persist the config that was bundled in the document.
+            let config = RunConfig(
+                visualisationConfigData: try? JSONEncoder().encode(document.visualisation),
+                transformersConfigData: try? JSONEncoder().encode(document.transformers),
+                interpolatorConfigData: try? JSONEncoder().encode(document.interpolator),
+                playDuration: document.duration
+            )
+            library.storeConfig(config, for: item)
 
-            record.visualisationConfigData = (try? JSONEncoder().encode(document.visualisation))
-            record.transformersConfigData = (try? JSONEncoder().encode(document.transformers))
-            record.interpolatorConfigData = (try? JSONEncoder().encode(document.interpolator))
-            record.playDuration = document.duration
-            try? modelContext.save()
-
-            return record
+            return item
         }
     }
 
     @MainActor
-    func callAsFunction(_ url: URL) throws -> RunRecord {
+    func callAsFunction(_ url: URL) throws -> RunItem {
         try body(url)
+    }
+
+    // MARK: - Errors
+
+    private struct UnboundError: LocalizedError {
+        var errorDescription: String? { "No library is available in the current environment." }
     }
 }

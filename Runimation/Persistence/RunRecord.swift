@@ -13,14 +13,39 @@ final class RunRecord {
 
     // MARK: - Identity
 
-    /// Stable UUID used for in-memory caching and `RunEntry` navigation.
-    /// Matches `Run.id` when the run is loaded into the player.
+    /// Raw UUID stored for database-level uniqueness enforcement.
+    /// Exposed only as `RunID` via `item.id` — never use this field directly.
     ///
     @Attribute(.unique)
-    fileprivate var entryID: UUID
+    fileprivate var itemUUID: UUID
 
-    var entry: RunEntry {
-        RunEntry(id: entryID)
+    /// The type-safe run identifier derived from the stored UUID.
+    var itemID: RunID { RunID(itemUUID) }
+
+    /// A sendable snapshot of this record's metadata.
+    /// Optional detail fields (`run`, `config`) are not populated here;
+    /// use `RunLibrary.load(_:with:)` for those.
+    ///
+    var item: RunItem {
+        RunItem(
+            id: itemID,
+            name: name,
+            date: date,
+            distance: distance,
+            duration: duration,
+            source: source
+        )
+    }
+
+    /// Opaque config blobs bundled as a `RunConfig` value.
+    ///
+    var config: RunConfig {
+        RunConfig(
+            visualisationConfigData: visualisationConfigData,
+            transformersConfigData: transformersConfigData,
+            interpolatorConfigData: interpolatorConfigData,
+            playDuration: playDuration
+        )
     }
 
     // MARK: - Display Metadata
@@ -68,7 +93,7 @@ final class RunRecord {
     // MARK: - Init
 
     init(
-        entryID: UUID = UUID(),
+        itemUUID: UUID = UUID(),
         name: String,
         date: Date,
         distance: Double,
@@ -78,7 +103,7 @@ final class RunRecord {
         lastPlayedAt: Date? = nil,
         trackData: Data? = nil
     ) {
-        self.entryID = entryID
+        self.itemUUID = itemUUID
         self.name = name
         self.date = date
         self.distance = distance
@@ -93,7 +118,7 @@ final class RunRecord {
 
     /// An in-memory sentinel representing the idle state (no run selected).
     ///
-    /// Never inserted into a `ModelContext`. Its `entryID` matches `Run.sedentary.id`
+    /// Never inserted into a `ModelContext`. Its `itemUUID` matches `Run.sedentaryID`
     /// so that `NowPlaying` returns this record when the player holds a sedentary run.
     ///
     static let sedentary: RunRecord = {
@@ -104,7 +129,7 @@ final class RunRecord {
             duration: 0,
             source: .bundled(name: "sedentary")
         )
-        record.entryID = Run.sedentaryID
+        record.itemUUID = Run.sedentaryID.value
         return record
     }()
 
@@ -112,7 +137,7 @@ final class RunRecord {
 
     /// True when this record is the sedentary sentinel (no real run selected).
     ///
-    var isSedentary: Bool { entryID == Run.sedentaryID }
+    var isSedentary: Bool { itemUUID == Run.sedentaryID.value }
 
     /// True when this record has a saved visualisation config.
     ///
@@ -121,10 +146,15 @@ final class RunRecord {
 
 extension FetchDescriptor<RunRecord> {
 
-    static func record(for run: RunEntry) -> FetchDescriptor<RunRecord> {
-        let id = run.id
+    static func record(for run: RunItem) -> FetchDescriptor<RunRecord> {
+        record(forID: run.id)
+    }
+
+    static func record(forID id: RunID) -> FetchDescriptor<RunRecord> {
+        let uuid = id.value
         return FetchDescriptor<RunRecord>(
-            predicate: #Predicate<RunRecord> { $0.entryID == id }
+            predicate: #Predicate<RunRecord> { $0.itemUUID == uuid }
         )
     }
 }
+

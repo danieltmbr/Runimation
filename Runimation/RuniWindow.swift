@@ -37,12 +37,9 @@ struct RuniWindow: View {
         modelContainer: ModelContainer,
         autoRestore: Bool
     ) {
-        let context = modelContainer.mainContext
         let navigationModel = NavigationModel(
-            findRecord: { entry in
-                try? context.fetch(FetchDescriptor.record(for: entry)).first
-            },
-            markAsPlaying: { record in library.markAsPlaying(record.entry) },
+            context: modelContainer.mainContext,
+            markAsPlaying: { item in library.markAsPlaying(item) },
             autoRestore: autoRestore
         )
         self.library = library
@@ -55,9 +52,10 @@ struct RuniWindow: View {
     var body: some View {
         RuniView()
             .nowPlaying(navigationModel.nowPlaying)
-            .library(library, modelContext: modelContainer.mainContext)
+            .library(library)
+            .importActions(library: library)
             .player(navigationModel.player)
-            .export(library: library, modelContext: modelContainer.mainContext)
+            .export(library: library)
             .environment(navigationModel)
             .modelContainer(modelContainer)
             .focusedValue(\.navigationModel, navigationModel)

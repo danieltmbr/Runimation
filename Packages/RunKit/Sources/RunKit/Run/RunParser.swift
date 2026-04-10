@@ -20,15 +20,15 @@ extension Run {
         public init() {}
 
         public func run(from track: GPX.Track) -> Run {
-            run(from: track, id: UUID())
+            run(from: track, id: RunID())
         }
 
         /// Parses a GPX track into a `Run` with a specific identifier.
         ///
         /// Use this variant when loading a run for a known `RunRecord` so the resulting
-        /// `Run.id` matches `RunRecord.entryID`, enabling `NowPlaying` to resolve the record.
+        /// `Run.id` matches `RunRecord.itemID`, enabling `NowPlaying` to resolve the record.
         ///
-        public func run(from track: GPX.Track, id: UUID) -> Run {
+        public func run(from track: GPX.Track, id: RunID) -> Run {
             let points = track.points
             let name = track.name
             let date = track.date ?? track.points.first?.time ?? .now

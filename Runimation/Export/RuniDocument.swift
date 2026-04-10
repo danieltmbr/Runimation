@@ -1,6 +1,7 @@
 import CoreKit
 import CoreTransferable
 import Foundation
+import RunKit
 import UniformTypeIdentifiers
 import Visualiser
 
@@ -36,37 +37,33 @@ struct RuniDocument: Codable, Sendable, Transferable {
 
     // MARK: - Factory
 
-    /// Builds a `RuniDocument` from a persisted `RunRecord`.
+    /// Builds a `RuniDocument` from a loaded `RunItem` and its raw GPS points.
     ///
-    /// Returns `nil` if the record's track data hasn't been loaded yet —
-    /// this can happen for Strava runs that have never been played.
-    /// All config fields fall back to defaults when not yet saved on the record.
+    /// Raw points must be fetched via `RunLibrary.rawPoints(for:)` after calling
+    /// `library.load(item, with: [.run, .config])`.
+    /// All config fields fall back to defaults when no saved config exists.
     ///
-    static func from(_ record: RunRecord) -> RuniDocument? {
-        guard let trackData = record.trackData,
-              let points = try? JSONDecoder().decode([GPX.Point].self, from: trackData)
-        else { return nil }
-
-        let visualisation: VisualisationConfig = record.visualisationConfigData
+    static func from(_ item: RunItem, points: [GPX.Point]) -> RuniDocument {
+        let visualisation: VisualisationConfig = item.config?.visualisationConfigData
             .flatMap { try? JSONDecoder().decode(VisualisationConfig.self, from: $0) }
             ?? .warp(Warp())
 
-        let transformers: [TransformerConfig] = record.transformersConfigData
+        let transformers: [TransformerConfig] = item.config?.transformersConfigData
             .flatMap { try? JSONDecoder().decode([TransformerConfig].self, from: $0) }
             ?? []
 
-        let interpolator: InterpolatorConfig = record.interpolatorConfigData
+        let interpolator: InterpolatorConfig = item.config?.interpolatorConfigData
             .flatMap { try? JSONDecoder().decode(InterpolatorConfig.self, from: $0) }
             ?? .linear
 
         return RuniDocument(
-            name: record.name,
-            date: record.date,
+            name: item.name,
+            date: item.date,
             points: points,
             visualisation: visualisation,
             transformers: transformers,
             interpolator: interpolator,
-            duration: record.playDuration ?? 30
+            duration: item.config?.playDuration ?? 30
         )
     }
 

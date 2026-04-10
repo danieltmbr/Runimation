@@ -1,18 +1,18 @@
 import RunKit
 
-/// Removes a `RunEntry` from the library.
+/// Removes a `RunItem` from the library.
 ///
 /// Inject via `.library(_:)` and access in views with:
 /// ```swift
 /// @Environment(\.deleteRun) private var deleteRun
-/// deleteRun(entry)
+/// deleteRun(item)
 /// ```
 ///
 public struct DeleteRunAction {
 
-    private let body: @MainActor (RunEntry) -> Void
+    private let body: @MainActor (RunItem) -> Void
 
-    public init(_ body: @escaping @MainActor (RunEntry) -> Void) {
+    public init(_ body: @escaping @MainActor (RunItem) -> Void) {
         self.body = body
     }
 
@@ -22,9 +22,9 @@ public struct DeleteRunAction {
 
     @MainActor
     public init(library: RunLibrary) {
-        self.init { entry in library.delete(entry) }
+        self.init { item in library.delete(item) }
     }
 
     @MainActor
-    public func callAsFunction(_ entry: RunEntry) { body(entry) }
+    public func callAsFunction(_ item: RunItem) { body(item) }
 }

@@ -2,49 +2,38 @@ import Foundation
 import RunKit
 import CoreKit
 
-/// Loads a run into the player, stopping any current playback.
+/// Sets a `Run` on the player and starts playback.
 ///
-/// Resolves when the player has finished processing and is ready to play.
-/// Throws `CancellationError` if preempted by a subsequent call.
-///
-/// Supports both a parsed `Run` and a raw `GPX.Track`:
+/// Inject via `.player(_:)` and call in views with:
 /// ```swift
 /// @Environment(\.playRun) private var playRun
 /// try? await playRun(run)
-/// try? await playRun(gpxTrack)
 /// ```
 ///
 public struct PlayRunAction {
 
-    private let playRun: @MainActor (Run) async throws -> Void
+    private let action: @MainActor (Run) async throws -> Void
 
-    private let playTrack: @MainActor (GPX.Track) async throws -> Void
-
-    init(
-        run: @escaping @MainActor (Run) async throws -> Void = { _ in },
-        track: @escaping @MainActor (GPX.Track) async throws -> Void = { _ in }
-    ) {
-        playRun = run
-        playTrack = track
+    public init() {
+        action = { _ in throw UnboundError() }
     }
 
     @MainActor
-    init(player: RunPlayer) {
-        self.init(
-            run: {
-                try await player.setRun($0);
-                player.play()
-            },
-            track: {
-                try await player.setRun($0);
-                player.play()
-            }
-        )
+    public init(player: RunPlayer) {
+        action = { run in
+            try await player.setRun(run)
+            player.play()
+        }
     }
 
     @MainActor
-    public func callAsFunction(_ run: Run) async throws { try await playRun(run) }
+    public func callAsFunction(_ run: Run) async throws {
+        try await action(run)
+    }
 
-    @MainActor
-    public func callAsFunction(_ track: GPX.Track) async throws { try await playTrack(track) }
+    // MARK: - Errors
+
+    private struct UnboundError: LocalizedError {
+        var errorDescription: String? { "No run player or library is available in the current environment." }
+    }
 }

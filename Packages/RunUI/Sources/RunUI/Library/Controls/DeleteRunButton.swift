@@ -13,9 +13,9 @@ public struct DeleteRunButton: View {
     @Environment(\.deleteRun)
     private var deleteRun
 
-    let run: RunEntry
+    let run: RunItem
 
-    public init(run: RunEntry) {
+    public init(run: RunItem) {
         self.run = run
     }
 

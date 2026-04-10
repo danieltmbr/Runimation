@@ -34,8 +34,6 @@ public struct WarpView: View {
 
     public var body: some View {
 
-        // `state` changes every ~16ms when driven by a 60fps PlayerState observer.
-        // SwiftUI re-renders this view on each tick — no TimelineView needed.
         let animTime = state.time
         let speed    = state.speed
         let scale    = self.scale

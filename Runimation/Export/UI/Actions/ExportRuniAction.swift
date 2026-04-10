@@ -1,24 +1,22 @@
 import Foundation
 import RunKit
-import SwiftData
 
-/// Builds and returns a `RuniDocument` for a given `RunEntry`.
+/// Builds and returns a `RuniDocument` for a given `RunItem`.
 ///
-/// Resolves the entry to its persisted `RunRecord` and loads track data
-/// from the original source if it hasn't been fetched yet. Safe to call
-/// for tracker runs that have never been played.
+/// Loads track data and config from the library if not already present.
+/// Safe to call for tracker runs that have never been played.
 ///
-/// Inject via `.export(library:modelContext:)` and access in views with:
+/// Inject via `.export(library:)` and access in views with:
 /// ```swift
 /// @Environment(\.exportRuni) private var exportRuni
-/// let doc = try await exportRuni(entry)
+/// let doc = try await exportRuni(item)
 /// ```
 ///
 struct ExportRuniAction {
 
-    private let body: @MainActor (RunEntry) async throws -> RuniDocument
+    private let body: @MainActor (RunItem) async throws -> RuniDocument
 
-    init(_ body: @escaping @MainActor (RunEntry) async throws -> RuniDocument) {
+    init(_ body: @escaping @MainActor (RunItem) async throws -> RuniDocument) {
         self.body = body
     }
 
@@ -27,29 +25,23 @@ struct ExportRuniAction {
     }
 
     @MainActor
-    init(library: RunLibrary, modelContext: ModelContext) {
-        self.init { entry in
-            _ = try await library.loadRun(for: entry)
-            guard let record = try? modelContext.fetch(FetchDescriptor.record(for: entry)).first
-            else { throw ResolutionError() }
-            guard let doc = RuniDocument.from(record) else { throw ExportError() }
-            return doc
+    init(library: RunLibrary) {
+        self.init { item in
+            let loaded = try await library.load(item, with: [.run, .config])
+            let points = try library.rawPoints(for: loaded.id)
+            return RuniDocument.from(loaded, points: points)
         }
     }
 
     @MainActor
-    func callAsFunction(_ entry: RunEntry) async throws -> RuniDocument {
-        try await body(entry)
+    func callAsFunction(_ item: RunItem) async throws -> RuniDocument {
+        try await body(item)
     }
 
     // MARK: - Errors
 
     private struct UnboundError: LocalizedError {
         var errorDescription: String? { "No export action is available in the current environment." }
-    }
-
-    private struct ResolutionError: LocalizedError {
-        var errorDescription: String? { "The run could not be found in the library." }
     }
 
     private struct ExportError: LocalizedError {

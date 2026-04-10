@@ -55,7 +55,7 @@ struct ExportSheet: View {
 
     // MARK: - Input
 
-    let run: RunEntry
+    let run: RunItem
 
     let viewportSize: CGSize
 
@@ -126,7 +126,7 @@ struct ExportSheet: View {
         } else if let url = renderedVideoURL {
             ShareLink(
                 item: RenderedVideo(url: url),
-                preview: SharePreview(run.id.uuidString, image: Image(systemName: "video"))
+                preview: SharePreview(run.name, image: Image(systemName: "video"))
             ) {
                 ExportOptionRow(
                     icon: "video.badge.checkmark",

@@ -6,7 +6,7 @@ struct RunStatsButton: View {
     @NavigationState(\.statsPath)
     private var stats
     
-    let run: RunEntry
+    let run: RunItem
     
     var body: some View {
 #if os(macOS)
@@ -24,5 +24,5 @@ struct RunStatsButton: View {
 }
 
 #Preview {
-    RunStatsButton(run: RunRecord.sedentary.entry)
+    RunStatsButton(run: RunRecord.sedentary.item)
 }

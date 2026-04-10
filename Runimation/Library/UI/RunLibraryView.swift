@@ -1,6 +1,5 @@
 import RunKit
 import RunUI
-import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -12,7 +11,7 @@ import UniformTypeIdentifiers
 /// happens in the main window's `NavigationStack`.
 ///
 /// The parent controls visibility via `isPresented`. On macOS, the parent must
-/// also pass `statsPath` and own a `navigationDestination(for: RunEntry.self)`.
+/// also pass `statsPath` and own a `navigationDestination(for: RunItem.self)`.
 ///
 /// GPX and `.runi` files are imported via the file picker (iOS) and drag-and-drop (macOS).
 ///
@@ -22,8 +21,8 @@ struct RunLibraryView: View {
 
     // MARK: - Library State
 
-    @Query(sort: \RunRecord.date, order: .reverse)
-    private var entries: [RunRecord]
+    @RunLibraryQuery
+    private var items
 
     @LibraryState(\.trackers)
     private var trackers
@@ -53,10 +52,10 @@ struct RunLibraryView: View {
     @Binding var isPresented: Bool
 
     #if os(macOS)
-    @Binding var statsPath: [RunEntry]
+    @Binding var statsPath: [RunItem]
 
     /// Use in `NavigationSplitView` sidebar where the view is persistent — no dismiss needed.
-    init(statsPath: Binding<[RunEntry]>) {
+    init(statsPath: Binding<[RunItem]>) {
         _isPresented = .constant(false)
         _statsPath = statsPath
     }
@@ -66,7 +65,7 @@ struct RunLibraryView: View {
 
     #if !os(macOS)
     @State
-    private var path: [RunEntry] = []
+    private var path: [RunItem] = []
     #endif
 
     @NavigationState(\.showFilePicker)
@@ -84,7 +83,7 @@ struct RunLibraryView: View {
         #else
         NavigationStack(path: $path) {
             libraryContent
-                .navigationDestination(for: RunEntry.self) { RunStatsDestination(entry: $0) }
+                .navigationDestination(for: RunItem.self) { RunStatsDestination(item: $0) }
         }
         #endif
     }
@@ -111,29 +110,28 @@ struct RunLibraryView: View {
 
     @ViewBuilder
     private var libraryList: some View {
-        if isLoading && entries.isEmpty {
+        if isLoading && items.isEmpty {
             ProgressView("Loading runs…")
-        } else if entries.isEmpty {
+        } else if items.isEmpty {
             LibraryEmptyView()
         } else {
-            List(entries) { record in
-                libraryRow(record)
+            List(items) { item in
+                libraryRow(item)
                     .onAppear {
-                        guard record.entry == entries.last?.entry else { return }
+                        guard item == items.last else { return }
                         loadNextPage()
                     }
             }
-//            .listStyle(.plain)
         }
     }
 
     @ViewBuilder
-    private func libraryRow(_ record: RunRecord) -> some View {
-        RunEntryRow(record: record) { record in
-            RunMenuActions(run: record.entry)
+    private func libraryRow(_ item: RunItem) -> some View {
+        RunEntryRow(item: item) { item in
+            RunMenuActions(run: item)
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            DeleteRunButton(run: record.entry)
+            DeleteRunButton(run: item)
         }
     }
 
@@ -188,7 +186,7 @@ struct RunLibraryView: View {
     // MARK: - Actions
 
     private func loadIfNeeded() async {
-        guard isConnected && entries.isEmpty else { return }
+        guard isConnected && items.isEmpty else { return }
         refreshLibrary()
     }
 

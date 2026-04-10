@@ -19,7 +19,7 @@ extension RunPlayer {
         public let purpose: Purpose
         public let fps: Int
 
-        public static let animation   = Variant(purpose: .animation,   fps: 60)
+        public static let animation   = Variant(purpose: .animation,   fps: 30)
         public static let metrics     = Variant(purpose: .metrics,     fps: 24)
         public static let diagnostics = Variant(purpose: .diagnostics, fps: 24)
     }

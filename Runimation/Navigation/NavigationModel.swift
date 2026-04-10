@@ -1,4 +1,5 @@
 import RunKit
+import SwiftData
 import SwiftUI
 
 /// Per-window observable model owning the `RunPlayer`, the `NowPlayingModel` bridge,
@@ -26,17 +27,17 @@ final class NavigationModel: Equatable {
 
     // MARK: - Navigation State
 
-    var statsPath: [RunEntry] = []
+    var statsPath: [RunItem] = []
 
     var columnVisibility: NavigationSplitViewVisibility = .automatic
 
-    /// Set after a `.runi` file open — triggers the save-to-library confirmation alert.
+    /// Set after a `.runi` file is opened — triggers the save-to-library confirmation alert.
     ///
-    var importedRecord: RunRecord?
+    var importedItem: RunItem?
 
     /// Set to trigger the export sheet for a specific run.
     ///
-    var exportingRun: RunEntry?
+    var exportingRun: RunItem?
 
     // MARK: - iOS-only Sheet State
 
@@ -51,14 +52,14 @@ final class NavigationModel: Equatable {
     // MARK: - Init
 
     init(
-        findRecord: @escaping @MainActor (RunEntry) -> RunRecord?,
-        markAsPlaying: @escaping @MainActor (RunRecord) -> Void,
+        context: ModelContext,
+        markAsPlaying: @escaping @MainActor (RunID) -> Void,
         autoRestore: Bool
     ) {
         self.player = RunPlayer(transformers: [GuassianRun()])
         self.autoRestore = autoRestore
         self.nowPlaying = NowPlayingModel(
-            findRecord: findRecord,
+            context: context,
             markAsPlaying: markAsPlaying
         )
     }

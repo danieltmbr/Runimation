@@ -1,31 +1,23 @@
 import RunKit
 import RunUI
-import SwiftData
 import SwiftUI
 
-/// Stats destination for a `RunEntry`.
+/// Stats destination for a `RunItem`.
 ///
-/// Resolves the entry's display name via a SwiftData fetch and loads
-/// the run via `\.loadEntry`. The three possible states — loading, loaded,
-/// failed — are represented by a single `Result<Run, Error>?`:
-/// `nil` = loading, `.success` = loaded, `.failure` = error.
+/// Loads the run via `\.loadRun` and renders metrics once available.
+/// The three possible states — loading, loaded, failed — are represented
+/// by a single `Result<Run, Error>?`: `nil` = loading, `.success` = loaded,
+/// `.failure` = error.
 ///
 struct RunStatsDestination: View {
 
-    @Environment(\.modelContext)
-    private var modelContext
+    @Environment(\.loadRun)
+    private var loadRun
 
-    @Environment(\.loadEntry)
-    private var loadEntry
-
-    let entry: RunEntry
+    let item: RunItem
 
     @State
     private var result: Result<Run, Error>?
-
-    private var record: RunRecord? {
-        try? modelContext.fetch(FetchDescriptor.record(for: entry)).first
-    }
 
     var body: some View {
         Group {
@@ -42,13 +34,13 @@ struct RunStatsDestination: View {
                 }
             }
         }
-        .navigationTitle(record?.name ?? "Run Stats")
+        .navigationTitle(item.name)
         .task { await load() }
     }
 
     private func load() async {
         do {
-            result = .success(try await loadEntry(entry))
+            result = .success(try await loadRun(item))
         } catch {
             result = .failure(error)
         }

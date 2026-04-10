@@ -13,7 +13,7 @@ struct ExportRunButton: View {
     @NavigationState(\.exportingRun)
     private var exportingRun
 
-    let run: RunEntry
+    let run: RunItem
 
     var body: some View {
         Button {

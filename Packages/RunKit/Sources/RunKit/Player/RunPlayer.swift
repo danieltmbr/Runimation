@@ -26,7 +26,7 @@ public final class RunPlayer {
 
         /// The identifier linking this set of runs back to their `RunRecord`.
         ///
-        public var id: UUID { original.id }
+        public var id: RunID { original.id }
 
         /// Unmodified run, good for displaying precise metrics.
         ///
@@ -280,7 +280,7 @@ public final class RunPlayer {
 
         let task = Task<Runs, Never>.detached(priority: .userInitiated) {
             let rawRun = makeRun()
-            let timing = Timing(duration: duration, fps: 60)
+            let timing = Timing(duration: duration, fps: 30)
             let transformed = transformers.reduce(rawRun) { $0.transform(by: $1) }
             return Runs(
                 original: rawRun,

@@ -7,8 +7,8 @@ import Foundation
 /// Handles all mutations — syncing from activity trackers, importing
 /// local track data, deleting, and run loading — but owns no in-memory
 /// list of entries. The list is driven directly by the persistence layer
-/// via `@Query` in the views that need it, so inserts and deletes are
-/// reflected automatically without any manual array management.
+/// via `@RunLibraryQuery` in the views that need it, so inserts and
+/// deletes are reflected automatically without any manual array management.
 ///
 /// Create one instance per app and inject it into the view hierarchy
 /// via `.library(_:)`. Views trigger mutations via `@Environment(\.action)`.
@@ -41,9 +41,9 @@ public final class RunLibrary {
 
     private let runParser: Run.Parser
 
-    /// In-memory parsed run cache keyed by run UUID.
+    /// In-memory parsed run cache keyed by `RunID`.
     ///
-    private var cache: [UUID: Run] = [:]
+    private var cache: [RunID: Run] = [:]
 
     /// Oldest activity date fetched per tracker, used as the `before` cursor.
     ///
@@ -80,6 +80,13 @@ public final class RunLibrary {
         tracker.disconnect()
         guard !keepRuns else { return }
         removeRuns(from: tracker)
+    }
+
+    /// Returns `true` if the run's track data is already stored locally,
+    /// meaning playback will not require a network call.
+    ///
+    public func hasPersistedTrack(for id: RunID) -> Bool {
+        storage.trackData(for: id) != nil
     }
 
     // MARK: - Fetching
@@ -124,39 +131,45 @@ public final class RunLibrary {
 
     // MARK: - Run Loading
 
-    /// Returns the parsed `Run` for the given entry, fetching and caching on first access.
+    /// Loads the requested detail properties for an item and returns an updated copy.
     ///
-    /// If `trackData` is stored for the entry, parsing happens locally.
-    /// Otherwise the origin is resolved — tracker activities are fetched
-    /// remotely, bundled and file runs are re-parsed locally.
+    /// `.run` — resolves track data from cache, local storage, or the original
+    /// source (tracker, bundled file, or local file). Safe to call repeatedly;
+    /// already-loaded properties are preserved.
     ///
-    public func loadRun(for entry: RunEntry) async throws -> Run {
-        if let cached = cache[entry.id] { return cached }
+    /// `.config` — reads the persisted config blobs from storage.
+    /// Returns `nil` config if the record has no saved config yet.
+    ///
+    /// Convenience overload — resolves the `RunItem` by ID then delegates to the canonical form.
+    public func load(_ id: RunID, with properties: Set<RunItem.Property>) async throws -> RunItem {
+        guard let item = item(for: id) else { throw LoadError.notFound }
+        return try await load(item, with: properties)
+    }
 
-        if let data = storage.trackData(for: entry.id) {
-            let name = storage.name(for: entry.id) ?? ""
-            return try parseAndCache(data: data, name: name, id: entry.id)
+    public func load(_ item: RunItem, with properties: Set<RunItem.Property>) async throws -> RunItem {
+        var result = item
+        if properties.contains(.run) {
+            result = result.adding(run: try await loadRun(for: item))
         }
-
-        guard let origin = storage.origin(for: entry.id) else {
-            throw LoadError.notFound
+        if properties.contains(.config) {
+            let config = storage.config(for: item.id) ?? RunConfig(
+                visualisationConfigData: nil,
+                transformersConfigData: nil,
+                interpolatorConfigData: nil,
+                playDuration: nil
+            )
+            result = result.adding(config: config)
         }
-
-        let track = try await fetchTrack(for: origin)
-        let data = try JSONEncoder().encode(track.points)
-        storage.storeTrackData(data, for: entry.id)
-
-        let run = runParser.run(from: track, id: entry.id)
-        cache[entry.id] = run
-        storage.updateDistance(run.distance, for: entry.id)
-        return run
+        return result
     }
 
     // MARK: - Import
 
     /// Imports a parsed run from raw track points into the library.
     ///
-    /// Returns the `RunEntry` for the newly created record.
+    /// Returns the `RunItem` for the newly created record, with no detail
+    /// properties populated. Call `load(_:with:)` afterwards if you need
+    /// the run data or config immediately.
     ///
     @discardableResult
     public func importTrack(
@@ -164,7 +177,7 @@ public final class RunLibrary {
         date: Date,
         points: [GPX.Point],
         source: RunOrigin
-    ) -> RunEntry {
+    ) -> RunItem {
         let trackData = try? JSONEncoder().encode(points)
         let track = GPX.Track(name: name, points: points, type: "running", date: date)
         let run = runParser.run(from: track)
@@ -177,31 +190,115 @@ public final class RunLibrary {
             trackData: trackData
         )
         cache[id] = run
-        return RunEntry(id: id)
+        return RunItem(
+            id: id,
+            name: name,
+            date: date,
+            distance: run.distance,
+            duration: run.duration,
+            source: source
+        )
+    }
+
+    // MARK: - Config
+
+    /// Persists config blobs for the given run (e.g. after importing a `.runi` document).
+    public func storeConfig(_ config: RunConfig, for id: RunID) {
+        storage.storeConfig(config, for: id)
+    }
+
+    /// Convenience overload — extracts `id` and delegates to the canonical form.
+    public func storeConfig(_ config: RunConfig, for item: RunItem) {
+        storeConfig(config, for: item.id)
+    }
+
+    // MARK: - Raw Track Data
+
+    // TODO: [GPX.Point] should not be a fundamental data type of the Library anymore
+    // It's an implementation detail we used for importing GPX files
+    // We need to have our own dedicated type.
+    //
+    /// Returns the raw GPS track points for the given run.
+    ///
+    /// Only valid after calling `load(_:with: [.run])`, which guarantees
+    /// track data has been written to storage.
+    ///
+    public func rawPoints(for id: RunID) throws -> [GPX.Point] {
+        guard let data = storage.trackData(for: id) else { throw LoadError.notFound }
+        return try JSONDecoder().decode([GPX.Point].self, from: data)
+    }
+
+    /// Convenience overload — extracts `id` and delegates to the canonical form.
+    public func rawPoints(for item: RunItem) throws -> [GPX.Point] {
+        try rawPoints(for: item.id)
     }
 
     // MARK: - Delete
 
-    public func delete(_ entry: RunEntry) {
-        cache[entry.id] = nil
-        storage.delete(id: entry.id)
+    /// Removes the run with the given ID from the library and cache.
+    public func delete(_ id: RunID) {
+        cache[id] = nil
+        storage.delete(id: id)
+    }
+
+    /// Convenience overload — extracts `id` and delegates to the canonical form.
+    public func delete(_ item: RunItem) {
+        delete(item.id)
     }
 
     // MARK: - NowPlaying
 
     /// Records that a run has just been loaded for playback.
-    public func markAsPlaying(_ entry: RunEntry) {
-        storage.markAsPlayed(id: entry.id)
+    public func markAsPlaying(_ id: RunID) {
+        storage.markAsPlayed(id: id)
     }
 
-    /// The most recently played run entry, for state restoration on launch.
-    public var lastPlayedEntry: RunEntry? {
-        storage.lastPlayedID().map { RunEntry(id: $0) }
+    /// Convenience overload — extracts `id` and delegates to the canonical form.
+    public func markAsPlaying(_ item: RunItem) {
+        markAsPlaying(item.id)
+    }
+
+    /// The most recently played run, for state restoration on launch.
+    /// Returns `nil` if no run has been played or storage has no record.
+    public var lastPlayedItem: RunItem? {
+        guard let id = storage.lastPlayedID() else { return nil }
+        return item(for: id)
     }
 
     // MARK: - Private
 
-    private func parseAndCache(data: Data, name: String, id: UUID) throws -> Run {
+    /// Builds a minimal `RunItem` from storage metadata for the given ID.
+    private func item(for id: RunID) -> RunItem? {
+        guard let name = storage.name(for: id),
+              let origin = storage.origin(for: id)
+        else { return nil }
+        return RunItem(id: id, name: name, date: Date(), distance: 0, duration: 0, source: origin)
+    }
+
+    /// Returns the parsed `Run` for the given item, fetching and caching on first access.
+    private func loadRun(for item: RunItem) async throws -> Run {
+        if let cached = cache[item.id] { return cached }
+
+        if let data = storage.trackData(for: item.id) {
+            let name = storage.name(for: item.id) ?? ""
+            return try parseAndCache(data: data, name: name, id: item.id)
+        }
+
+        guard let origin = storage.origin(for: item.id) else {
+            throw LoadError.notFound
+        }
+
+        let track = try await fetchTrack(for: origin)
+        let data = try JSONEncoder().encode(track.points)
+        storage.storeTrackData(data, for: item.id)
+
+        let run = runParser.run(from: track, id: item.id)
+        cache[item.id] = run
+        storage.updateDistance(run.distance, for: item.id)
+        return run
+    }
+
+    private func parseAndCache(data: Data, name: String, id: RunID) throws -> Run {
         let points = try JSONDecoder().decode([GPX.Point].self, from: data)
         let track = GPX.Track(name: name, points: points, type: "running", date: nil)
         let run = runParser.run(from: track, id: id)

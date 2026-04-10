@@ -18,7 +18,7 @@ struct ExportButton: View {
 
     var body: some View {
         Button {
-            exportingRun = nowPlaying.record.entry
+            exportingRun = nowPlaying.record.item
         } label: {
             Label("Share", systemImage: "square.and.arrow.up")
         }
