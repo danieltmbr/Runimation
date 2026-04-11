@@ -1,3 +1,4 @@
+import CoreUI
 import RunKit
 import RunUI
 import SwiftUI
@@ -14,7 +15,7 @@ import SwiftUI
 ///
 private struct ImportDialogueAlert: ViewModifier {
 
-    @NavigationState(\.importedItem)
+    @Navigation(\.importer.importedItem)
     private var importedItem
 
     @Environment(\.deleteRun)

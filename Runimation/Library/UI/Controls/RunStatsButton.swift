@@ -1,9 +1,10 @@
-import SwiftUI
+import CoreUI
 import RunKit
+import SwiftUI
 
 struct RunStatsButton: View {
-    
-    @NavigationState(\.statsPath)
+
+    @Navigation(\.library.statsPath)
     private var stats
     
     let run: RunItem

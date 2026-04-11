@@ -1,3 +1,4 @@
+import CoreUI
 import RunKit
 import RunUI
 import SwiftUI
@@ -16,7 +17,7 @@ struct LibraryEmptyView: View {
     @LibraryState(\.isConnected)
     private var isConnected
 
-    @NavigationState(\.showFilePicker)
+    @Navigation(\.library.showFilePicker)
     private var showFilePicker
 
     var body: some View {

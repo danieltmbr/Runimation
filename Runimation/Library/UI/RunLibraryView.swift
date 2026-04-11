@@ -1,3 +1,4 @@
+import CoreUI
 import RunKit
 import RunUI
 import SwiftUI
@@ -68,7 +69,7 @@ struct RunLibraryView: View {
     private var path: [RunItem] = []
     #endif
 
-    @NavigationState(\.showFilePicker)
+    @Navigation(\.library.showFilePicker)
     private var showFilePicker
 
     @State

@@ -1,11 +1,12 @@
+import CoreUI
 import SwiftUI
 
 struct CustomisationToggle: View {
-    
+
     @Environment(\.openWindow)
     private var openWindow
-    
-    @NavigationState(\.showCustomisation)
+
+    @Navigation(\.player.showCustomisation)
     private var showCustomisation: Bool
     
     var body: some View {

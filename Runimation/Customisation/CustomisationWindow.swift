@@ -1,11 +1,12 @@
 #if os(macOS)
+import CoreUI
 import RunKit
-import SwiftUI
 import RunUI
+import SwiftUI
 
 /// macOS floating window that tracks whichever player window is currently key.
 ///
-/// Reads the active `NavigationModel` from `WindowCoordinator`, which is updated
+/// Reads the active window state from `WindowCoordinator`, which is updated
 /// by `RuniWindow` whenever it becomes the key window. This bypasses `@FocusedValue`,
 /// which cannot cross SwiftUI scene boundaries (the Customisation window lives in a
 /// separate `Window` scene from the main `WindowGroup`).
@@ -17,14 +18,17 @@ struct CustomisationWindow: View {
 
     var body: some View {
         Group {
-            if let nav = coordinator.activeNavigationModel {
+            if let nav = coordinator.activeNavigationModel,
+               let player = coordinator.activePlayer,
+               let nowPlaying = coordinator.activeNowPlaying {
                 VStack {
                     CustomisationPanel()
                         .padding()
                     Spacer()
                 }
-                .player(nav.player)
-                .environment(nav.nowPlaying)
+                .player(player)
+                .environment(nowPlaying)
+                .environment(nav)
             } else {
                 ContentUnavailableView(
                     "No Window Selected",

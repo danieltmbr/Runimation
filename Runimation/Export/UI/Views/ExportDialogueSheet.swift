@@ -1,8 +1,9 @@
+import CoreUI
 import SwiftUI
 
 private struct ExportDialogueSheet: ViewModifier {
 
-    @NavigationState(\.exportingRun)
+    @Navigation(\.export.exportingRun)
     private var exportingRun
 
     let viewportSize: CGSize

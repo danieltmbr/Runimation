@@ -1,3 +1,4 @@
+import CoreUI
 import SwiftUI
 
 /// Toolbar button that triggers the export sheet for the currently playing run.
@@ -5,7 +6,7 @@ import SwiftUI
 /// Sets `exportingRun` in `NavigationModel` — the sheet is presented by the
 /// window root view, which owns both the record and the viewport size.
 ///
-/// Disabled when no run is loaded. Requires `@NowPlaying` and `@NavigationState`
+/// Disabled when no run is loaded. Requires `@NowPlaying` and `@Navigation`
 /// in the environment.
 ///
 struct ExportButton: View {
@@ -13,7 +14,7 @@ struct ExportButton: View {
     @NowPlaying
     private var nowPlaying
 
-    @NavigationState(\.exportingRun)
+    @Navigation(\.export.exportingRun)
     private var exportingRun
 
     var body: some View {

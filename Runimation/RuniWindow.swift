@@ -1,4 +1,5 @@
 import AuthenticationServices
+import CoreUI
 import RunKit
 import RunUI
 import SwiftData
@@ -10,9 +11,9 @@ import UIKit
 
 /// Per-window root view.
 ///
-/// Owns the `NavigationModel` (player + now-playing + navigation state) and
-/// sets up the full environment chain for its subtree. Platform-specific
-/// layout lives in `content`: `NavigationSplitView` on Mac/iPad,
+/// Owns the `NavigationModel` (navigation scope registry), `RunPlayer`, and
+/// `NowPlayingModel`, and sets up the full environment chain for its subtree.
+/// Platform-specific layout lives in `content`: `NavigationSplitView` on Mac/iPad,
 /// `NavigationStack` + sheets on iPhone.
 ///
 /// Two instances exist on macOS: the main persistent window (`autoRestore: true`)
@@ -23,6 +24,12 @@ struct RuniWindow: View {
     let library: RunLibrary
 
     let modelContainer: ModelContainer
+
+    @State
+    private var player: RunPlayer
+
+    @State
+    private var nowPlaying: NowPlayingModel
 
     @State
     private var navigationModel: NavigationModel
@@ -45,30 +52,44 @@ struct RuniWindow: View {
         modelContainer: ModelContainer,
         autoRestore: Bool
     ) {
-        let navigationModel = NavigationModel(
+        let player = RunPlayer(transformers: [GuassianRun()])
+        let nowPlaying = NowPlayingModel(
             context: modelContainer.mainContext,
-            markAsPlaying: { item in library.markAsPlaying(item) },
-            autoRestore: autoRestore
+            markAsPlaying: { item in library.markAsPlaying(item) }
         )
+        let navigation = NavigationModel(autoRestore: autoRestore)
+        navigation.register(PlayerNavigation())
+        navigation.register(LibraryNavigation())
+        navigation.register(ExportNavigation())
+        navigation.register(ImportNavigation())
+
         self.library = library
         self.modelContainer = modelContainer
-        self._navigationModel = State(initialValue: navigationModel)
+        self._player = State(initialValue: player)
+        self._nowPlaying = State(initialValue: nowPlaying)
+        self._navigationModel = State(initialValue: navigation)
     }
 
     // MARK: - Body
 
     var body: some View {
         RuniView()
-            .nowPlaying(navigationModel.nowPlaying)
+            .nowPlaying(nowPlaying)
             .library(library)
             .importActions(library: library)
-            .player(navigationModel.player)
+            .player(player)
             .export(library: library)
             .environment(navigationModel)
             .modelContainer(modelContainer)
+            #if os(macOS)
             .onChange(of: controlActiveState, initial: true) { _, state in
-                if state == .key { windowCoordinator.activeNavigationModel = navigationModel }
+                if state == .key {
+                    windowCoordinator.activeNavigationModel = navigationModel
+                    windowCoordinator.activePlayer = player
+                    windowCoordinator.activeNowPlaying = nowPlaying
+                }
             }
+            #endif
             #if os(iOS)
             .background(WindowAnchorReader { anchor in presentationAnchor = anchor })
             .environment(\.presentationAnchor, presentationAnchor)

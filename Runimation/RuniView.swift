@@ -1,3 +1,4 @@
+import CoreUI
 import RunKit
 import RunUI
 import SwiftUI
@@ -5,16 +6,16 @@ import Visualiser
 
 struct RuniView: View {
 
-    @NavigationState(\.autoRestore)
+    @Navigation(\.autoRestore)
     private var autoRestore
 
-    @NavigationState(\.columnVisibility)
+    @Navigation(\.library.columnVisibility)
     private var columnVisibility
 
-    @NavigationState(\.importedItem)
+    @Navigation(\.importer.importedItem)
     private var importedItem
 
-    @NavigationState(\.statsPath)
+    @Navigation(\.library.statsPath)
     private var stats
 
     @LibraryState(\.lastPlayedItem)
@@ -30,13 +31,13 @@ struct RuniView: View {
     private var viewportSize: CGSize = .zero
 
 #if os(iOS)
-    @NavigationState(\.showLibrary)
+    @Navigation(\.library.showLibrary)
     private var showLibrary
 
-    @NavigationState(\.showNowPlaying)
+    @Navigation(\.player.showNowPlaying)
     private var showNowPlaying
 
-    @NavigationState(\.showCustomisation)
+    @Navigation(\.player.showCustomisation)
     private var showCustomisation
 
     @State

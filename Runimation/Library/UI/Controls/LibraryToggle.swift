@@ -1,11 +1,12 @@
+import CoreUI
 import SwiftUI
 
 struct LibraryToggle: View {
-    
-    @NavigationState(\.columnVisibility)
+
+    @Navigation(\.library.columnVisibility)
     private var columnVisibility
 
-    @NavigationState(\.showLibrary)
+    @Navigation(\.library.showLibrary)
     private var showLibrary
     
     var body: some View {

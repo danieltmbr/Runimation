@@ -34,6 +34,14 @@
 - **Always read a file in full before modifying it.** Do not rely on memory or earlier reads from the same session — re-read immediately before every edit. Skipping this step causes incorrect edits and wastes time.
 
 
+## Navigation
+
+- **Use `@Navigation(\.scope.property)` for all navigation state.** Never read `NavigationModel` directly from `@Environment` in views.
+- **Adding navigation state for a new feature:** (1) define an `@MainActor @Observable final class [Feature]Navigation` in the feature's module, (2) extend `NavigationModel` with a computed `var` that has a no-op setter, (3) call `navigation.register([Feature]Navigation())` in `RuniWindow.init`. See `/.claude/docs/NavigationPattern.md` for the full pattern.
+- **Access control is enforced by Swift's module system.** Mark properties the rest of the app needs as `public`. Leave internal journey steps with no modifier — they are only visible inside the feature's own package.
+- **Never add stored properties to `NavigationModel`.** It is a scope registry, not a state bag. All state lives in scope classes.
+- **Package tiers** determine where a scope lives: fundamental (CoreUI/CoreKit), functional (RunKit/RunUI/Animations/StravaKit), feature (future ExportPackage etc.), or the app layer for anything not yet packaged. See `/.claude/docs/NavigationPattern.md` for rules.
+
 ## Project Overview
 The main purpose of this project is simply to learn computer graphics programming in Metal in a fun way.
 Learning mainly happens by implementing shader techniques from Inigo Quilez's site. 
