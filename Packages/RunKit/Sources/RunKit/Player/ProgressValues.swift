@@ -1,7 +1,7 @@
 /// A namespace for reading playback progress at different sampling rates.
 ///
-/// Use `@PlayerState(\.progress.animation)` for 30fps animation updates.
-/// Use `@PlayerState(\.progress.metrics)` for 24fps metric label updates.
+/// Use `@Player(\.progress.animation)` for 30fps animation updates.
+/// Use `@Player(\.progress.metrics)` for 24fps metric label updates.
 ///
 @dynamicMemberLookup
 public struct ProgressValues {

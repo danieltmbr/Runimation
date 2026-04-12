@@ -36,7 +36,7 @@ extension EnvironmentValues {
 extension View {
 
     /// Injects a `RunLibrary` and its core actions into the SwiftUI environment,
-    /// making them available to any descendant view via `@LibraryState` and
+    /// making them available to any descendant view via `@Library` and
     /// `@Environment(\.action)`.
     ///
     /// Apply once near the root of the library's view hierarchy. App targets

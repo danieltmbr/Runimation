@@ -7,7 +7,7 @@ import RunKit
 ///
 public struct PlayerProgressBar: View {
 
-    @PlayerState(\.progress.metrics)
+    @Player(\.progress.metrics)
     private var progress
     
     public init() {}

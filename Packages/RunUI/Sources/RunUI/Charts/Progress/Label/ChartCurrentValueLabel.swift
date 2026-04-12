@@ -8,7 +8,7 @@ import RunKit
 ///
 public struct ChartCurrentValueLabel: View {
     
-    @PlayerState(\.segment.diagnostics)
+    @Player(\.segment.diagnostics)
     private var segment
     
     let mapper: any RunChartValueMapper

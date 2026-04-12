@@ -6,20 +6,20 @@ import RunKit
 ///
 /// Use the read-only init for `private(set)` properties:
 /// ```swift
-/// @PlayerState(\.isPlaying) private var isPlaying
-/// @PlayerState(\.segments.animation) private var segment
+/// @Player(\.isPlaying) private var isPlaying
+/// @Player(\.segments.animation) private var segment
 /// ```
 ///
 /// Use the read-write init for publicly settable properties,
 /// which also provides a `Binding` via the `$` prefix:
 /// ```swift
-/// @PlayerState(\.duration) private var duration
-/// @PlayerState(\.loop) private var loop
+/// @Player(\.duration) private var duration
+/// @Player(\.loop) private var loop
 /// ```
 ///
 @MainActor
 @propertyWrapper
-public struct PlayerState<Value>: DynamicProperty {
+public struct Player<Value>: DynamicProperty {
 
     @Environment(RunPlayer.self)
     private var player

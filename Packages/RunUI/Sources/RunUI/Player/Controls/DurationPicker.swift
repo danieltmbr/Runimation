@@ -12,7 +12,7 @@ import SwiftUI
 ///
 public struct DurationPicker: View {
 
-    @PlayerState(\.duration)
+    @Player(\.duration)
     private var duration
 
     @State

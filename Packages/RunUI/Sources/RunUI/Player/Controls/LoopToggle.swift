@@ -9,7 +9,7 @@ import RunKit
 ///
 public struct LoopToggle: View {
 
-    @PlayerState(\.loop)
+    @Player(\.loop)
     private var loop
     
     public init() {}

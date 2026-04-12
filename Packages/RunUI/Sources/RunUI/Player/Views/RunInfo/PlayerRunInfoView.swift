@@ -2,7 +2,7 @@ import SwiftUI
 
 /// A player-coupled wrapper around `RunInfoView`.
 ///
-/// Reads the current run from the player environment via `@PlayerState`
+/// Reads the current run from the player environment via `@Player`
 /// and forwards it to `RunInfoView`. Use this in playback controls and
 /// Now Playing sheets where the display should track the loaded run.
 ///
@@ -12,7 +12,7 @@ import SwiftUI
 ///
 public struct PlayerRunInfoView: View {
 
-    @PlayerState(\.run.metrics)
+    @Player(\.run.metrics)
     private var run
 
     public init() {}

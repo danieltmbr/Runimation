@@ -7,7 +7,7 @@ import SwiftUI
 /// in any context — the Run Library list, player controls, or standalone screens.
 ///
 /// For player-coupled usage (where data should track the currently loaded run),
-/// use `PlayerRunInfoView` instead, which reads `@PlayerState` and forwards to this view.
+/// use `PlayerRunInfoView` instead, which reads `@Player` and forwards to this view.
 ///
 public struct RunInfoView: View {
     

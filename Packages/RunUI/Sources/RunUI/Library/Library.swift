@@ -6,8 +6,8 @@ import SwiftUI
 ///
 /// Use the read-only init for `private(set)` properties:
 /// ```swift
-/// @LibraryState(\.isLoading) private var isLoading
-/// @LibraryState(\.isConnected) private var isConnected
+/// @Library(\.isLoading) private var isLoading
+/// @Library(\.isConnected) private var isConnected
 /// ```
 ///
 /// Use the read-write init for publicly settable properties,
@@ -15,7 +15,7 @@ import SwiftUI
 ///
 @MainActor
 @propertyWrapper
-public struct LibraryState<Value>: DynamicProperty {
+public struct Library<Value>: DynamicProperty {
 
     @Environment(RunLibrary.self)
     private var library

@@ -7,10 +7,10 @@ import RunKit
 ///
 public struct PlayToggle: View {
     
-    @PlayerState(\.run.animation)
+    @Player(\.run.animation)
     private var run
 
-    @PlayerState(\.isPlaying)
+    @Player(\.isPlaying)
     private var isPlaying
 
     @Environment(\.togglePlay)

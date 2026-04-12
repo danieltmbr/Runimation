@@ -26,13 +26,13 @@ struct RunLibraryView: View {
     @RunLibraryQuery
     private var items
 
-    @LibraryState(\.trackers)
+    @Library(\.trackers)
     private var trackers
 
-    @LibraryState(\.isLoading)
+    @Library(\.isLoading)
     private var isLoading
 
-    @LibraryState(\.isConnected)
+    @Library(\.isConnected)
     private var isConnected
 
     // MARK: - Library Actions

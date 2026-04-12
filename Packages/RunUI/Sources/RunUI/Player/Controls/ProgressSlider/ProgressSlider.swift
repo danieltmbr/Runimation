@@ -3,7 +3,7 @@ import RunKit
 
 /// A view that reflects and controls the player's playback progress.
 ///
-/// Reads progress via `@PlayerState` and commits seeks via `SeekAction`.
+/// Reads progress via `@Player` and commits seeks via `SeekAction`.
 /// The appearance and interaction mechanism are controlled by
 /// `progressSliderStyle(_:)`:
 /// - `.system` (default): native SwiftUI `Slider`
@@ -19,7 +19,7 @@ public struct ProgressSlider: View {
     @Environment(\.seek)
     private var seek
 
-    @PlayerState(\.progress.animation)
+    @Player(\.progress.animation)
     private var progress
 
     public init() {}

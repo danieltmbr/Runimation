@@ -33,7 +33,7 @@ extension View {
 
     /// Injects a `RunPlayer` and all its associated actions into
     /// the SwiftUI environment, making them available to any descendant
-    /// view via `@PlayerState` and `@Environment(\.action)`.
+    /// view via `@Player` and `@Environment(\.action)`.
     ///
     /// Apply once near the root of the player's view hierarchy:
     /// ```swift

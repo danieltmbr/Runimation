@@ -8,7 +8,7 @@ import RunKit
 ///
 public struct CompassRose: View {
 
-    @PlayerState(\.segment.animation)
+    @Player(\.segment.animation)
     private var segment
     
     public init() {}

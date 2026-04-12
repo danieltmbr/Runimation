@@ -10,13 +10,13 @@ import SwiftUI
 ///
 public struct LibraryEmptyView: View {
 
-    @LibraryState(\.isConnected)
+    @Library(\.isConnected)
     private var isConnected
 
     @Navigation(\.library.showFilePicker)
     private var showFilePicker
     
-    @LibraryState(\.trackers)
+    @Library(\.trackers)
     private var trackers
 
     public init() {}

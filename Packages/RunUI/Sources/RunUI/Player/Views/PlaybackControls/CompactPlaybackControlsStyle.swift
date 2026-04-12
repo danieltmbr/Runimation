@@ -17,7 +17,7 @@ public struct CompactPlaybackControlsStyle: PlaybackControlsStyle {
 
 private struct CompactPlaybackControls: View {
 
-    @PlayerState(\.run.metrics)
+    @Player(\.run.metrics)
     private var run
 
     var body: some View {

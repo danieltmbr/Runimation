@@ -18,10 +18,10 @@ import SwiftUI
 ///
 public struct DurationSlider: View {
 
-    @PlayerState(\.duration)
+    @Player(\.duration)
     private var duration
 
-    @PlayerState(\.run.metrics)
+    @Player(\.run.metrics)
     private var run
 
     @Environment(\.setDuration)

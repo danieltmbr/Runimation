@@ -19,7 +19,7 @@ struct RuniView: View {
     @Navigation(\.library.statsPath)
     private var stats
 
-    @LibraryState(\.lastPlayedItem)
+    @Library(\.lastPlayedItem)
     private var lastPlayedItem
 
     @Environment(\.importFile)

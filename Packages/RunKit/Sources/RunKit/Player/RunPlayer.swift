@@ -57,7 +57,7 @@ public final class RunPlayer {
 
     /// A namespace for reading the current playback segment
     /// under each reading variant, enabling KeyPath-based access:
-    /// `@PlayerState(\.segment.animation)`.
+    /// `@Player(\.segment.animation)`.
     ///
     @dynamicMemberLookup
     @MainActor public struct Segments {

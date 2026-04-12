@@ -23,16 +23,16 @@ struct VisualiserView: View {
 ///
 private struct PlayerDrivenView: View {
 
-    @PlayerState(\.segment.animation)
+    @Player(\.segment.animation)
     private var segment
 
-    @PlayerState(\.progress.animation)
+    @Player(\.progress.animation)
     private var progress
 
-    @PlayerState(\.run.animation)
+    @Player(\.run.animation)
     private var run
 
-    @PlayerState(\.duration)
+    @Player(\.duration)
     private var duration
 
     var visualisation: Binding<any Visualisation>
