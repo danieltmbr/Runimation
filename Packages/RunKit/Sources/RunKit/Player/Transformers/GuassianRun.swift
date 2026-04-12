@@ -16,7 +16,7 @@ import CoreGraphics
 /// sigma is always in seconds, correctly handling
 /// variable-duration segments (e.g. rest periods).
 ///
-public struct GuassianRun: RunTransformer, Codable {
+public struct GuassianRun: RunTransformer, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey { case configuration }
 

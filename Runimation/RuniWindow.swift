@@ -2,6 +2,7 @@ import AuthenticationServices
 import CoreUI
 import RunKit
 import RunUI
+import RuniTransfer
 import SwiftData
 import SwiftUI
 import VisualiserUI
@@ -76,9 +77,8 @@ struct RuniWindow: View {
         RuniView()
             .nowPlaying(nowPlaying)
             .library(library)
-            .importActions(library: library)
+            .transfer(library: library)
             .player(player)
-            .export(library: library)
             .environment(navigationModel)
             .modelContainer(modelContainer)
             #if os(macOS)

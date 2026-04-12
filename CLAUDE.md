@@ -34,6 +34,13 @@
 - **Always read a file in full before modifying it.** Do not rely on memory or earlier reads from the same session — re-read immediately before every edit. Skipping this step causes incorrect edits and wastes time.
 
 
+## Package Architecture
+
+- **Four tiers: Fundamental → Functional → Feature → App layer.** Dependencies only flow downward. See `/.claude/docs/PackageArchitecture.md` for the full diagram and rules.
+- **Naming:** `[Domain]Kit` / `[Domain]UI` for functional pairs (e.g. `RunKit` + `RunUI`). Bare noun for a feature data layer; `Runi[Feature]` for its UI layer (e.g. `Transfer` + `RuniTransfer`). Omit the Kit half when there is no meaningful headless operation (e.g. `VisualiserUI`).
+- **Navigation scope ownership follows package ownership.** When a feature moves to a package, its `[Feature]Navigation` scope class and `NavigationModel` extension move with it. The app layer only owns scopes for features not yet packaged.
+- **Never add a dependency that violates the tier ordering.** A Functional package (e.g. RunUI) must not depend on a Feature package (e.g. RuniTransfer). If shared logic is needed, extract it into a lower tier.
+
 ## Navigation
 
 - **Use `@Navigation(\.scope.property)` for all navigation state.** Never read `NavigationModel` directly from `@Environment` in views.

@@ -1,6 +1,7 @@
 import CoreUI
 import RunKit
 import RunUI
+import RuniTransfer
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -44,9 +45,6 @@ struct RunLibraryView: View {
 
     @Environment(\.importFile)
     private var importFile
-
-    @Environment(\.importDocument)
-    private var importDocument
 
     // MARK: - Bindings
 
@@ -202,13 +200,13 @@ struct RunLibraryView: View {
             if provider.hasItemConformingToTypeIdentifier(UTType.runi.identifier) {
                 provider.loadItem(forTypeIdentifier: UTType.runi.identifier) { item, _ in
                     guard let url = item as? URL else { return }
-                    Task { @MainActor in try? self.importDocument(url) }
+                    Task { @MainActor in try? await self.importFile(url) }
                 }
                 handled = true
             } else if provider.hasItemConformingToTypeIdentifier(gpxUTType.identifier) {
                 provider.loadItem(forTypeIdentifier: gpxUTType.identifier) { item, _ in
                     guard let url = item as? URL else { return }
-                    Task { @MainActor in self.importFile(url) }
+                    Task { @MainActor in try? await self.importFile(url) }
                 }
                 handled = true
             } else if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
@@ -216,7 +214,7 @@ struct RunLibraryView: View {
                     guard let data = item as? Data,
                           let url = URL(dataRepresentation: data, relativeTo: nil)
                     else { return }
-                    Task { @MainActor in self.importURL(url) }
+                    Task { @MainActor in try? await self.importFile(url) }
                 }
                 handled = true
             }
@@ -225,11 +223,7 @@ struct RunLibraryView: View {
     }
 
     private func importURL(_ url: URL) {
-        if url.pathExtension.lowercased() == "runi" {
-            Task { try? importDocument(url) }
-        } else {
-            importFile(url)
-        }
+        Task { try? await importFile(url) }
     }
 
     // MARK: - Helpers

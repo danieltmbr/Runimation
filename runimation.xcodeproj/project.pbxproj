@@ -14,6 +14,7 @@
 		E2FB3C012F56FBF700126ACC /* RunUI in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C002F56FBF700126ACC /* RunUI */; };
 		E2FB3C042F57140000126ACC /* VisualiserUI in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C032F57140000126ACC /* VisualiserUI */; };
 		E2FB3C7D2F578B6200126ACC /* StravaKit in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C7C2F578B6200126ACC /* StravaKit */; };
+		E2FB3C852F5902A000126ACC /* RuniTransfer in Frameworks */ = {isa = PBXBuildFile; productRef = E2FB3C862F5902A000126ACC /* RuniTransfer */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -83,6 +84,7 @@
 				E2FB3BF82F56FBC000126ACC /* CoreKit in Frameworks */,
 				E2FB3BFE2F56FBE800126ACC /* RunKit in Frameworks */,
 				E2FB3BFB2F56FBD700126ACC /* CoreUI in Frameworks */,
+				E2FB3C852F5902A000126ACC /* RuniTransfer in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,6 +160,7 @@
 				E2FB3C002F56FBF700126ACC /* RunUI */,
 				E2FB3C032F57140000126ACC /* VisualiserUI */,
 				E2FB3C7C2F578B6200126ACC /* StravaKit */,
+				E2FB3C862F5902A000126ACC /* RuniTransfer */,
 			);
 			productName = runimation;
 			productReference = E263D3112F3F8E920089E1E8 /* Runimation.app */;
@@ -248,6 +251,7 @@
 				E2FB3BFF2F56FBF700126ACC /* XCLocalSwiftPackageReference "Packages/RunUI" */,
 				E2FB3C022F5713FF00126ACC /* XCLocalSwiftPackageReference "Packages/VisualiserUI" */,
 				E2FB3C7B2F578B6200126ACC /* XCLocalSwiftPackageReference "Packages/StravaKit" */,
+				E2FB3C872F5902A000126ACC /* XCLocalSwiftPackageReference "Packages/RuniTransfer" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E263D3122F3F8E920089E1E8 /* Products */;
@@ -740,6 +744,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/StravaKit;
 		};
+		E2FB3C872F5902A000126ACC /* XCLocalSwiftPackageReference "Packages/RuniTransfer" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/RuniTransfer;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -766,6 +774,10 @@
 		E2FB3C7C2F578B6200126ACC /* StravaKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = StravaKit;
+		};
+		E2FB3C862F5902A000126ACC /* RuniTransfer */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RuniTransfer;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

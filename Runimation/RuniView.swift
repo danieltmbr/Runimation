@@ -1,6 +1,7 @@
 import CoreUI
 import RunKit
 import RunUI
+import RuniTransfer
 import SwiftUI
 import VisualiserUI
 
@@ -21,8 +22,8 @@ struct RuniView: View {
     @LibraryState(\.lastPlayedItem)
     private var lastPlayedItem
 
-    @Environment(\.importDocument)
-    private var importDocument
+    @Environment(\.importFile)
+    private var importFile
 
     @NowPlaying
     private var nowPlaying
@@ -145,7 +146,7 @@ struct RuniView: View {
     private func handleURL(_ url: URL) {
         guard url.pathExtension == "runi" else { return }
         Task {
-            guard let item = try? importDocument(url) else { return }
+            guard let item = try? await importFile(url) else { return }
             await nowPlaying.play(item)
             if autoRestore { importedItem = item }
         }

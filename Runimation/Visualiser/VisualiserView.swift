@@ -35,7 +35,7 @@ private struct PlayerDrivenView: View {
     @PlayerState(\.duration)
     private var duration
 
-    var visualisation: Binding<any Visualiser.Visualisation>
+    var visualisation: Binding<any Visualisation>
 
     var body: some View {
         VisualiserCanvas(

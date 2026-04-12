@@ -4,7 +4,7 @@ import Foundation
 /// when the runner is moving slowly or stopped, and clips speed outliers
 /// at the 98th percentile to prevent GPS spikes from distorting the signal.
 ///
-public struct SpeedWeightedRun: RunTransformer, Codable {
+public struct SpeedWeightedRun: RunTransformer, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey { case configuration }
 
