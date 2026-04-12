@@ -213,7 +213,7 @@ The app is currently a mix of production features, diagnostics, and shader learn
 ### Key files
 - `Runimation/Persistence/RunRecord.swift` — `@Model` with metadata + `Data?` config blobs + `playDuration: TimeInterval?`
 - `Runimation/Persistence/RunRecord+Config.swift` — load helpers for all config types
-- `Runimation/Persistence/VisualisationConfig.swift`, `InterpolatorConfig.swift`, `TransformerConfig.swift` — Codable config enums
+- `Packages/VisualiserUI/.../VisualisationConfig.swift`, `Packages/RunKit/.../InterpolatorConfig.swift`, `Packages/RunKit/.../TransformerConfig.swift` — Codable config enums (moved to packages in Phase 7)
 - `Runimation/NowPlaying/NowPlayingModel.swift` — `@Observable` model + `NowPlayingModifier`
 - `Runimation/NowPlaying/NowPlaying.swift` — `@propertyWrapper` + config bindings
 
@@ -248,15 +248,15 @@ The app is currently a mix of production features, diagnostics, and shader learn
 - [x] `PaletteGradientRenderer.render` + `PathSimplifier.rdp` made `public` for use in main target
 
 ### Key files
-- `Runimation/Export/RuniDocument.swift` — Codable container + Transferable conformance
-- `Runimation/Export/RuniUTType.swift` — UTType declaration for `.runi`
-- `Runimation/Export/VideoRenderer.swift` — offline Metal pipeline (WarpUniforms / PathUniforms; palette texture; path MTLBuffer)
-- `Runimation/Export/VideoExportConfig.swift` — resolution, fps, codec
-- `Runimation/Export/ExportSheet.swift` — two-option share sheet
-- `Runimation/Export/ExportButton.swift` — toolbar export button
-- `Runimation/Export/ExportRuniAction.swift` + `ExportVideoAction.swift` — thin action wrappers
-- `Runimation/Export/ExportEnvironment.swift` — environment keys + `.export(player:)` modifier
-- `Packages/Visualiser/Sources/Visualiser/Resources/Shaders/export.metal` — export-specific Metal shaders
+- `Packages/RuniTransfer/.../RuniDocument.swift` — Codable container + Transferable conformance
+- `Packages/RuniTransfer/.../RuniUTType.swift` — UTType declaration for `.runi`
+- `Packages/RuniTransfer/.../VideoRenderer.swift` — offline Metal pipeline (WarpUniforms / PathUniforms; palette texture; path MTLBuffer)
+- `Packages/RuniTransfer/.../VideoExportConfig.swift` — resolution, fps, codec
+- `Packages/RuniTransfer/.../ExportSheet.swift` — two-option share sheet
+- `Runimation/Export/UI/Controls/ExportButton.swift` — toolbar export button (app layer; uses `@NowPlaying`)
+- `Packages/RuniTransfer/.../ExportRuniAction.swift` + `ExportVideoAction.swift` — thin action wrappers
+- `Packages/RuniTransfer/.../TransferEnvironment.swift` — environment keys + `.transfer(library:)` modifier
+- `Packages/VisualiserUI/Sources/VisualiserUI/Resources/Shaders/export.metal` — export-specific Metal shaders
 
 ### Key decisions
 - `[[stitchable]]` shaders cannot be used in a standard `MTLRenderPipelineState`; export shaders are written separately in `export.metal` and forward-declare the shared math functions compiled into the same `.metallib`
@@ -317,7 +317,7 @@ The app is currently a mix of production features, diagnostics, and shader learn
 - `RuniView` has a single clear responsibility (layout + routing) ✓
 - Adding a new modal destination requires touching only `NavigationModel` ✓
 - No scattered `@State` navigation flags in root views — all owned by `NavigationModel` ✓
-- No direct `@Environment(RunLibrary.self)` in leaf views — `@LibraryState` and actions only ✓
+- No direct `@Environment(RunLibrary.self)` in leaf views — `@Library` and actions only ✓
 
 ---
 
@@ -373,3 +373,4 @@ _Updated after each session. Format: `[date] Phase X.Y — what was done`_
 [2026-04-06] Phase 7 in progress — RunLibrary extracted to RunKit with ActivityTracker + RunStorage protocols. Library actions (Refresh, LoadNextPage, LoadEntry, Delete), LibraryState, ConnectToggle, DeleteRunButton, and base LibraryEnvironment moved to RunUI. StravaTracker + SwiftDataRunStorage added as app-layer concrete implementations. ConnectToggle replaces hardcoded ConnectButton/DisconnectButton — takes a specific tracker, shows displayName + connection status, handles keepRuns confirmation. App's RunLibraryEnvironment.swift now only adds import-specific actions on top of RunUI's .library().
 [2026-04-10] Phase 7 complete — NavigationModel owns all per-window state (player, nowPlaying, navigation flags); NavigationState property wrapper gives clean @-syntax access. RuniView is a thin layout coordinator. WindowCoordinator solves cross-scene Customisation window tracking. FocusedNavigationModel.swift deleted (superseded). RuniView migrated from @Environment(RunLibrary.self) to @LibraryState(\.lastPlayedItem). Ownership boundaries documented in roadmap. Branch: phase7-navigation.
 [2026-03-29] Phase 6 complete — Two export formats: `.runi` (lightweight Codable+Transferable JSON; instant ShareLink) and video (.mp4 via offline Metal pipeline). export.metal adds standard vertex+fragment shaders that forward-declare shared math from warp.metal/run.metal; VideoRenderer renders full duration at viewport resolution as fast as GPU allows using AVAssetWriter. ExportSheet presents both options; ExportButton replaces share placeholder in toolbar. RunLibrary.importRuniDocument handles .runi import; ContentView.onOpenURL handles "Open In" from AirDrop/Messages. PaletteGradientRenderer.render + PathSimplifier.rdp made public. UTType registered in Info.plist. Branch: ifs.
+[2026-04-12] Phase 7 extended — Visualiser package renamed to VisualiserUI (naming convention: functional UI packages use [Domain]UI suffix). PackageArchitecture.md + NavigationPattern.md written to .claude/docs. Scoped NavigationModel fully implemented: PlayerNavigation + LibraryNavigation moved to RunUI; ExportNavigation + ImportNavigation live in new RuniTransfer package. RuniTransfer feature package created (CoreUI + RunKit + RunUI + VisualiserUI deps): owns RuniDocument, RuniUTType, VideoRenderer, VideoExportConfig, all export/import actions, ExportSheet, ImportDialogueAlert, TransferEnvironment (.transfer(library:) replaces .export + .importActions). VisualisationConfig moved to VisualiserUI; TransformerConfig + InterpolatorConfig moved to RunKit. Additional library views (RunSummaryGrid, RunMetricsView, RunStatsDestination, LibraryEmptyView, RunStatsButton, LibraryToggle) moved from app layer to RunUI. @PlayerState → @Player, @LibraryState → @Library (consistent with @Navigation naming). Branch: phase7-navigation.
