@@ -1,4 +1,4 @@
-import Visualiser
+import VisualiserUI
 import SwiftUI
 
 /// Interactive demo exploring domain warping — nested fBM displacement.
@@ -29,7 +29,7 @@ struct WarpDemoView: View {
                     .visualEffect { content, _ in
                         content
                             .colorEffect(
-                                ShaderLibrary.bundle(.visualiser).warpShader(
+                                ShaderLibrary.bundle(.visualiserUI).warpShader(
                                     .float(elapsed),
                                     .float(octaves),
                                     .float(h),

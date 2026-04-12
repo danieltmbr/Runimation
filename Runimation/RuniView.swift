@@ -2,7 +2,7 @@ import CoreUI
 import RunKit
 import RunUI
 import SwiftUI
-import Visualiser
+import VisualiserUI
 
 struct RuniView: View {
 

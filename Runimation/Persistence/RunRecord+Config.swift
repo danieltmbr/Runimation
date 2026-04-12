@@ -1,6 +1,6 @@
 import Foundation
 import RunKit
-import Visualiser
+import VisualiserUI
 
 /// Convenience accessors for resolving typed config values from a `RunRecord`.
 ///

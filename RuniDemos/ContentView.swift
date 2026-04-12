@@ -1,5 +1,5 @@
 import SwiftUI
-import Visualiser
+import VisualiserUI
 
 /// Root view for the RuniDemos app. Presents all shader learning demos
 /// in a sidebar-style TabView so each can be explored independently.

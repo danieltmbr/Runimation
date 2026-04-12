@@ -3,7 +3,7 @@ import CoreGraphics
 import CoreVideo
 import Metal
 import RunKit
-import Visualiser
+import VisualiserUI
 
 /// Renders a Runimation visualisation to an `.mp4` file using a raw Metal pipeline.
 ///
@@ -12,7 +12,7 @@ import Visualiser
 /// animation at 30 fps (3600 frames) typically takes 30–60 seconds to render.
 ///
 /// The export pipeline uses dedicated Metal shaders (`export.metal`) compiled into
-/// `Bundle.visualiser`. These mirror the live `runWarpShader` / `runPathWarpShader`
+/// `Bundle.visualiserUI`. These mirror the live `runWarpShader` / `runPathWarpShader`
 /// logic but use standard vertex + fragment functions rather than SwiftUI's
 /// `[[stitchable]]` calling convention, allowing them to be driven via a plain
 /// `MTLRenderCommandEncoder`.
@@ -74,7 +74,7 @@ struct VideoRenderer {
 
         // Load the compiled .metallib from Visualiser.bundle — contains export_vertex,
         // export_warp_fragment, export_path_fragment, export_path_warp_fragment.
-        guard let metalLibURL = Bundle.visualiser.url(forResource: "default", withExtension: "metallib") else {
+        guard let metalLibURL = Bundle.visualiserUI.url(forResource: "default", withExtension: "metallib") else {
             throw RenderError.metalLibraryNotFound
         }
         let library = try device.makeLibrary(URL: metalLibURL)

@@ -4,7 +4,7 @@ import RunKit
 import RunUI
 import SwiftData
 import SwiftUI
-import Visualiser
+import VisualiserUI
 #if os(iOS)
 import UIKit
 #endif

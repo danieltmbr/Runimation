@@ -1,7 +1,7 @@
 import CoreKit
 import CoreUI
 import SwiftUI
-import Visualiser
+import VisualiserUI
 
 /// The Customisation Panel lets users switch between the Visualisation Adjustment
 /// and Data Processing Pipeline settings.

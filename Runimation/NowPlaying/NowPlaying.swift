@@ -1,7 +1,7 @@
 import RunKit
 import RunUI
 import SwiftUI
-import Visualiser
+import VisualiserUI
 
 /// A property wrapper + `DynamicProperty` that reflects the currently
 /// playing `RunRecord` and provides bindings for its configuration.

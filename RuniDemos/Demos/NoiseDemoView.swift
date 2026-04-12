@@ -1,4 +1,4 @@
-import Visualiser
+import VisualiserUI
 import SwiftUI
 
 /// Interactive demo exploring 2D value noise interpolation modes.
@@ -39,7 +39,7 @@ struct NoiseDemoView: View {
                     .visualEffect { content, proxy in
                         content
                             .colorEffect(
-                                ShaderLibrary.bundle(.visualiser).noiseShader(
+                                ShaderLibrary.bundle(.visualiserUI).noiseShader(
                                     .float(elapsed),
                                     .float(scale),
                                     .float(modeValue)

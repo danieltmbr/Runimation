@@ -1,4 +1,4 @@
-import Visualiser
+import VisualiserUI
 import SwiftUI
 
 /// Interactive demo exploring cosine colour palettes (Inigo Quilez technique).
@@ -118,7 +118,7 @@ struct ColorsDemoView: View {
                 o.y /= Float(-geometryProxy.size.height)/scale
                 return content
                     .colorEffect(
-                        ShaderLibrary.bundle(.visualiser).gradientShader(
+                        ShaderLibrary.bundle(.visualiserUI).gradientShader(
                             .float(elapsed),
                             .float2(geometryProxy.size),
                             .float(scale),
@@ -143,7 +143,7 @@ struct ColorsDemoView: View {
                 o.y /= Float(-geometryProxy.size.height) / scale
                 return content
                     .colorEffect(
-                        ShaderLibrary.bundle(.visualiser).blobShader(
+                        ShaderLibrary.bundle(.visualiserUI).blobShader(
                             .float(elapsed),
                             .float2(geometryProxy.size),
                             .float(scale),

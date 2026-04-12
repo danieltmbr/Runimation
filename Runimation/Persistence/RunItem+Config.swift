@@ -1,6 +1,6 @@
 import Foundation
 import RunKit
-import Visualiser
+import VisualiserUI
 
 /// Decodes the app-specific config types from the opaque blobs in a `RunItem`.
 ///

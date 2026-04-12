@@ -2,16 +2,16 @@
 import PackageDescription
 
 let package = Package(
-    name: "Visualiser",
+    name: "VisualiserUI",
     platforms: [.iOS(.v26), .macOS(.v26)],
-    products: [.library(name: "Visualiser", targets: ["Visualiser"])],
+    products: [.library(name: "VisualiserUI", targets: ["VisualiserUI"])],
     dependencies: [
         .package(path: "../CoreKit"),
         .package(path: "../CoreUI"),
     ],
     targets: [
         .target(
-            name: "Visualiser",
+            name: "VisualiserUI",
             dependencies: [
                 .product(name: "CoreKit", package: "CoreKit"),
                 .product(name: "CoreUI", package: "CoreUI"),

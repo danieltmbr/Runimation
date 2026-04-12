@@ -1,5 +1,5 @@
 import SwiftUI
-import Visualiser
+import VisualiserUI
 import CoreKit
 import CoreUI
 

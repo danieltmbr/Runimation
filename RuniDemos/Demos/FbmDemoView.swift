@@ -1,4 +1,4 @@
-import Visualiser
+import VisualiserUI
 import SwiftUI
 
 /// Interactive demo exploring Fractional Brownian Motion (fBM) parameters.
@@ -29,7 +29,7 @@ struct FbmDemoView: View {
                     .visualEffect { content, _ in
                         content
                             .colorEffect(
-                                ShaderLibrary.bundle(.visualiser).fbmShader(
+                                ShaderLibrary.bundle(.visualiserUI).fbmShader(
                                     .float(elapsed),
                                     .float(octaves),
                                     .float(h),

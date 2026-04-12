@@ -1,7 +1,7 @@
 import RunKit
 import RunUI
 import SwiftUI
-import Visualiser
+import VisualiserUI
 
 struct VisualiserView: View {
 

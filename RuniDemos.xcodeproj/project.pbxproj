@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D10000000000000000042D10 /* Visualiser in Frameworks */ = {isa = PBXBuildFile; productRef = D10000000000000000041D10 /* Visualiser */; };
+		D10000000000000000042D10 /* VisualiserUI in Frameworks */ = {isa = PBXBuildFile; productRef = D10000000000000000041D10 /* VisualiserUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D10000000000000000042D10 /* Visualiser in Frameworks */,
+				D10000000000000000042D10 /* VisualiserUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,7 +78,7 @@
 			);
 			name = RuniDemos;
 			packageProductDependencies = (
-				D10000000000000000041D10 /* Visualiser */,
+				D10000000000000000041D10 /* VisualiserUI */,
 			);
 			productName = RuniDemos;
 			productReference = D10000000000000000011D10 /* RuniDemos.app */;
@@ -109,7 +109,7 @@
 			mainGroup = D10000000000000000002D10;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				D10000000000000000040D10 /* XCLocalSwiftPackageReference "Packages/Visualiser" */,
+				D10000000000000000040D10 /* XCLocalSwiftPackageReference "Packages/VisualiserUI" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D10000000000000000003D10 /* Products */;
@@ -372,17 +372,17 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		D10000000000000000040D10 /* XCLocalSwiftPackageReference "Packages/Visualiser" */ = {
+		D10000000000000000040D10 /* XCLocalSwiftPackageReference "Packages/VisualiserUI" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = Packages/Visualiser;
+			relativePath = Packages/VisualiserUI;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		D10000000000000000041D10 /* Visualiser */ = {
+		D10000000000000000041D10 /* VisualiserUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D10000000000000000040D10 /* XCLocalSwiftPackageReference "Packages/Visualiser" */;
-			productName = Visualiser;
+			package = D10000000000000000040D10 /* XCLocalSwiftPackageReference "Packages/VisualiserUI" */;
+			productName = VisualiserUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -3,7 +3,7 @@ import CoreTransferable
 import Foundation
 import RunKit
 import UniformTypeIdentifiers
-import Visualiser
+import VisualiserUI
 
 /// A portable, shareable snapshot of a run and its complete visualisation config.
 ///

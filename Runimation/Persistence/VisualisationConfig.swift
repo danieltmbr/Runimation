@@ -1,5 +1,5 @@
 import Foundation
-import Visualiser
+import VisualiserUI
 
 /// Codable representation of the finite set of `Visualisation` conformers.
 ///

@@ -1,6 +1,6 @@
 import Foundation
 import RunKit
-import Visualiser
+import VisualiserUI
 
 /// Renders a run's animation to an `.mp4` file, fully independent of the player.
 ///
