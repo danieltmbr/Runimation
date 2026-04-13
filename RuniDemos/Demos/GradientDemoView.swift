@@ -1,10 +1,10 @@
 import VisualiserUI
 import SwiftUI
 
-/// Interactive demo exploring cosine colour palettes (Inigo Quilez technique).
 /// Switch between plain gradient and animated blob modes; pinch-to-zoom and
 /// pan to explore the colour field. Demonstrates the gradient and blob shaders.
-struct ColorsDemoView: View {
+///
+struct GradientDemoView: View {
 
     enum Gradient: String, CaseIterable, Sendable  {
         case plain = "Plain"
@@ -59,7 +59,7 @@ struct ColorsDemoView: View {
         VStack {
             TimelineView(.animation) { timeline in
                 let elapsed: TimeInterval = timeline.date.timeIntervalSince(startTime)
-                colors(elapsedTime: elapsed)
+                gradients(elapsedTime: elapsed)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .gesture(magnifyGesture)
                     .simultaneousGesture(panGesture)
@@ -98,7 +98,7 @@ struct ColorsDemoView: View {
     // MARK: - Colors
 
     @ViewBuilder
-    private func colors(elapsedTime elapsed: TimeInterval) -> some View {
+    private func gradients(elapsedTime elapsed: TimeInterval) -> some View {
         switch gradient {
         case .plain:
             plain(elapsedTime: elapsed)
@@ -194,5 +194,5 @@ struct ColorsDemoView: View {
 }
 
 #Preview {
-    ColorsDemoView()
+    GradientDemoView()
 }

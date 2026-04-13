@@ -12,7 +12,7 @@ public struct VisualisationList: View {
     private static let catalog: [Item<any Visualisation>] = [
         Item(value: Warp() as any Visualisation),
         Item(value: RunPath() as any Visualisation),
-        Item(value: Colors() as any Visualisation),
+        Item(value: Gradients() as any Visualisation),
     ]
 
     public init(visualisation: Binding<any Visualisation>) {

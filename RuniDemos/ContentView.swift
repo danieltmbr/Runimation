@@ -6,8 +6,8 @@ import VisualiserUI
 struct ContentView: View {
     var body: some View {
         TabView {
-            Tab("Colors", systemImage: "paintpalette") {
-                ColorsDemoView()
+            Tab("Gradients", systemImage: "paintpalette") {
+                GradientDemoView()
             }
             Tab("Noise", systemImage: "waveform") {
                 NoiseDemoView()

@@ -3,7 +3,7 @@ import Metal
 import CoreGraphics
 
 
-public struct ColorsView: View {
+public struct GradientsView: View {
 
     let state: VisualiserState
 
@@ -22,7 +22,7 @@ public struct ColorsView: View {
         Rectangle()
             .visualEffect { content, proxy in
                 content.colorEffect(
-                    ShaderLibrary.bundle(.module).runColorShader(
+                    ShaderLibrary.bundle(.module).runGradientShader(
                         .float(animTime),
                         .float2(proxy.size),
                         .float2(coordinates),
@@ -37,5 +37,5 @@ public struct ColorsView: View {
 }
 
 #Preview {
-    ColorsView(state: .zero)
+    GradientsView(state: .zero)
 }

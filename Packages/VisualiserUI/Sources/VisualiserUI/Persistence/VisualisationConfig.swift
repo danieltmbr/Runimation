@@ -13,7 +13,7 @@ public enum VisualisationConfig: Sendable {
 
     case warp(Warp)
     case runPath(RunPath)
-    case colors(Colors)
+    case colors(Gradients)
 
     // MARK: - Init
 
@@ -21,7 +21,7 @@ public enum VisualisationConfig: Sendable {
         switch visualisation {
         case let v as Warp: self = .warp(v)
         case is RunPath:    self = .runPath(RunPath())
-        case is Colors:     self = .colors(Colors())
+        case is Gradients:     self = .colors(Gradients())
         default:
             throw EncodingError.invalidValue(
                 visualisation,
@@ -36,7 +36,7 @@ public enum VisualisationConfig: Sendable {
         switch self {
         case .warp(let v): return v
         case .runPath:     return RunPath()
-        case .colors:      return Colors()
+        case .colors:      return Gradients()
         }
     }
 }
@@ -56,7 +56,7 @@ extension VisualisationConfig: Codable {
         } else if container.contains(.runPath) {
             self = .runPath(try container.decode(RunPath.self, forKey: .runPath))
         } else if container.contains(.colors) {
-            self = .colors(try container.decode(Colors.self, forKey: .colors))
+            self = .colors(try container.decode(Gradients.self, forKey: .colors))
         } else {
             throw DecodingError.dataCorrupted(
                 .init(codingPath: decoder.codingPath, debugDescription: "Unknown VisualisationConfig case")

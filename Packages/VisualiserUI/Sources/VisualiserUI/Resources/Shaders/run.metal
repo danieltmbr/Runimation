@@ -234,7 +234,7 @@ WarpResult runWarp(float2 p, float octaves, float h, float animTime, float2 flow
     return half4(half3(color), 1.0);
 }
 
-[[ stitchable ]] half4 runColorShader(
+[[ stitchable ]] half4 runGradientShader(
                                       float2 position,
                                       half4 currentColor,
                                       float time,
