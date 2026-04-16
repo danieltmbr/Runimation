@@ -40,7 +40,7 @@
 			</dict>
 		</dict>
 	</array>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<key>LSSupportsOpeningDocumentsInPlace-iOS</key>
 	<false/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
