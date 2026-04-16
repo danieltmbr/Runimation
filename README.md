@@ -17,7 +17,7 @@ A place where runners can have fun with their metrics instead of analysing them.
 
 A place where runners can feel connected to their communities by seeing how their runs contribute to shared animations of group sessions or animations combining the individual runs each club member. Having fun with others and see they collaborate on something bigger than themselves.
 
-## Personal notes
+## Personal notes
 
 I started running as a means to be fit and healthy. It used to be liberating and made me feel light and happy. It helped me cope and supported me in my life. Until I started focusing on performance way too much and turned running into yet another source of stress.
 
