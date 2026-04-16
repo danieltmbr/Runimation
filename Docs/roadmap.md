@@ -334,6 +334,7 @@ The app is currently a mix of production features, diagnostics, and shader learn
 - [ ] Edge cases: no network, empty runs, very short/long runs
 - [ ] Privacy: App Tracking Transparency if needed, privacy policy
 - [ ] TestFlight beta
+- [ ] Logging
 - [ ] App Store submission
 
 ### Verification
